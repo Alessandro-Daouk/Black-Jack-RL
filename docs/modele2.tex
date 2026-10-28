@@ -1,0 +1,421 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{booktabs}
+\usepackage[hidelinks]{hyperref}
+
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemme}{Lemme}
+\theoremstyle{definition}
+\newtheorem{definition}{Définition}
+\theoremstyle{remark}
+\newtheorem*{remarque}{Remarque}
+
+\newcommand{\HIT}{\textsc{hit}}
+\newcommand{\STAND}{\textsc{stand}}
+\newcommand{\BUST}{\textsc{bust}}
+\newcommand{\QH}{Q_{\HIT}}
+\newcommand{\VS}{V_{\STAND}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\1}{\mathbf{1}}
+
+\floatname{algorithm}{Algorithme}
+\algrenewcommand\algorithmicrequire{\textbf{Entrées :}}
+\algrenewcommand\algorithmicensure{\textbf{Sortie :}}
+
+\title{Blackjack AI --- Fonctionnement mathématique du modèle 2\\
+\large Agent Q-learning hybride : apprentissage de $\QH$ avec $\VS$ fourni par le modèle 1}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+%======================================================================
+\section{Cadre : un processus de décision markovien}
+%======================================================================
+
+On modélise une manche de \texttt{Blackjack-v1} (Gymnasium, \texttt{natural=False}, \texttt{sab=False}) comme un processus de décision markovien (MDP) épisodique.
+
+\paragraph{Cartes.} Le paquet est infini : chaque tirage est indépendant, de loi
+\[
+P(c)=\frac{1}{13}\quad (c=1,\dots,9),\qquad P(10)=\frac{4}{13},
+\]
+où $c=1$ désigne l'as et $c=10$ regroupe 10, valet, dame et roi.
+
+\paragraph{États.} Un état est un triplet
+\[
+s=(p,d,a),\qquad p\in\{4,\dots,21\},\; d\in\{1,\dots,10\},\; a\in\{0,1\},
+\]
+où $p$ est le total du joueur, $d$ la carte visible du croupier et $a=1$ si le joueur possède un as compté comme 11 (as \emph{utilisable}). La carte cachée du croupier ne fait pas partie de l'état : elle n'est pas observable.
+
+\paragraph{Total dur.} On note $h=p-10a$ le total où tous les as comptent pour 1.
+
+\paragraph{Actions.} $\mathcal{A}=\{\HIT,\STAND\}$.
+
+\paragraph{Transition de \HIT.} Depuis $s=(p,d,a)$, on tire $c\sim P$ :
+\begin{align*}
+h' &= h+c, \\
+a' &= \1\big[(a=1 \text{ ou } c=1) \text{ et } h'+10\le 21\big], \\
+p' &= h'+10\,a'.
+\end{align*}
+Si $h'>21$, la manche se termine (\emph{bust}) avec la récompense $-1$. Sinon on passe à $s'=(p',d,a')$ avec la récompense $0$.
+
+\begin{remarque}
+Cette transition est bien markovienne. Si $a=0$ alors que la main contient un as compté comme 1, on a forcément $h+10>21$, donc $h'+10>21$ : cet as ne peut jamais redevenir utilisable. Il n'est donc pas nécessaire de mémoriser sa présence.
+\end{remarque}
+
+\paragraph{Transition de \STAND.} La manche se termine. Le croupier joue selon sa règle fixe (il tire tant que son total est $<17$, en comptant un as comme 11 si possible, et reste donc sur un 17 \emph{soft}). On note $D\in\mathcal{D}=\{17,18,19,20,21,\BUST\}$ son résultat final. La récompense est
+\[
+R(p,D)=
+\begin{cases}
++1 & \text{si } D=\BUST \text{ ou } D<p,\\
+\phantom{+}0 & \text{si } D=p,\\
+-1 & \text{si } D>p.
+\end{cases}
+\]
+
+\subsection{Le graphe des états est acyclique}
+
+\begin{proposition}\label{prop:dag}
+Le total dur $h$ augmente strictement à chaque \HIT. Une manche comporte donc au plus $21-4=17$ tirages sans bust, puis une dernière décision, soit au plus $18$ décisions, et le graphe des transitions est acyclique.
+\end{proposition}
+
+\begin{proof}
+$h'=h+c$ avec $c\ge 1$, et l'épisode se termine dès que $h'>21$. Le total $p$ peut diminuer (18 \emph{soft} $+\,10$ donne 18 dur), mais pas $h$.
+\end{proof}
+
+Deux conséquences :
+\begin{enumerate}
+  \item le facteur d'actualisation $\gamma=1$ est parfaitement défini, car aucune somme infinie n'apparaît ; on prendra $\gamma=1$ dans toute la suite ;
+  \item toutes les fonctions de valeur exactes se calculent par \emph{récurrence à rebours} sur $h$, de $h=21$ jusqu'à $h=4$ (section~\ref{sec:dp}).
+\end{enumerate}
+
+%======================================================================
+\section{Valeur de \STAND{} : rôle du modèle 1}
+%======================================================================
+
+Le modèle 1 fournit, pour chaque carte visible $d$, une distribution $\hat P(D\mid d)$ sur les six classes de $\mathcal{D}$. On en déduit la valeur de rester :
+\begin{equation}\label{eq:vstand}
+\VS(s)=\sum_{D\in\mathcal{D}} P(D\mid d)\,R(p,D).
+\end{equation}
+On note $\VS$ la valeur calculée avec la vraie distribution $P$, et $\hat V_{\STAND}$ celle calculée avec la distribution apprise $\hat P$.
+
+\paragraph{Propriétés immédiates.}
+\begin{itemize}
+  \item $\VS(s)\in[-1,1]$, car c'est une moyenne pondérée de valeurs de $[-1,1]$.
+  \item $\VS$ ne dépend pas de $a$, et elle est croissante en $p$.
+  \item Pour $p\le 16$, toute issue non-bust du croupier bat le joueur, donc $\VS(s)=2P(\BUST\mid d)-1$ est constante en $p$.
+\end{itemize}
+
+\subsection{Distribution exacte du croupier}\label{sec:croupier}
+
+Comme le paquet est infini, la carte cachée est simplement un tirage de plus. On définit $f(h_D,u)$ comme la loi du résultat final du croupier depuis un total dur $h_D$, avec $u=1$ s'il possède au moins un as. Son total effectif vaut $t=h_D+10$ si $u=1$ et $h_D+10\le 21$, et $t=h_D$ sinon. On a alors
+\[
+f(h_D,u)=
+\begin{cases}
+\delta_{t} & \text{si } 17\le t\le 21,\\
+\delta_{\BUST} & \text{si } t>21,\\
+\displaystyle\sum_{c=1}^{10}P(c)\,f\big(h_D+c,\;\max(u,\1[c=1])\big) & \text{si } t<17,
+\end{cases}
+\]
+et la distribution cherchée est $P(\cdot\mid d)=f(d,\1[d=1])$. C'est la distribution de référence de l'ablation : elle est \emph{exacte}, et non estimée par simulation.
+
+%======================================================================
+\section{Équations de Bellman du modèle hybride}
+%======================================================================
+
+Dans l'architecture hybride, seule la valeur de \HIT{} est apprise. La valeur de \STAND{} est fournie par \eqref{eq:vstand}.
+
+\begin{definition}
+La valeur optimale de \HIT{} est la solution de
+\begin{equation}\label{eq:bellman}
+\QH^*(s)=\sum_{c=1}^{10}P(c)\,
+\begin{cases}
+-1 & \text{si } h+c>21,\\
+\max\big(\QH^*(s'),\,\VS(s')\big) & \text{sinon},
+\end{cases}
+\end{equation}
+où $s'$ est l'état obtenu en tirant $c$ depuis $s$.
+\end{definition}
+
+D'après la proposition~\ref{prop:dag}, le membre de droite ne fait intervenir que des états de total dur strictement plus grand. L'équation \eqref{eq:bellman} admet donc une unique solution, calculable de proche en proche.
+
+\paragraph{Politique hybride.}
+\[
+\pi(s)=
+\begin{cases}
+\HIT & \text{si } \QH(s)>\VS(s),\\
+\STAND & \text{sinon}.
+\end{cases}
+\]
+
+\paragraph{Valeur d'un état.} $V^*(s)=\max\big(\QH^*(s),\VS(s)\big)$.
+
+\begin{proposition}[Cas faciles, utiles comme tests]\label{prop:faciles}
+\leavevmode
+\begin{enumerate}
+  \item $\QH^*(21,d,0)=-1$ pour tout $d$.
+  \item Si $p\le 11$, alors $\QH^*(s)\ge\VS(s)$ : tirer est toujours au moins aussi bon que rester.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(1) Avec $h=21$, toute carte provoque un bust.
+(2) Si $p\le 11$ alors $a=0$ (sinon $p\ge 12$), donc $h=p\le 11$ et aucun tirage ne fait dépasser 21. Pour toute carte $c$, $\max(\QH^*(s'),\VS(s'))\ge\VS(s')\ge\VS(s)$, la dernière inégalité venant de la croissance de $\VS$ en $p$ et de $p'\ge p$ (avec $a=0$, on a $p'=h+c+10a'\ge p$). En moyennant sur $c$, on obtient $\QH^*(s)\ge\VS(s)$.
+\end{proof}
+
+%======================================================================
+\section{Apprentissage par Q-learning}
+%======================================================================
+
+L'agent ne connaît pas $P(c)$ et n'utilise pas \eqref{eq:bellman} directement. Il remplace l'espérance sur $c$ par le seul tirage observé.
+
+\subsection{Règle de mise à jour}
+
+Après une action \HIT{} depuis $s$, on observe $(r,s',\text{fin})$. On forme la cible
+\[
+y=
+\begin{cases}
+r & \text{si la manche est terminée (\texttt{terminated})},\\
+r+\max\big(\QH(s'),\,\hat V_{\STAND}(s')\big) & \text{sinon},
+\end{cases}
+\]
+puis on met à jour
+\begin{equation}\label{eq:update}
+\QH(s)\leftarrow\QH(s)+\alpha_N(s)\,\big[y-\QH(s)\big].
+\end{equation}
+Une action \STAND{} termine la manche et ne déclenche aucune mise à jour de $\QH$.
+
+\begin{remarque}[Transitions terminales]
+Dans Gymnasium, \texttt{step} renvoie \texttt{terminated} et \texttt{truncated}. On n'ajoute \emph{jamais} de valeur future lorsque \texttt{terminated} est vrai. \texttt{Blackjack-v1} n'a pas de limite de temps, donc \texttt{truncated} reste faux.
+\end{remarque}
+
+\begin{remarque}[Apprentissage \emph{off-policy}]
+À cause du $\max$ dans la cible, l'agent apprend la valeur de la politique \emph{optimale} \eqref{eq:bellman}, et non celle de la politique $\varepsilon$-greedy suivie pendant l'entraînement. Apprendre la valeur de la politique effectivement jouée correspondrait à SARSA.
+\end{remarque}
+
+\subsection{Choix du taux d'apprentissage}
+
+\begin{lemme}\label{lem:variance}
+Soit une suite de cibles indépendantes $y_n$ de moyenne $\mu$ et de variance $\sigma^2$, et $Q_{n+1}=(1-\alpha)Q_n+\alpha y_n$ avec $\alpha\in(0,1)$ constant. En régime stationnaire,
+\[
+\E[Q]=\mu,\qquad \operatorname{Var}(Q)=\frac{\alpha}{2-\alpha}\,\sigma^2.
+\]
+\end{lemme}
+
+\begin{proof}
+En notant $v$ la variance stationnaire et en utilisant l'indépendance de $Q_n$ et $y_n$, on a $v=(1-\alpha)^2v+\alpha^2\sigma^2$, d'où $v=\alpha^2\sigma^2/(2\alpha-\alpha^2)$.
+\end{proof}
+
+Avec $\alpha=0{,}1$ et $\sigma\approx 0{,}9$ (récompenses dans $\{-1,0,1\}$), l'écart-type résiduel vaut environ $0{,}2$. Or, dans les états limites, l'écart $|\QH^*(s)-\VS(s)|$ est souvent de l'ordre de quelques centièmes. Un $\alpha$ constant rend donc la politique finale instable précisément là où la décision est difficile.
+
+On utilise plutôt un pas qui décroît avec le nombre de visites $N(s)$ de l'état :
+\[
+\alpha_N(s)=\frac{1}{N(s)}.
+\]
+Pour une cible stationnaire, $\QH(s)$ est alors exactement la moyenne empirique des cibles observées, et les conditions de Robbins--Monro
+\[
+\sum_{n}\alpha_n=\infty,\qquad\sum_n\alpha_n^2<\infty
+\]
+sont satisfaites. Elles garantissent la convergence vers $\QH^*$ si chaque état est visité une infinité de fois. Les cibles dépendent des estimations aux états suivants, mais celles-ci ont un total dur plus grand (proposition~\ref{prop:dag}) et convergent de proche en proche. Le même pas est utilisé pour le Q-learning standard afin que la comparaison soit équitable.
+
+\subsection{Exploration}
+
+On joue une politique $\varepsilon$-greedy : avec probabilité $\varepsilon_k$ on choisit une action uniformément, sinon l'action $\pi(s)$. La décroissance est
+\[
+\varepsilon_k=\max\big(\varepsilon_{\min},\;\varepsilon_0\,\lambda^k\big),
+\]
+où $k$ est l'indice de l'épisode. Avec $\varepsilon_0=1$, $\varepsilon_{\min}=0{,}05$ et $\lambda=0{,}999$, le minimum est atteint dès $k=\ln(0{,}05)/\ln(0{,}999)\approx 3\,000$ épisodes. Sur $100\,000$ épisodes, $97\,\%$ de l'entraînement se fait donc à exploration minimale. Prendre $\lambda=0{,}99995$ répartit l'exploration sur environ $60\,000$ épisodes.
+
+\paragraph{Initialisation.} $\QH\equiv 0$. Cette valeur est optimiste dans les nombreux états où la vraie valeur de \HIT{} est négative : l'agent tire souvent au début, ce qui favorise l'exploration.
+
+\subsection{Algorithme}
+
+\begin{algorithm}[H]
+\caption{Q-learning hybride (modèle 2)}\label{alg:hybride}
+\begin{algorithmic}[1]
+\Require modèle 1 $\hat P(\cdot\mid d)$, nombre d'épisodes $K$, paramètres $\varepsilon_0,\varepsilon_{\min},\lambda$, graine
+\Ensure table $\QH$
+\State $\QH(s)\gets 0$, $N(s)\gets 0$ pour tout $s$
+\For{$k=0,\dots,K-1$}
+  \State $\varepsilon\gets\max(\varepsilon_{\min},\varepsilon_0\lambda^k)$
+  \State $s\gets$ \texttt{env.reset()}
+  \Loop
+    \State $v\gets\hat V_{\STAND}(s)$ \Comment{équation \eqref{eq:vstand}}
+    \If{$\mathrm{rand}()<\varepsilon$} $a\gets$ action uniforme
+    \Else\ $a\gets\HIT$ si $\QH(s)>v$, sinon $\STAND$
+    \EndIf
+    \If{$a=\STAND$}
+      \State \texttt{env.step(STAND)} ; \textbf{break} \Comment{pas de mise à jour de $\QH$}
+    \EndIf
+    \State $(s',r,\mathit{term})\gets$ \texttt{env.step(HIT)}
+    \If{$\mathit{term}$} $y\gets r$
+    \Else\ $y\gets r+\max\big(\QH(s'),\hat V_{\STAND}(s')\big)$
+    \EndIf
+    \State $N(s)\gets N(s)+1$
+    \State $\QH(s)\gets\QH(s)+\frac{1}{N(s)}\big(y-\QH(s)\big)$
+    \If{$\mathit{term}$} \textbf{break} \EndIf
+    \State $s\gets s'$
+  \EndLoop
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Baseline : Q-learning standard}
+
+Le Q-learning standard apprend les deux valeurs $Q(s,\HIT)$ et $Q(s,\STAND)$. La mise à jour de \HIT{} est identique à \eqref{eq:update}, avec la cible $r+\max\big(Q(s',\HIT),Q(s',\STAND)\big)$. Pour \STAND{}, la cible est simplement la récompense observée :
+\[
+Q(s,\STAND)\leftarrow Q(s,\STAND)+\alpha_N(s,\STAND)\,\big[r-Q(s,\STAND)\big].
+\]
+
+%======================================================================
+\section{Pourquoi l'hybride peut apprendre plus vite}
+%======================================================================
+
+\paragraph{Réduction de variance.} Dans le Q-learning standard, $Q(s',\STAND)$ est une moyenne d'échantillons bruités (écart-type proche de $0{,}9$ par observation), et ce bruit se propage dans les cibles de \HIT. Dans l'hybride, $\hat V_{\STAND}(s')$ est une espérance calculée, sans bruit d'échantillonnage. Le bruit de la cible ne provient plus que du tirage de la carte et de $\QH(s')$. C'est le même principe qu'Expected SARSA : remplacer un échantillon par son espérance.
+
+\paragraph{Biais de maximisation.} Pour des estimateurs sans biais $X,Y$, on a $\E[\max(X,Y)]\ge\max(\E X,\E Y)$. Le Q-learning standard surestime donc systématiquement les cibles. Dans l'hybride, l'un des deux arguments du $\max$ est exact (à l'erreur du modèle 1 près), ce qui réduit ce biais.
+
+\paragraph{Moins de paramètres.} L'hybride apprend une table, contre deux pour la baseline. La moitié du problème est résolue par le modèle 1. C'est aussi pour cette raison qu'il faut compter les simulations utilisées pour entraîner le modèle 1 dans le budget de l'hybride.
+
+\begin{remarque}
+Avec un budget suffisant, les deux méthodes convergent vers la même politique optimale. La question expérimentale porte donc sur la \emph{vitesse} d'apprentissage à budget de simulations égal, et sur l'effet de la qualité du modèle 1.
+\end{remarque}
+
+%======================================================================
+\section{Effet d'une erreur du modèle 1}
+%======================================================================
+
+On note la distance en variation totale
+\[
+\|\hat P-P\|_{TV}=\frac12\sum_{D\in\mathcal{D}}\big|\hat P(D\mid d)-P(D\mid d)\big|,
+\qquad
+\varepsilon_{TV}=\max_{d}\|\hat P(\cdot\mid d)-P(\cdot\mid d)\|_{TV}.
+\]
+
+\begin{lemme}\label{lem:tv}
+Pour tout état $s$, $\big|\hat V_{\STAND}(s)-\VS(s)\big|\le 2\,\varepsilon_{TV}$.
+\end{lemme}
+
+\begin{proof}
+Comme $\sum_D(\hat P-P)(D)=0$ et $|R|\le 1$,
+\[
+\big|\hat V_{\STAND}(s)-\VS(s)\big|=\Big|\sum_D(\hat P-P)(D)\,R(p,D)\Big|\le\sum_D|\hat P-P|(D)=2\|\hat P-P\|_{TV}.\qedhere
+\]
+\end{proof}
+
+On pose $\eta=2\varepsilon_{TV}$. On note $\hat Q_{\HIT}$ la solution de \eqref{eq:bellman} où $\VS$ est remplacé par $\hat V_{\STAND}$ : c'est la limite vers laquelle converge l'algorithme~\ref{alg:hybride}.
+
+\begin{proposition}[L'erreur ne s'amplifie pas]\label{prop:borne}
+Pour tout état $s$, $\big|\hat Q_{\HIT}(s)-\QH^*(s)\big|\le\eta$.
+\end{proposition}
+
+\begin{proof}
+Par récurrence descendante sur le total dur $h$. Pour $h=21$, toute carte fait buster, donc les deux valeurs valent $-1$. Supposons la borne vraie pour tous les états de total dur $>h$. Pour une carte $c$ qui ne fait pas buster, l'état $s'$ a un total dur $>h$. On utilise l'inégalité $|\max(x,y)-\max(x',y')|\le\max(|x-x'|,|y-y'|)$, puis l'hypothèse de récurrence et le lemme~\ref{lem:tv} :
+\[
+\Big|\max\big(\hat Q_{\HIT}(s'),\hat V_{\STAND}(s')\big)-\max\big(\QH^*(s'),\VS(s')\big)\Big|\le\eta.
+\]
+Les cartes qui font buster contribuent $-1$ dans les deux cas. En moyennant sur $c$ avec les poids $P(c)$, l'écart reste $\le\eta$.
+\end{proof}
+
+\begin{proposition}[Quand la décision est-elle fausse ?]\label{prop:decision}
+Si $|\QH^*(s)-\VS(s)|>2\eta$, la politique hybride limite choisit l'action optimale en $s$.
+\end{proposition}
+
+\begin{proof}
+Supposons $\QH^*(s)-\VS(s)>2\eta$. Alors $\hat Q_{\HIT}(s)-\hat V_{\STAND}(s)\ge\QH^*(s)-\eta-\VS(s)-\eta>0$, et l'agent tire. Le cas symétrique se traite de même.
+\end{proof}
+
+\begin{proposition}[Perte de performance]\label{prop:perte}
+Soit $\hat\pi$ la politique hybride limite et $T$ le nombre de décisions prises dans une manche. Alors
+\[
+V^*(s_0)-V^{\hat\pi}(s_0)\le 2\eta\;\E_{\hat\pi}[T]\le 36\,\eta.
+\]
+\end{proposition}
+
+\begin{proof}
+Par le lemme de différence de performance (en épisodique, avec $\gamma=1$),
+\[
+V^*(s_0)-V^{\hat\pi}(s_0)=\E_{\hat\pi}\Big[\sum_{t<T}\big(V^*(s_t)-Q^*(s_t,\hat\pi(s_t))\big)\Big].
+\]
+D'après la proposition~\ref{prop:decision}, chaque terme est nul, sauf si l'état est ambigu ($|\QH^*-\VS|\le 2\eta$). Dans ce cas, il vaut au plus $2\eta$. On conclut avec $T\le 18$ (proposition~\ref{prop:dag}).
+\end{proof}
+
+En pratique, une manche compte rarement plus de deux ou trois décisions, et peu d'états sont ambigus : la borne est très pessimiste. Elle relie néanmoins directement la qualité probabiliste du modèle 1 (mesurée par $\varepsilon_{TV}$) à la perte de l'agent, ce qui justifie l'ablation.
+
+%======================================================================
+\section{Référence exacte et évaluation sans bruit}\label{sec:dp}
+%======================================================================
+
+\subsection{Solution optimale par programmation dynamique}
+
+En connaissant $P(c)$, on calcule exactement la distribution du croupier (section~\ref{sec:croupier}), puis $\VS$ par \eqref{eq:vstand}, puis $\QH^*$ par \eqref{eq:bellman}, en parcourant les états par total dur décroissant. On obtient la politique optimale $\pi^*$, qui sert à la fois d'oracle pour les tests et de référence pour les expériences.
+
+\subsection{Évaluation exacte d'une politique}
+
+Pour une politique déterministe $\pi$ quelconque (apprise ou heuristique), sa valeur se calcule par la même récurrence :
+\[
+V^{\pi}(s)=
+\begin{cases}
+\VS(s) & \text{si } \pi(s)=\STAND,\\[2pt]
+\displaystyle\sum_c P(c)\,\big(-\1[h+c>21]+\1[h+c\le 21]\,V^{\pi}(s')\big) & \text{si } \pi(s)=\HIT,
+\end{cases}
+\]
+et son gain moyen par manche est
+\[
+J(\pi)=\sum_{s_0}\mu_0(s_0)\,V^{\pi}(s_0),
+\]
+où $\mu_0$ est la loi de l'état initial (deux cartes du joueur et une carte visible du croupier, tirées indépendamment).
+
+\paragraph{Pourquoi c'est important.} Évaluer par simulation sur $n$ manches donne une erreur standard d'environ $\sigma/\sqrt n\approx 0{,}95/\sqrt n$, soit $\pm 0{,}01$ pour $n=10\,000$. Or deux politiques proches de l'optimum diffèrent souvent de quelques millièmes. L'évaluation exacte supprime ce bruit. La simulation reste utile pour vérifier que les deux méthodes concordent.
+
+\subsection{Métriques retenues}
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Métrique & Définition \\
+\midrule
+Gain moyen exact & $J(\pi)$ \\
+Écart à l'optimum & $J(\pi^*)-J(\pi)$ \\
+Taux d'accord & proportion d'états atteignables où $\pi(s)=\pi^*(s)$ \\
+Erreur sur $\QH$ & $\max_s|\QH(s)-\QH^*(s)|$ \\
+Gain simulé & moyenne sur $n$ manches, avec intervalle de confiance \\
+Courbe d'apprentissage & $J(\pi_k)$ en fonction du nombre de simulations \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+%======================================================================
+\section{Paramètres de départ}
+%======================================================================
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Paramètre & Valeur & Rôle \\
+\midrule
+$\alpha_N(s)$ & $1/N(s)$ & pas d'apprentissage (identique pour les deux agents) \\
+$\gamma$ & $1$ & justifié par la proposition~\ref{prop:dag} \\
+$\varepsilon_0$ & $1{,}0$ & exploration initiale \\
+$\varepsilon_{\min}$ & $0{,}05$ & exploration minimale \\
+$\lambda$ & $0{,}99995$ & décroissance de $\varepsilon$ par épisode \\
+$K$ & $100\,000$ & épisodes, à ajuster après mesure du temps \\
+Graines & 5 & variabilité entre essais \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Ces valeurs sont des points de départ et non des valeurs optimales garanties. Elles sont enregistrées avec la table $\QH$ et la graine lors de la sauvegarde.
+
+\end{document}
