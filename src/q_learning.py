@@ -16,9 +16,13 @@ CONFIG = dict(
     eps_min=0.05,
     decay=0.99995,
     gamma=1.0,
+    omega=1.0,  # pas alpha = 1 / N^omega ; omega < 1 oublie plus vite les premières cibles
     eval_every=2_000,
     seeds=[0, 1, 2, 3, 4],
 )
+
+# réglés par src/tune.py sur les graines 100-102 ; omega = 1 (alpha = 1/N) reste le meilleur pour les deux
+TUNED = dict(standard={**CONFIG, "eps_min": 0.4}, hybrid={**CONFIG, "eps_min": 1.0})
 
 
 def greedy_policy(Q):
@@ -31,11 +35,11 @@ def choose_action(Q, s, eps, rng):
     return HIT if Q[HIT][s] > Q[STAND][s] else STAND
 
 
-def update(Q, N, s, act, r, s2, term, gamma=1.0):
-    # alpha = 1/N(s, a) ; aucune valeur future si la manche est terminée
+def update(Q, N, s, act, r, s2, term, gamma=1.0, omega=1.0):
+    # alpha = 1/N(s, a)^omega ; aucune valeur future si la manche est terminée
     y = r if term else r + gamma * max(Q[HIT][s2], Q[STAND][s2])
     N[act][s] += 1
-    Q[act][s] += (y - Q[act][s]) / N[act][s]
+    Q[act][s] += (y - Q[act][s]) / N[act][s] ** omega
 
 
 def train(agent, seed, V=V_TRUE, cfg=CONFIG):
@@ -55,7 +59,7 @@ def train(agent, seed, V=V_TRUE, cfg=CONFIG):
             act = choose_action(Q, s, eps, rng)
             s2, r, term, trunc, _ = env.step(act)
             if not (agent == "hybrid" and act == STAND):
-                update(Q, N, s, act, r, s2, term, cfg["gamma"])
+                update(Q, N, s, act, r, s2, term, cfg["gamma"], cfg["omega"])
             if term or trunc:
                 break
             s = s2
