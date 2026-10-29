@@ -14,7 +14,7 @@ from src.supervised.model import DEFAULT_MODEL
 from src.supervised.values import stand_value
 from src.train_hybrid import PRESETS, train_hybrid
 
-LEGACY_AGENT = ROOT / "models/hybrid/agent.npz"
+LEGACY_AGENT = ROOT / "models/hybrid/agent_config.npz"
 MANIFEST = json.loads((ROOT / "docs/wassim_source.json").read_text(encoding="utf-8"))
 
 
@@ -149,7 +149,7 @@ def test_local_rl_sources_match_manifest():
 
 
 def test_legacy_agent_is_preserved_and_still_loads():
-    legacy_evaluation = json.loads((ROOT / "results/hybrid/evaluation.json").read_text(encoding="utf-8"))
+    legacy_evaluation = json.loads((ROOT / "results/hybrid/agent_config/evaluation.json").read_text(encoding="utf-8"))
     assert file_sha256(LEGACY_AGENT) == legacy_evaluation["agent_sha256"]
     agent = load_agent(LEGACY_AGENT)
     assert agent.metadata["wassim_source_commit"].startswith("0780a4f")
@@ -157,8 +157,9 @@ def test_legacy_agent_is_preserved_and_still_loads():
     assert decision.action == HIT
     assert decision.stand_value == pytest.approx(-0.582872, abs=1e-6)
     assert decision.hit_value == pytest.approx(-0.546372, abs=1e-6)
-    # Les sorties par défaut ne visent plus l'ancien agent ni ses résultats.
-    assert DEFAULT_AGENT != LEGACY_AGENT and results_dir_for(DEFAULT_AGENT) != ROOT / "results/hybrid"
+    # Chaque agent a son propre dossier de résultats ; les sorties par défaut ne visent pas l'ancien agent.
+    assert results_dir_for(LEGACY_AGENT) == ROOT / "results/hybrid/agent_config"
+    assert DEFAULT_AGENT != LEGACY_AGENT and results_dir_for(DEFAULT_AGENT) != results_dir_for(LEGACY_AGENT)
 
 
 def test_default_agent_uses_new_rl_code_and_plays_complete_games():

@@ -39,7 +39,7 @@ METHOD_NAMES = {"hybrid_supervised": "Hybride, V_STAND supervisée", "hybrid_exa
                 "standard": "Q-learning standard"}
 HANDS_COUNTED = {"train_hands": "entraînement", "all_hands": "toutes", "none": "aucune"}
 CHECKPOINTS = (10_000, 20_000, 50_000, 100_000)
-LEGACY_AGENT = ROOT / "models/hybrid/agent.npz"  # CONFIG, graine 0, sources du commit 0780a4f
+LEGACY_AGENT = ROOT / "models/hybrid/agent_config.npz"  # CONFIG, graine 0, sources du commit 0780a4f
 DEFAULT_OUTPUT = ROOT / "results/hybrid/config_vs_tuned"
 
 
@@ -354,8 +354,8 @@ def write_report(summary: dict, output: Path) -> None:
         "- STAND est resté figé dans tous les entraînements hybrides.",
     ])
     legacy = summary["checks"]["legacy_agent_reproduced"]
-    lines.append({True: "- Le run CONFIG de graine 0 reproduit bit à bit l'ancien agent `models/hybrid/agent.npz`.",
-                  False: "- Le run CONFIG de graine 0 ne reproduit pas l'ancien agent `models/hybrid/agent.npz`.",
+    lines.append({True: "- Le run CONFIG de graine 0 reproduit bit à bit l'ancien agent `models/hybrid/agent_config.npz`.",
+                  False: "- Le run CONFIG de graine 0 ne reproduit pas l'ancien agent `models/hybrid/agent_config.npz`.",
                   None: "- Reproduction de l'ancien agent non vérifiable avec ces paramètres."}[legacy])
     lines.extend([
         "", "## Limites", "",

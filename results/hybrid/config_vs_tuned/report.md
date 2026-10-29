@@ -103,7 +103,7 @@ Seule la politique optimale π* fournit la borne supérieure du gain espéré.
 ## Vérifications
 
 - STAND est resté figé dans tous les entraînements hybrides.
-- Le run CONFIG de graine 0 reproduit bit à bit l'ancien agent `models/hybrid/agent.npz`.
+- Le run CONFIG de graine 0 reproduit bit à bit l'ancien agent `models/hybrid/agent_config.npz`.
 
 ## Limites
 

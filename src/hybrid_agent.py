@@ -13,7 +13,7 @@ from src.supervised.data import require_integer
 from src.supervised.model import DEFAULT_MODEL, DealerPredictor, load_model
 
 ROOT = Path(__file__).resolve().parents[1]
-# Agent retenu par la comparaison CONFIG/TUNED ; l'ancien agent reste dans models/hybrid/agent.npz.
+# Agent retenu par la comparaison CONFIG/TUNED ; l'ancien agent reste dans models/hybrid/agent_config.npz.
 DEFAULT_AGENT = ROOT / "models/hybrid/agent_tuned.npz"
 
 

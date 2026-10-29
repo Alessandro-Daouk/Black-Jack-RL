@@ -40,16 +40,32 @@
     "replaced_files": {
       "src/q_learning.py": "b442a87b216b01d4d25dcf5b1dcdd61d79375ce9abbac09071bb985e3661929f"
     },
-    "note": "Sources de l’ancien agent models/hybrid/agent.npz ; ses empreintes complètes sont dans results/hybrid/training.json."
+    "note": "Sources de l’ancien agent models/hybrid/agent_config.npz (anciennement models/hybrid/agent.npz) ; ses empreintes complètes sont dans results/hybrid/agent_config/training.json."
   },
-  "integration_note": "Branche intégrée issue de wassim ; notebook, réglage et artefacts historiques conservés dans leurs chemins originaux.",
+  "integration_note": "Branche intégrée issue de wassim. Le notebook, le réglage et leurs sorties sont conservés ; seuls les chemins de sortie ont été regroupés sous results/q_learning/ et models/q_learning/, sans modifier les mesures.",
   "retained_upstream": [
     {
       "original_path": "src/tune.py",
-      "sha256": "9a14cdd04aa473748bfc865e9c9afd3f27c89e94a4e60499abce4b74f21cc804"
+      "local_path": "src/tune.py",
+      "sha256": "9a14cdd04aa473748bfc865e9c9afd3f27c89e94a4e60499abce4b74f21cc804",
+      "local_change": "Chemin de sortie déplacé de results/tuning.csv vers results/q_learning/tuning.csv ; l'empreinte ci-dessus est celle de l'original."
     },
     {
-      "original_path": "models/q_hit_table.pkl, results/, train_model2.ipynb"
+      "original_path": "train_model2.ipynb",
+      "local_path": "train_model2.ipynb",
+      "local_change": "Chemins de sortie déplacés vers results/q_learning/ et models/q_learning/ ; cellules de calcul inchangées."
+    },
+    {
+      "original_path": "models/q_hit_table.pkl",
+      "local_path": "models/q_learning/q_hit_table.pkl"
+    },
+    {
+      "original_path": "results/metrics.csv, results/tuning.csv, results/learning_curve.png, results/ablation.png",
+      "local_path": "results/q_learning/"
+    },
+    {
+      "original_path": "docs/modele2.tex, docs/blackjack.pdf",
+      "local_path": "docs/modele2.tex, docs/modele2.pdf"
     }
   ]
 }

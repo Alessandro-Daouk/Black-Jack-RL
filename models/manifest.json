@@ -26,11 +26,11 @@
       "sha256": "f8774e458407f4f97d7611c125ad1fda09bfae633d866e4e7db8c370a88f55df"
     },
     {
-      "path": "models/hybrid/agent.npz",
+      "path": "models/hybrid/agent_config.npz",
       "sha256": "52ecd4296c9bf039611558215b5e8c2cdae4d792323cd533a21502b21d9e1843"
     },
     {
-      "path": "models/q_hit_table.pkl",
+      "path": "models/q_learning/q_hit_table.pkl",
       "sha256": "e93f17fdf74452e11c80e6a16e0b508e2f8a00aee610871abff08be613d388d6"
     }
   ]
