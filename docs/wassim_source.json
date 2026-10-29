@@ -1,0 +1,55 @@
+{
+  "repository": "https://github.com/Alessandro-Daouk/Black-Jack-RL",
+  "branch": "wassim",
+  "commit": "58f5ce35880ae18c107187f4b64f23f2fa005ded",
+  "note": "Fichiers de Wassim importés sans modification pour l’intégration locale. Entre 0780a4f (parent direct) et 58f5ce3, seul src/q_learning.py change parmi ces fichiers.",
+  "files": [
+    {
+      "original_path": "src/environment.py",
+      "local_path": "src/environment.py",
+      "sha256": "803cc796dd023bf31ded9975d6112795691bafa2dd8418e385f91a15f1848b21"
+    },
+    {
+      "original_path": "src/stand_value.py",
+      "local_path": "src/stand_value.py",
+      "sha256": "038a2f6872d4e2c3c3a8cf82417729807c86e3a81976e15de755a756e3b6a472"
+    },
+    {
+      "original_path": "src/q_learning.py",
+      "local_path": "src/q_learning.py",
+      "sha256": "c3d65ccfa4d88b9fabaf5acdc0fd217754b569e17614614e1899a0c07499998f"
+    },
+    {
+      "original_path": "src/evaluate.py",
+      "local_path": "src/evaluate.py",
+      "sha256": "82b93ac233578c59f319a31a72a146a1e26f94b8f594f6ffc12d2322a5366997"
+    },
+    {
+      "original_path": "tests/test_q_learning.py",
+      "local_path": "tests/test_q_learning.py",
+      "sha256": "f063f3619431d667a4707164c80b2d55db0b20c216985f759bf9f20548f8c042"
+    },
+    {
+      "original_path": "tests/test_stand_value.py",
+      "local_path": "tests/test_stand_value.py",
+      "sha256": "35ce76edbdde08a99cfb208cb840102751c4d0929c6c15e396ec6a0bd9c808a2"
+    }
+  ],
+  "previous_import": {
+    "commit": "0780a4f32335540c5b59a602f38c08de3b3f01f6",
+    "replaced_files": {
+      "src/q_learning.py": "b442a87b216b01d4d25dcf5b1dcdd61d79375ce9abbac09071bb985e3661929f"
+    },
+    "note": "Sources de l’ancien agent models/hybrid/agent.npz ; ses empreintes complètes sont dans results/hybrid/training.json."
+  },
+  "integration_note": "Branche intégrée issue de wassim ; notebook, réglage et artefacts historiques conservés dans leurs chemins originaux.",
+  "retained_upstream": [
+    {
+      "original_path": "src/tune.py",
+      "sha256": "9a14cdd04aa473748bfc865e9c9afd3f27c89e94a4e60499abce4b74f21cc804"
+    },
+    {
+      "original_path": "models/q_hit_table.pkl, results/, train_model2.ipynb"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "default_predictor": "models/supervised/dealer_model.joblib",
+  "default_agent": "models/hybrid/agent_tuned.npz",
+  "evaluation": "results/hybrid/agent_tuned/evaluation.json",
+  "selection": "Hybride TUNED retenu sur validation 200–219 ; graine 0 fixée, sans sélectionner la meilleure graine de test.",
+  "artifacts": [
+    {
+      "path": "models/supervised/dealer_model.joblib",
+      "sha256": "b91c797fcffa18ef421f73fff0ef7c088bcdacbad0d787d3ec819f67a9ebbfc1"
+    },
+    {
+      "path": "models/supervised/metadata.json",
+      "sha256": "7f8f380f8be84b7423609441fb942d6c39556dd042cb18cf8eea73a93ea177d7"
+    },
+    {
+      "path": "models/supervised/probabilities.json",
+      "sha256": "34729faef81e10f77956b63088f0efa4e97e4a80d051fb89d2d192cea3ed2a9e"
+    },
+    {
+      "path": "models/supervised/stand_values.npy",
+      "sha256": "9f4b4d744e63375ef6005aea9cdf41a5083bd0fdd331c80eb5eb4926f144e897"
+    },
+    {
+      "path": "models/hybrid/agent_tuned.npz",
+      "sha256": "f8774e458407f4f97d7611c125ad1fda09bfae633d866e4e7db8c370a88f55df"
+    },
+    {
+      "path": "models/hybrid/agent.npz",
+      "sha256": "52ecd4296c9bf039611558215b5e8c2cdae4d792323cd533a21502b21d9e1843"
+    },
+    {
+      "path": "models/q_hit_table.pkl",
+      "sha256": "e93f17fdf74452e11c80e6a16e0b508e2f8a00aee610871abff08be613d388d6"
+    }
+  ]
+}

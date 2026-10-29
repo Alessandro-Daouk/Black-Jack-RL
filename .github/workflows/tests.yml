@@ -1,0 +1,26 @@
+name: Tests et modele livre
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.6"
+          python-version: "3.12.7"
+      - run: uv sync --locked
+      - run: uv run --locked pytest -q
+      - run: uv run --locked python -m scripts.verify_release
+      - run: uv run --locked python -m src.play --games 5 --seed 2030

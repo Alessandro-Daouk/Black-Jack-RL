@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "kind": "hybrid_supervised",
+  "seed": 0,
+  "training_preset": "tuned",
+  "training_config": {
+    "episodes": 100000,
+    "eps0": 1.0,
+    "eps_min": 1.0,
+    "decay": 0.99995,
+    "gamma": 1.0,
+    "omega": 1.0,
+    "eval_every": 2000,
+    "seeds": [
+      0
+    ]
+  },
+  "dealer_model_sha256": "b91c797fcffa18ef421f73fff0ef7c088bcdacbad0d787d3ec819f67a9ebbfc1",
+  "dealer_model_filename": "dealer_model.joblib",
+  "dealer_training_splits": {
+    "train": {
+      "samples": 60000,
+      "seed": 42,
+      "sha256": "ddd4bf9dc4be938c21979e02a129ef7458c82b68cf9149bc345b53aad4993171"
+    },
+    "validation": {
+      "samples": 12000,
+      "seed": 43,
+      "sha256": "160de7e6bef5aaa61900e7286e98c2e9f2f3fef16f4568ca41afb98edd37d9b2"
+    },
+    "test": {
+      "samples": 12000,
+      "seed": 123,
+      "sha256": "9183706ffd8e59c2d57cc2be255621444ca1aa291a7bed532a8694289e2f7893"
+    }
+  },
+  "rules": {
+    "environment": "Blackjack-v1",
+    "natural": false,
+    "sab": false,
+    "infinite_deck": true,
+    "stand_on_soft_17": true
+  },
+  "wassim_source_commit": "58f5ce35880ae18c107187f4b64f23f2fa005ded",
+  "rl_source_sha256": {
+    "src/environment.py": "803cc796dd023bf31ded9975d6112795691bafa2dd8418e385f91a15f1848b21",
+    "src/q_learning.py": "c3d65ccfa4d88b9fabaf5acdc0fd217754b569e17614614e1899a0c07499998f",
+    "src/stand_value.py": "038a2f6872d4e2c3c3a8cf82417729807c86e3a81976e15de755a756e3b6a472",
+    "src/evaluate.py": "82b93ac233578c59f319a31a72a146a1e26f94b8f594f6ffc12d2322a5366997"
+  },
+  "training_seconds": 4.443631206999271,
+  "reachable_states": 280,
+  "visited_hit_states": 280,
+  "stand_frozen": true,
+  "versions": {
+    "python": "3.12.7",
+    "numpy": "2.5.4",
+    "gymnasium": "1.4.0",
+    "scikit-learn": "1.9.1"
+  }
+}

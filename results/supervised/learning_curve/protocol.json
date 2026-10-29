@@ -1,0 +1,22 @@
+{
+  "sizes": [
+    5000,
+    20000,
+    60000,
+    200000
+  ],
+  "repeats": 5,
+  "validation_size": 12000,
+  "test_size": 24000,
+  "C_candidates": [
+    0.01,
+    0.1,
+    1.0,
+    10.0,
+    100.0
+  ],
+  "selection": "C sur validation, sans refit ; aucun remplacement du modèle livré.",
+  "nested_training_sizes": true,
+  "independent_unit": "jeu simulé (répétition)",
+  "uncertainty": "écart-type et IC de Student approximatif de la moyenne entre répétitions"
+}

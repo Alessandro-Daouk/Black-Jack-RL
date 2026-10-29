@@ -1,0 +1,23 @@
+{
+  "games": 10000,
+  "evaluation_seed": 2026,
+  "rl_training_seed": 0,
+  "rl_training_episodes": 100000,
+  "exploration_epsilon": 0,
+  "wins": 4368,
+  "draws": 942,
+  "losses": 4690,
+  "mean_reward": -0.0322,
+  "mean_reward_approx_95pct_interval": [
+    -0.05084426390081519,
+    -0.013555736099184812
+  ],
+  "exact_expected_reward": -0.04776477494669111,
+  "optimal_exact_expected_reward": -0.046555977066697535,
+  "gap_to_optimal_exact": 0.0012087978799935756,
+  "decisions": 15333,
+  "unvisited_hit_decisions": 0,
+  "dealer_model_sha256": "b91c797fcffa18ef421f73fff0ef7c088bcdacbad0d787d3ec819f67a9ebbfc1",
+  "scope": "Un seul entraînement RL. IC du test conditionnel à cet agent fixé ; pas de conclusion de supériorité sur le Q-learning standard.",
+  "agent_sha256": "52ecd4296c9bf039611558215b5e8c2cdae4d792323cd533a21502b21d9e1843"
+}
