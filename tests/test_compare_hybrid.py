@@ -33,7 +33,7 @@ def test_tuned_depends_on_agent_type_and_keeps_omega():
 
 def test_small_comparison_writes_consistent_outputs(tmp_path):
     summary = compare(episodes=400, output_dir=tmp_path, validation_seeds=(1, 2), test_seeds=(3, 4), jobs=1)
-    with (tmp_path / "runs.csv").open() as stream:
+    with (tmp_path / "runs.csv").open(encoding="utf-8") as stream:
         runs = list(csv.DictReader(stream))
     validation = [dict(row, exact_expected_reward=float(row["exact_expected_reward"]))
                   for row in runs if row["phase"] == "validation"]
@@ -42,7 +42,7 @@ def test_small_comparison_writes_consistent_outputs(tmp_path):
     assert {row["seed"] for row in validation} == {"1", "2"}
     assert len(summary["test"]["arms"]) == 6
     assert summary["checks"]["legacy_agent_reproduced"] is None
-    assert json.loads((tmp_path / "summary.json").read_text()) == summary
+    assert json.loads((tmp_path / "summary.json").read_text(encoding="utf-8")) == summary
     assert (tmp_path / "report.md").read_text(encoding="utf-8").startswith("# Comparaison CONFIG / TUNED")
 
 

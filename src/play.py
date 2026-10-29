@@ -12,7 +12,7 @@ from src.supervised.model import DEFAULT_MODEL
 def explain(agent, state) -> None:
     decision = agent.decide(state)
     print(f"État {decision.state} : STAND={decision.stand_value:+.6f}, "
-          f"HIT={decision.hit_value:+.6f} → {decision.action_name} "
+          f"HIT={decision.hit_value:+.6f} -> {decision.action_name} "
           f"(HIT observé {decision.hit_visits} fois à l'entraînement)")
 
 

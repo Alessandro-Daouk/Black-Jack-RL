@@ -28,3 +28,6 @@ package = false
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+# Avec PYTHONWARNDEFAULTENCODING=1 (CI), un fichier texte ouvert sans encoding= dans notre code échoue :
+# sous Windows, l'encodage par défaut est cp1252, pas UTF-8.
+filterwarnings = ["error::EncodingWarning:(src|scripts|tests?)[._]"]

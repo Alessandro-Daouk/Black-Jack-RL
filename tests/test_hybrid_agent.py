@@ -1,4 +1,7 @@
 import json
+import os
+import subprocess
+import sys
 
 import joblib
 import numpy as np
@@ -12,7 +15,7 @@ from src.supervised.values import stand_value
 from src.train_hybrid import PRESETS, train_hybrid
 
 LEGACY_AGENT = ROOT / "models/hybrid/agent.npz"
-MANIFEST = json.loads((ROOT / "docs/wassim_source.json").read_text())
+MANIFEST = json.loads((ROOT / "docs/wassim_source.json").read_text(encoding="utf-8"))
 
 
 @pytest.fixture(scope="module")
@@ -30,7 +33,7 @@ def test_training_uses_supervised_stand_and_preserves_it(trained):
     assert agent.metadata["training_config"]["episodes"] == 800
     assert agent.visits.sum() > 0
     np.testing.assert_array_equal(agent.stand_values, agent.predictor.stand_values())
-    metadata = json.loads((folder / "results/training.json").read_text())
+    metadata = json.loads((folder / "results/training.json").read_text(encoding="utf-8"))
     assert metadata["training_config"]["gamma"] == 1
 
 
@@ -124,7 +127,7 @@ def test_cannot_overwrite_supervised_model_with_rl_archive(tmp_path):
 def test_preset_is_recorded_with_omega(tmp_path, preset, eps_min):
     agent = train_hybrid(episodes=300, seed=5, agent_path=tmp_path / "agent.npz",
                          results_dir=tmp_path / "results", preset=preset)
-    saved = json.loads((tmp_path / "results/training.json").read_text())
+    saved = json.loads((tmp_path / "results/training.json").read_text(encoding="utf-8"))
     for metadata in (agent.metadata, saved, load_agent(tmp_path / "agent.npz").metadata):
         assert metadata["training_preset"] == preset
         assert metadata["training_config"]["eps_min"] == eps_min
@@ -146,7 +149,7 @@ def test_local_rl_sources_match_manifest():
 
 
 def test_legacy_agent_is_preserved_and_still_loads():
-    legacy_evaluation = json.loads((ROOT / "results/hybrid/evaluation.json").read_text())
+    legacy_evaluation = json.loads((ROOT / "results/hybrid/evaluation.json").read_text(encoding="utf-8"))
     assert file_sha256(LEGACY_AGENT) == legacy_evaluation["agent_sha256"]
     agent = load_agent(LEGACY_AGENT)
     assert agent.metadata["wassim_source_commit"].startswith("0780a4f")
@@ -168,6 +171,14 @@ def test_default_agent_uses_new_rl_code_and_plays_complete_games():
     assert result["decisions"] >= 200
 
 
+@pytest.mark.parametrize("args", [["--state", "15", "10", "0"], ["--games", "2", "--seed", "2030", "--trace"]])
+def test_play_output_fits_windows_code_page(args):
+    # Sous Windows, une sortie redirigée (fichier, pipe) est encodée en cp1252, pas en UTF-8.
+    env = dict(os.environ, PYTHONIOENCODING="cp1252")
+    run = subprocess.run([sys.executable, "-m", "src.play", *args], cwd=ROOT, env=env, capture_output=True)
+    assert run.returncode == 0, run.stderr.decode("cp1252", "replace")
+
+
 @pytest.mark.parametrize("preset", ["config", "tuned"])
 def test_training_requires_explicit_output(preset):
     with pytest.raises(ValueError, match="explicitement"):
@@ -178,8 +189,8 @@ def test_overwrite_is_explicit_and_invalidates_previous_evaluation(tmp_path):
     path, output = tmp_path / "agent.npz", tmp_path / "results"
     train_hybrid(agent_path=path, results_dir=output, episodes=200, seed=1, preset="config")
     original = path.read_bytes()
-    (output / "evaluation.json").write_text('{"stale": true}')
-    (output / "report.md").write_text("Ancien rapport")
+    (output / "evaluation.json").write_text('{"stale": true}', encoding="utf-8")
+    (output / "report.md").write_text("Ancien rapport", encoding="utf-8")
     with pytest.raises(ValueError, match="déjà existante"):
         train_hybrid(agent_path=path, results_dir=output, episodes=200, seed=2, preset="tuned")
     assert path.read_bytes() == original
@@ -193,7 +204,7 @@ def test_overwrite_is_explicit_and_invalidates_previous_evaluation(tmp_path):
 def test_result_directory_collision_is_rejected_before_training(tmp_path):
     output = tmp_path / "results"
     output.mkdir()
-    (output / "report.md").write_text("À conserver")
+    (output / "report.md").write_text("À conserver", encoding="utf-8")
     with pytest.raises(ValueError, match="déjà existante"):
         train_hybrid(agent_path=tmp_path / "new.npz", results_dir=output, preset="config")
     assert not (tmp_path / "new.npz").exists()

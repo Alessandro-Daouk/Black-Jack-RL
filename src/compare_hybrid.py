@@ -241,11 +241,11 @@ def compare(model_path=DEFAULT_MODEL, episodes=100_000, output_dir=DEFAULT_OUTPU
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     rows = validation_rows + test_rows
-    with (output_dir / "runs.csv").open("w", newline="") as stream:
+    with (output_dir / "runs.csv").open("w", newline="", encoding="utf-8") as stream:
         writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
         writer.writeheader()
         writer.writerows(rows)
-    with (output_dir / "learning_curves.csv").open("w", newline="") as stream:
+    with (output_dir / "learning_curves.csv").open("w", newline="", encoding="utf-8") as stream:
         writer = csv.writer(stream)
         writer.writerow(["phase", "method", "preset", "seed", "episodes", "exact_expected_reward"])
         writer.writerows((*key, (i + 1) * eval_every, f"{score:.10f}")

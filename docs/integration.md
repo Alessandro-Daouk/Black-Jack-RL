@@ -36,6 +36,9 @@ pas un guide de l'état actuel. `docs/rapport.md` rassemble la conclusion commun
   `tests/supervised/` ; aucune copie dupliquée des tests RL.
 - Fichiers texte UTF-8, fins de ligne LF pour les sources et manifestes, afin de
   conserver les empreintes sous Windows comme sous Linux.
+- Toute lecture ou écriture de fichier texte précise `encoding="utf-8"` : sous Windows,
+  l'encodage par défaut est cp1252. La CI ne force pas l'UTF-8 et fait échouer pytest
+  sur tout fichier ouvert sans encodage explicite (`PYTHONWARNDEFAULTENCODING=1`).
 - Les environnements, caches et reproductions locales sont exclus de Git.
 - Vérification des modèles livrés : `python -m scripts.verify_release`.
 - Workflow GitHub Actions préparé pour Linux et Windows ; son résultat effectif

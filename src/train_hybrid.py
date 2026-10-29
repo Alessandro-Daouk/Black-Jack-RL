@@ -75,7 +75,7 @@ def train_hybrid(model_path=DEFAULT_MODEL, agent_path=None, episodes=100_000,
     agent = load_agent(agent_path, model_path)
     results_dir.mkdir(parents=True, exist_ok=True)
     (results_dir / "training.json").write_text(json.dumps(metadata, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    with (results_dir / "learning_curve.csv").open("w", newline="") as stream:
+    with (results_dir / "learning_curve.csv").open("w", newline="", encoding="utf-8") as stream:
         writer = csv.writer(stream)
         writer.writerow(["episodes", "exact_expected_reward"])
         writer.writerows(((i + 1) * cfg["eval_every"], float(score)) for i, score in enumerate(result["curve"]))
