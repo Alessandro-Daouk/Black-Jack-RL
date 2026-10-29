@@ -1,0 +1,633 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage[hidelinks]{hyperref}
+
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemme}{Lemme}
+\newtheorem{corollaire}{Corollaire}
+\theoremstyle{definition}
+\newtheorem{definition}{Définition}
+\theoremstyle{remark}
+\newtheorem*{remarque}{Remarque}
+
+\newcommand{\HIT}{\textsc{hit}}
+\newcommand{\STAND}{\textsc{stand}}
+\newcommand{\BUST}{\textsc{bust}}
+\newcommand{\QH}{Q_{\HIT}}
+\newcommand{\VS}{V_{\STAND}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\1}{\mathbf{1}}
+\newcommand{\KL}{\mathrm{KL}}
+\newcommand{\TV}{\mathrm{TV}}
+\newcommand{\R}{\mathcal{R}}
+
+\title{Blackjack AI --- Fonctionnement mathématique du modèle 1\\
+\large Prédiction probabiliste du croupier et effet de son erreur sur l'agent hybride}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+\bigskip
+
+Ce document complète \emph{Fonctionnement mathématique du modèle 2} (fichier
+\texttt{docs/modele2.pdf}), qui décrit le processus de décision markovien, le Q-learning
+hybride et la propagation d'une erreur du modèle 1 vers la politique. Nous en reprenons
+les notations : $P(c)$ désigne la loi d'une carte, $d$ la carte visible du croupier,
+$D\in\mathcal{D}=\{17,18,19,20,21,\BUST\}$ son résultat final et $R(p,D)$ le gain du
+joueur qui reste avec le total $p$. Le présent document traite de la partie statistique :
+ce que le modèle 1 estime, comment il l'estime, avec quelle précision en fonction du
+nombre de mains simulées, et comment cette précision se traduit en qualité de décision.
+Toutes les valeurs numériques citées proviennent des fichiers de résultats du dépôt ou
+ont été recalculées à partir des modèles livrés.
+
+%======================================================================
+\section{Le problème d'apprentissage}
+%======================================================================
+
+\subsection{Données}
+
+On note $\mathcal{C}=\{1,\dots,10\}$ l'ensemble des cartes visibles possibles et
+$K=|\mathcal{D}|=6$ le nombre de résultats du croupier. Une simulation tire la carte
+visible $d$ selon $P$, puis la carte cachée et les cartes suivantes, et applique la règle
+du croupier jusqu'à son arrêt. On obtient un exemple $(d_i,D_i)$. Les $n$ exemples d'un jeu
+de données sont indépendants et de même loi :
+\[
+d_i\sim P,\qquad D_i\mid d_i\sim\pi_{d_i},\qquad\text{où }\pi_d(k)=P(D=k\mid d).
+\]
+On note $n_d$ le nombre d'exemples de carte visible $d$, $n_{dk}$ le nombre de ceux qui
+se terminent par le résultat $k$, et $f_d(k)=n_{dk}/n_d$ la fréquence observée
+correspondante.
+
+\subsection{La carte visible suffit}
+
+\begin{proposition}\label{prop:suffisance}
+Dans un paquet infini, pour tout état $s=(p,d,a)$ dans lequel le joueur reste,
+\[
+P(D=k\mid s)=\pi_d(k)\qquad\text{pour tout }k\in\mathcal{D}.
+\]
+\end{proposition}
+
+\begin{proof}
+Toutes les cartes sont des tirages indépendants de loi $P$. Le résultat $D$ est une
+fonction de la carte visible, de la carte cachée et des cartes que tire ensuite le
+croupier, car sa règle d'arrêt ne dépend que de sa propre main. Les cartes du joueur sont
+d'autres tirages, indépendants des précédents. Conditionnellement à $d$, le résultat $D$
+est donc indépendant de $(p,a)$.
+\end{proof}
+
+Cette propriété justifie de simuler le croupier séparément du joueur et de ne donner au
+modèle que la carte visible. Elle cesserait d'être vraie avec un paquet fini, où les
+cartes déjà distribuées au joueur modifient la composition du paquet.
+
+\subsection{Ce qu'il faut estimer}
+
+Le modèle 1 doit estimer dix lois de probabilité $\pi_1,\dots,\pi_{10}$, chacune élément
+du simplexe
+\[
+\Delta_K=\Big\{q\in[0,1]^K : \sum_{k}q(k)=1\Big\}.
+\]
+Chaque loi a $K-1=5$ degrés de liberté, soit $50$ paramètres libres au total. Il s'agit
+d'un problème d'estimation de faible dimension, pour lequel on dispose de dizaines de
+milliers d'exemples : on s'attend donc à une erreur faible, que la
+section~\ref{sec:taille} quantifie.
+
+%======================================================================
+\section{Évaluer une prédiction probabiliste}
+%======================================================================
+
+Une prédiction est une famille $q=(q_1,\dots,q_{10})$ de lois de $\Delta_K$. On l'évalue
+par des \emph{règles de score} qui comparent la loi annoncée au résultat observé.
+
+\subsection{Log-loss, entropie et divergence de Kullback-Leibler}
+
+\begin{definition}
+La log-loss d'une prédiction $q$ sur l'exemple $(d,D)$ vaut $-\log q_d(D)$, en nats.
+Son espérance sous la vraie loi des données est le risque
+\[
+\R(q)=\E\big[-\log q_d(D)\big]=-\sum_{d\in\mathcal{C}}P(d)\sum_{k\in\mathcal{D}}\pi_d(k)\log q_d(k).
+\]
+\end{definition}
+
+\begin{proposition}[Décomposition du risque]\label{prop:decomposition}
+Pour toute prédiction $q$ dont les probabilités sont strictement positives,
+\[
+\R(q)=H(D\mid d)+\sum_{d\in\mathcal{C}}P(d)\,\KL(\pi_d\,\|\,q_d),
+\]
+où $H(D\mid d)=-\sum_d P(d)\sum_k\pi_d(k)\log\pi_d(k)$ est l'entropie conditionnelle du
+résultat et $\KL(\pi\,\|\,q)=\sum_k\pi(k)\log\big(\pi(k)/q(k)\big)$ la divergence de
+Kullback-Leibler.
+\end{proposition}
+
+\begin{proof}
+On écrit $-\log q_d(k)=-\log\pi_d(k)+\log\big(\pi_d(k)/q_d(k)\big)$, puis on prend
+l'espérance sous $\pi_d$ et sous $P$.
+\end{proof}
+
+La divergence de Kullback-Leibler est positive et ne s'annule que si les deux lois sont
+égales (inégalité de Gibbs). On en déduit trois conséquences.
+\begin{enumerate}
+  \item Le risque est minimal pour $q=\pi$ et seulement pour elle : la log-loss
+  récompense les probabilités exactes, ce que l'on exprime en disant que c'est une règle
+  de score \emph{strictement propre}~\cite{gneiting}.
+  \item La valeur minimale est l'entropie conditionnelle, qui vaut ici $1{,}6481$ nat
+  par main. Aucun modèle ne peut faire mieux en moyenne : cette part de la perte
+  traduit le hasard des cartes, pas une imperfection du modèle.
+  \item Le second terme, appelé \emph{excès de log-loss}, mesure seulement l'erreur du
+  modèle. Comme $\pi$ est connue exactement (section 2.1 du document du modèle 2), cet
+  excès se calcule sans aucun jeu de test. Pour le modèle livré, il vaut $0{,}000429$.
+\end{enumerate}
+
+\begin{remarque}
+La log-loss mesurée sur un jeu de test fini estime $\R(q)$ avec un bruit important.
+L'écart-type d'une perte individuelle vaut environ $0{,}55$, donc celui d'une moyenne
+sur $12\,000$ mains vaut environ $0{,}005$, soit douze fois l'excès à mesurer. C'est
+pourquoi la loi exacte elle-même peut obtenir une log-loss de test légèrement moins bonne
+qu'un modèle estimé ($1{,}651709$ contre $1{,}651587$), et pourquoi les comparaisons
+utilisent l'excès exact ou des différences appariées sur les mêmes mains.
+\end{remarque}
+
+\subsection{Score de Brier}
+
+\begin{proposition}\label{prop:brier}
+Le score de Brier multiclasse $B(q)=\E\big[\sum_k\big(q_d(k)-\1[D=k]\big)^2\big]$ se
+décompose en
+\[
+B(q)=\sum_{d}P(d)\Big(\|q_d-\pi_d\|^2+1-\|\pi_d\|^2\Big).
+\]
+\end{proposition}
+
+\begin{proof}
+Pour $d$ fixé et $Y_k=\1[D=k]$, on a $\E[Y_k]=\pi_d(k)$ et
+$\E\big[(q_d(k)-Y_k)^2\big]=(q_d(k)-\pi_d(k))^2+\pi_d(k)(1-\pi_d(k))$. On somme sur $k$
+en utilisant $\sum_k\pi_d(k)=1$.
+\end{proof}
+
+Le score de Brier est donc lui aussi strictement propre. Sa part irréductible,
+$\sum_d P(d)\big(1-\|\pi_d\|^2\big)$, vaut $0{,}7768$ : comme pour la log-loss, la
+quasi-totalité du score observé ($0{,}7785$ sur le test) provient du hasard des cartes.
+
+\subsection{Exactitude}
+
+Un prédicteur qui annonce toujours le résultat le plus probable a pour exactitude
+\[
+\sum_{d}P(d)\,\pi_d\big(\arg\max_k q_d(k)\big)\le\sum_d P(d)\max_k\pi_d(k)=36{,}70\,\%.
+\]
+La borne est atteinte dès que $q_d$ et $\pi_d$ ont le même mode pour chaque carte, quelle
+que soit la précision des autres probabilités. C'est le cas pour la régression, pour les
+fréquences et pour la loi exacte, qui obtiennent toutes trois $36{,}49\,\%$ sur le même
+jeu de test. L'exactitude ne permet donc pas de distinguer ces estimateurs ; elle
+n'évalue pas non plus les probabilités dont l'agent hybride a besoin.
+
+%======================================================================
+\section{La régression logistique multinomiale}
+%======================================================================
+
+\subsection{Le modèle}
+
+La carte visible est représentée par le vecteur indicateur $x=e_d\in\{0,1\}^{10}$
+(encodage \emph{one-hot}). Le modèle associe à chaque résultat $k$ un vecteur de poids
+$w_k\in\mathbb{R}^{10}$ et un biais $b_k\in\mathbb{R}$. Comme $w_k^\top e_d=w_{k,d}$, le
+score du résultat $k$ pour la carte $d$ vaut $z_k(d)=w_{k,d}+b_k$, et la probabilité
+prédite est donnée par la fonction \emph{softmax}~\cite{hastie} :
+\[
+q_d(k)=\frac{\exp\big(w_{k,d}+b_k\big)}{\sum_{j\in\mathcal{D}}\exp\big(w_{j,d}+b_j\big)}.
+\]
+Les paramètres forment une matrice $W\in\mathbb{R}^{6\times 10}$ et un vecteur
+$b\in\mathbb{R}^6$, soit 66 nombres pour 50 degrés de liberté : ajouter une même
+constante à tous les scores d'une carte ne change pas ses probabilités. La
+régularisation, décrite ci-dessous, sélectionne une représentation parmi toutes
+celles qui donnent les mêmes probabilités.
+
+\subsection{Estimation}
+
+Avec le solveur L-BFGS, scikit-learn minimise
+\[
+\mathcal{L}_C(W,b)=\frac12\|W\|_F^2+C\sum_{i=1}^n-\log q_{d_i}(D_i),
+\]
+où $\|W\|_F^2=\sum_{k,d}w_{k,d}^2$ et où les biais ne sont pas pénalisés. Diviser par
+$Cn$ montre qu'il s'agit de minimiser la log-loss moyenne d'entraînement plus la pénalité
+$\|W\|_F^2/(2Cn)$ : plus $C$ est petit, plus la pénalité est forte. De manière
+équivalente, $(W,b)$ est l'estimateur du maximum a posteriori lorsque chaque poids suit a
+priori une loi normale centrée de variance $C$. La forme exacte de cet objectif a été
+vérifiée numériquement à travers sa condition d'optimalité
+(proposition~\ref{prop:regularisation}).
+
+\begin{proposition}[Convexité et gradient]\label{prop:gradient}
+La fonction $\mathcal{L}_C$ est convexe, et strictement convexe en $W$. Ses dérivées
+partielles valent
+\[
+\frac{\partial\mathcal{L}_C}{\partial w_{k,d}}=w_{k,d}+C\,n_d\big(q_d(k)-f_d(k)\big),
+\qquad
+\frac{\partial\mathcal{L}_C}{\partial b_k}=C\sum_{d}n_d\big(q_d(k)-f_d(k)\big).
+\]
+\end{proposition}
+
+\begin{proof}
+La perte d'un exemple s'écrit $-z_{D_i}(d_i)+\log\sum_j\exp z_j(d_i)$. La fonction
+$\log\sum\exp$ est convexe et les scores sont affines en $(W,b)$, donc la perte est
+convexe ; le terme $\frac12\|W\|_F^2$ est strictement convexe en $W$. La dérivée de la
+perte d'un exemple par rapport à $z_k$ vaut $q_{d_i}(k)-\1[D_i=k]$. Seuls les exemples de
+carte $d$ font intervenir $w_{k,d}$ ; leur somme donne
+$n_d\,q_d(k)-n_{dk}=n_d\big(q_d(k)-f_d(k)\big)$. Le biais $b_k$ intervient dans tous les
+exemples, d'où la somme sur $d$.
+\end{proof}
+
+Annuler ce gradient conduit à des équations non linéaires, car $q_d$ dépend de $W$ et
+de $b$ à travers la softmax. Il n'existe pas de formule explicite pour $C$ fini, et
+l'optimum est calculé numériquement par L-BFGS, une méthode de quasi-Newton qui
+approche la courbure de l'objectif à partir des gradients
+successifs~\cite{nocedal}. La convexité garantit que le minimum trouvé est global.
+
+\begin{remarque}[Ce n'est pas une méthode des moindres carrés]
+Les moindres carrés ajustent une fonction linéaire en minimisant une somme d'écarts
+quadratiques ; leurs prédictions ne sont pas contraintes à former des probabilités. La
+régression logistique maximise au contraire la vraisemblance d'un modèle de
+probabilités, ce qui revient à minimiser la log-loss. Les deux approches coïncident
+toutefois dans le cas particulier étudié ici : avec une seule variable catégorielle, une
+régression linéaire des indicatrices $\1[D=k]$ sur l'encodage one-hot donne elle aussi
+les fréquences $f_d(k)$, qui sont les moyennes de ces indicatrices dans chaque catégorie.
+Les deux méthodes ne divergent qu'en présence de plusieurs variables explicatives.
+\end{remarque}
+
+%======================================================================
+\section{Le cas d'une seule variable catégorielle}
+%======================================================================
+
+\subsection{Sans régularisation, la régression redonne les fréquences}
+
+\begin{proposition}[Modèle saturé]\label{prop:sature}
+Supposons $n_{dk}>0$ pour toute carte $d$ et tout résultat $k$. Alors la log-loss
+d'entraînement $\sum_i-\log q_{d_i}(D_i)$ atteint son minimum exactement lorsque
+$q_d=f_d$ pour toute carte $d$.
+\end{proposition}
+
+\begin{proof}
+En regroupant les exemples par carte, puis en appliquant la
+proposition~\ref{prop:decomposition} à la loi empirique,
+\[
+\sum_{i=1}^n-\log q_{d_i}(D_i)=\sum_{d}n_d\Big(H(f_d)+\KL(f_d\,\|\,q_d)\Big).
+\]
+Le premier terme ne dépend pas du modèle et le second est minimal, égal à zéro, si et
+seulement si $q_d=f_d$ pour chaque $d$. Cette valeur est atteignable : il suffit de
+prendre $b=0$ et $w_{k,d}=\log f_d(k)$, ce qui est possible car toutes les fréquences
+sont strictement positives.
+\end{proof}
+
+Le modèle est dit \emph{saturé} : il peut représenter n'importe quelle famille de dix
+lois strictement positives, et rien ne relie les estimations des différentes cartes. Si
+un résultat n'était jamais observé pour une carte, la fréquence correspondante serait
+nulle, valeur qu'une softmax ne peut pas atteindre, et les poids divergeraient. Dans le
+jeu d'entraînement livré, le plus petit effectif $n_{dk}$ vaut $278$ : la situation ne
+se produit pas.
+
+\subsection{L'effet exact de la régularisation}
+
+\begin{proposition}\label{prop:regularisation}
+Au minimum de $\mathcal{L}_C$, pour toute carte $d$ et tout résultat $k$,
+\[
+q_d(k)-f_d(k)=-\frac{w_{k,d}}{C\,n_d}
+\qquad\text{et}\qquad
+\sum_{d\in\mathcal{C}}w_{k,d}=0.
+\]
+En particulier, $\sum_d n_d\,q_d(k)=\sum_d n_{dk}$ : le modèle reproduit exactement la
+fréquence globale de chaque résultat dans l'échantillon d'entraînement.
+\end{proposition}
+
+\begin{proof}
+On annule les dérivées de la proposition~\ref{prop:gradient}. La dérivée par rapport à
+$w_{k,d}$ donne la première égalité. La dérivée par rapport à $b_k$ donne
+$\sum_d n_d\big(q_d(k)-f_d(k)\big)=0$ ; en y remplaçant chaque terme par
+$-w_{k,d}/C$, on obtient la seconde.
+\end{proof}
+
+Cette proposition décrit entièrement l'effet de la régularisation. Lorsque les poids
+sont nuls, toutes les cartes reçoivent la même loi, $\mathrm{softmax}(b)$ ; la
+pénalité attire donc chaque $q_d$ vers une loi commune à toutes les cartes. L'écart aux
+fréquences est inversement proportionnel à $C\,n_d$ : il est plus marqué pour les cartes
+rares et pour les petites valeurs de $C$.
+
+Pour le modèle livré, l'identité a été vérifiée sur les soixante probabilités avec un
+écart maximal de $1{,}5\times10^{-7}$, dû à la tolérance de l'optimiseur. Avec
+$C=0{,}1$ et $n_d$ compris entre $4\,546$ et $18\,374$, on a $C\,n_d\ge 454$, et le plus
+grand écart entre la régression et les fréquences vaut $0{,}0026$. Cette proposition
+explique trois observations du projet.
+\begin{enumerate}
+  \item \emph{Le choix de $C$ importe peu.} Pour $C\ge 0{,}1$, les écarts aux
+  fréquences sont trop petits pour modifier la log-loss de validation au-delà de la
+  sixième décimale. Pour $C=0{,}01$, ils sont dix fois plus grands et la log-loss de
+  validation se dégrade nettement ($1{,}641715$ contre $1{,}641194$).
+  \item \emph{La régression et les fréquences ont la même qualité.} Leur excès de
+  log-loss diffère de $0{,}00002$ à $60\,000$ mains, alors que l'excès lui-même vaut
+  $0{,}0004$.
+  \item \emph{Les deux agents hybrides prennent presque toujours les mêmes décisions.}
+  D'après le lemme sur la variation totale du document du modèle 2, les valeurs de
+  \STAND{} calculées avec la régression et avec les fréquences diffèrent d'au plus
+  $2\max_d\TV(q_d,f_d)=0{,}0053$. Les deux politiques ne peuvent donc différer que dans
+  des états où les valeurs de \HIT{} et de \STAND{} sont presque égales, ce qui est
+  cohérent avec les gains identiques observés sur 18 des 20 graines de l'ablation.
+\end{enumerate}
+
+\begin{remarque}[Quand la régression serait-elle utile ?]
+L'intérêt d'un modèle paramétrique apparaît lorsqu'il n'est pas saturé, c'est-à-dire
+lorsque le nombre de situations possibles est grand devant le nombre de paramètres. Avec
+un paquet fini, par exemple, la loi du croupier dépendrait aussi des cartes déjà
+sorties ; les combinaisons possibles seraient trop nombreuses pour être estimées
+séparément, et un modèle qui partage l'information entre situations voisines deviendrait
+nécessaire.
+\end{remarque}
+
+%======================================================================
+\section{Erreur d'estimation et quantité de données}\label{sec:taille}
+%======================================================================
+
+\subsection{Comportement asymptotique}
+
+\begin{proposition}\label{prop:asymptotique}
+Soit $f$ le vecteur des fréquences de $m$ tirages indépendants de loi
+$\pi\in\Delta_K$, avec $\pi(k)>0$ pour tout $k$. Lorsque toutes les fréquences sont
+strictement positives,
+\[
+\KL(\pi\,\|\,f)=\frac12\sum_{k}\frac{\big(f(k)-\pi(k)\big)^2}{\pi(k)}+O_P\big(m^{-3/2}\big),
+\qquad
+\E\bigg[\frac12\sum_k\frac{\big(f(k)-\pi(k)\big)^2}{\pi(k)}\bigg]=\frac{K-1}{2m}.
+\]
+\end{proposition}
+
+\begin{proof}
+On pose $\delta_k=f(k)-\pi(k)$ ; on a $\sum_k\delta_k=0$ et $\delta_k=O_P(m^{-1/2})$.
+Le développement $-\log(1+u)=-u+u^2/2+O(u^3)$ appliqué à $u=\delta_k/\pi(k)$ donne
+\[
+\KL(\pi\,\|\,f)=-\sum_k\pi(k)\log\Big(1+\frac{\delta_k}{\pi(k)}\Big)
+=-\sum_k\delta_k+\frac12\sum_k\frac{\delta_k^2}{\pi(k)}+O_P\big(m^{-3/2}\big),
+\]
+et le terme linéaire est nul. Pour la loi multinomiale,
+$\E[\delta_k^2]=\pi(k)\big(1-\pi(k)\big)/m$, d'où
+$\E\big[\frac12\sum_k\delta_k^2/\pi(k)\big]=\sum_k\big(1-\pi(k)\big)/(2m)=(K-1)/(2m)$.
+\end{proof}
+
+La probabilité qu'une fréquence soit nulle décroît exponentiellement avec $m$. Pour
+les tailles étudiées ici, elle est négligeable : avec $5\,000$ mains, une carte est
+observée environ $385$ fois et le résultat le moins probable a une probabilité d'environ
+$0{,}06$, si bien qu'il manque avec une probabilité de l'ordre de $10^{-10}$.
+
+\begin{corollaire}\label{cor:25n}
+Pour $n$ mains d'entraînement, l'excès moyen de log-loss de l'estimateur par fréquences
+vaut, à l'ordre principal,
+\[
+\sum_{d\in\mathcal{C}}P(d)\,\frac{K-1}{2\,n\,P(d)}=\frac{|\mathcal{C}|\,(K-1)}{2n}=\frac{25}{n}.
+\]
+\end{corollaire}
+
+\begin{proof}
+La carte $d$ est observée environ $n_d\approx n\,P(d)$ fois ; on applique la
+proposition~\ref{prop:asymptotique} à chaque carte, puis on pondère par $P(d)$.
+\end{proof}
+
+Ce résultat ne dépend pas de la loi des cartes visibles : une carte rare est estimée
+moins précisément, mais elle pèse moins dans le risque, et les deux effets se
+compensent exactement. L'erreur diminue comme $1/n$ : il faut multiplier le nombre de
+mains par dix pour diviser l'excès par dix.
+
+Pour la régression régularisée, la proposition~\ref{prop:regularisation} montre que
+$q_d-f_d=O(1/n_d)$. Cette correction ne modifie le développement de la
+proposition~\ref{prop:asymptotique} qu'aux ordres supérieurs, et l'excès de la
+régression suit donc la même loi $25/n$ à l'ordre principal. Pour de petits
+échantillons, la correction n'est plus négligeable : avec $5\,000$ mains, $C\,n_d$
+vaut environ $38$ au lieu de $460$, et l'attraction vers la loi commune réduit un peu
+la variance de l'estimation. C'est cohérent avec le léger avantage, non significatif, de
+la régression observé à cette taille.
+
+\subsection{Comparaison avec les mesures}
+
+L'étude de la quantité de données répète l'entraînement sur cinq jeux indépendants pour
+quatre tailles. Le tableau~\ref{tab:25n} et la figure~\ref{fig:25n} comparent les excès
+moyens mesurés à la prédiction du corollaire~\ref{cor:25n}.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{rrrr}
+\toprule
+Mains d'entraînement $n$ & Prédiction $25/n$ & Fréquences (mesure) & Régression (mesure) \\
+\midrule
+$5\,000$   & $0{,}005000$ & $0{,}005007$ & $0{,}004507$ \\
+$20\,000$  & $0{,}001250$ & $0{,}001310$ & $0{,}001257$ \\
+$60\,000$  & $0{,}000417$ & $0{,}000434$ & $0{,}000424$ \\
+$200\,000$ & $0{,}000125$ & $0{,}000119$ & $0{,}000129$ \\
+\bottomrule
+\end{tabular}
+\caption{Excès de log-loss moyen sur cinq jeux indépendants, comparé à la prédiction
+asymptotique.}\label{tab:25n}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{loglogaxis}[
+  width=0.78\textwidth, height=6.2cm,
+  xlabel={Mains d'entraînement $n$},
+  ylabel={Excès de log-loss (nat par main)},
+  legend pos=north east, legend cell align=left,
+  grid=major, grid style={gray!25},
+]
+\addplot[domain=4000:250000, samples=2, thick, black] {25/x};
+\addlegendentry{Prédiction $25/n$}
+\addplot[only marks, mark=*, blue] coordinates {
+  (5000,0.004507) (20000,0.001257) (60000,0.000424) (200000,0.000129)};
+\addlegendentry{Régression logistique}
+\addplot[only marks, mark=square*, orange] coordinates {
+  (5000,0.005007) (20000,0.001310) (60000,0.000434) (200000,0.000119)};
+\addlegendentry{Fréquences}
+\end{loglogaxis}
+\end{tikzpicture}
+\caption{Excès de log-loss moyen en fonction du nombre de mains, en échelle
+logarithmique. La droite de pente $-1$ est la prédiction du
+corollaire~\ref{cor:25n}.}\label{fig:25n}
+\end{figure}
+
+Sur deux ordres de grandeur de taille d'échantillon, les fréquences suivent la prédiction
+à moins de 5\,\% près. La régression la suit de la même manière, sauf à $5\,000$ mains où
+elle fait 10\,\% mieux, pour la raison donnée ci-dessus. L'erreur résiduelle du modèle 1
+s'explique donc entièrement par la taille finie des données : le modèle saturé n'a pas
+de biais d'approximation, et il n'y a pas de surapprentissage à corriger.
+
+\begin{remarque}[Dispersion d'une carte à l'autre]
+La quantité $2m\cdot\frac12\sum_k\delta_k^2/\pi(k)$ est la statistique du $\chi^2$ de
+Pearson. Asymptotiquement, $2\,n_d\KL(\pi_d\,\|\,f_d)$ suit donc approximativement une loi
+du $\chi^2$ à $K-1=5$ degrés de liberté, de moyenne 5 et d'écart-type $\sqrt{10}\approx3{,}2$.
+Dans le jeu d'entraînement livré, cette quantité vaut en moyenne $5{,}4$ sur les dix
+cartes. Elle atteint $13{,}7$ pour la carte 6, une valeur qu'une loi du $\chi^2$ à cinq
+degrés de liberté dépasse avec une probabilité de $1{,}8\,\%$. Sur dix cartes, la
+probabilité qu'au moins une atteigne une telle valeur est de $16\,\%$ : c'est une
+fluctuation ordinaire. Elle explique toutefois pourquoi la carte 6 concentre les plus
+grandes erreurs du modèle livré (section~\ref{sec:decision}).
+\end{remarque}
+
+%======================================================================
+\section{De l'erreur des probabilités à l'erreur de décision}\label{sec:decision}
+%======================================================================
+
+\subsection{Erreur sur la valeur de rester}
+
+\begin{proposition}\label{prop:pinsker}
+Pour tout total $p$ et toute carte $d$,
+\[
+\big|\hat V_{\STAND}(p,d)-\VS(p,d)\big|\le2\,\TV(q_d,\pi_d)\le\sqrt{2\,\KL(\pi_d\,\|\,q_d)}.
+\]
+De plus, pour $p\le16$, $\hat V_{\STAND}(p,d)-\VS(p,d)=2\big(q_d(\BUST)-\pi_d(\BUST)\big)$.
+\end{proposition}
+
+\begin{proof}
+La première inégalité est le lemme sur la variation totale du document du modèle 2
+(section 6). La seconde est l'inégalité de Pinsker,
+$\TV(\pi,q)\le\sqrt{\KL(\pi\,\|\,q)/2}$~\cite{cover}. Enfin, pour $p\le16$, le joueur ne
+gagne que si le croupier dépasse 21, donc $\VS(p,d)=2\pi_d(\BUST)-1$, et de même pour
+$\hat V_{\STAND}$ (section 2 du document du modèle 2).
+\end{proof}
+
+En combinant cette proposition avec la proposition~\ref{prop:asymptotique}, on obtient
+l'ordre de grandeur typique de l'erreur sur la valeur de rester :
+\[
+\big|\hat V_{\STAND}-\VS\big|\lesssim\sqrt{2\cdot\frac{K-1}{2\,n_d}}=\sqrt{\frac{5}{n\,P(d)}}.
+\]
+Avec $n=60\,000$, cela donne environ $0{,}033$ pour une carte de 1 à 9 et $0{,}017$ pour
+la carte 10. L'erreur ne décroît qu'en $1/\sqrt{n}$ : la diviser par deux demande quatre
+fois plus de mains.
+
+Pour le modèle livré, la plus grande distance en variation totale vaut
+$\varepsilon_{TV}=0{,}0229$ et est atteinte pour la carte 6, d'où la borne
+$\eta=2\varepsilon_{TV}=0{,}0457$. L'erreur maximale effectivement observée sur
+$\VS$ vaut $0{,}0387$, dans l'état $(17,6,0)$. Pour les totaux inférieurs ou égaux à 16,
+l'erreur provient uniquement de la probabilité de dépassement : pour la carte 6, le
+modèle annonce $0{,}4041$ au lieu de $0{,}4232$, ce qui donne une erreur de
+$2\times0{,}0191=0{,}0382$.
+
+\subsection{Conséquences pour la politique}
+
+Le document du modèle 2 (section 6) établit trois résultats qui relient $\eta$ à la
+politique hybride limite, c'est-à-dire à celle qu'obtiendrait le Q-learning hybride
+après un nombre infini d'épisodes :
+\begin{enumerate}
+  \item la valeur de \HIT{} limite vérifie $|\hat Q_{\HIT}-\QH^*|\le\eta$ dans tout état ;
+  \item la décision ne peut différer de la décision optimale que dans les états
+  \emph{ambigus}, où $|\QH^*-\VS|\le2\eta$ ;
+  \item la perte de gain est au plus $36\,\eta$.
+\end{enumerate}
+Le tableau~\ref{tab:bornes} confronte ces bornes aux valeurs calculées pour le modèle
+livré, en résolvant les équations de Bellman avec $\hat V_{\STAND}$.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrr}
+\toprule
+Quantité & Borne théorique & Valeur calculée \\
+\midrule
+Erreur maximale sur $\VS$ & $\eta=0{,}0457$ & $0{,}0387$ \\
+Erreur maximale sur $\QH$ & $\eta=0{,}0457$ & $0{,}0370$ \\
+États où la décision peut différer & 27 états ambigus sur 280 & 1 état sur 280 \\
+Perte de gain espéré par partie & $36\,\eta=1{,}65$ & $0{,}000022$ \\
+\bottomrule
+\end{tabular}
+\caption{Bornes du document du modèle 2 et valeurs obtenues avec le modèle 1 livré.}\label{tab:bornes}
+\end{table}
+
+Les bornes sur les valeurs sont proches des erreurs observées, mais les bornes sur la
+politique sont très pessimistes. Le seul état où la décision change est $(12,4,0)$ : la
+politique optimale y reste, car $\VS=-0{,}2111$ dépasse $\QH^*=-0{,}2135$ de seulement
+$0{,}0025$, alors que la politique hybride limite tire, car
+$\hat Q_{\HIT}=-0{,}2239$ dépasse $\hat V_{\STAND}=-0{,}2273$. La perte qui en résulte,
+$0{,}000022$ par partie, est négligeable devant l'écart de $0{,}00065$ qui sépare l'agent
+livré de l'optimum après $100\,000$ épisodes.
+
+\begin{remarque}[Pourquoi les erreurs se compensent en partie]
+La décision dépend de la différence $\hat Q_{\HIT}-\hat V_{\STAND}$, et non de chaque
+valeur séparément. Or $\hat Q_{\HIT}(s)$ est calculée à partir des valeurs
+$\hat V_{\STAND}$ des états suivants, qui partagent la même carte visible et donc la même
+erreur de probabilité. Les deux erreurs vont dans le même sens et s'annulent en partie.
+Dans l'état $(12,4,0)$, la valeur de rester est sous-estimée de $0{,}0163$ et celle de
+tirer de $0{,}0104$ : leur différence ne varie que de $0{,}0059$, alors que la borne
+autorise une variation de $2\eta=0{,}0915$.
+\end{remarque}
+
+%======================================================================
+\section{Protocole statistique}
+%======================================================================
+
+\paragraph{Choix de la régularisation.} Pour chaque valeur candidate de $C$, la log-loss
+moyenne sur le jeu de validation est un estimateur sans biais du risque $\R(q_C)$ du
+modèle entraîné. Choisir la valeur qui minimise ces estimations rend en revanche le score
+retenu optimiste, car on sélectionne en partie le bruit de la validation. C'est pourquoi
+la qualité finale est mesurée sur un jeu de test distinct, généré après ce choix.
+
+\paragraph{Comparaison appariée sur le test.} Pour comparer deux estimateurs $q$ et
+$q'$, on calcule sur chaque main de test la différence
+$\Delta_i=-\log q_{d_i}(D_i)+\log q'_{d_i}(D_i)$. Le bruit dû aux cartes, commun aux
+deux estimateurs, disparaît en grande partie de cette différence. L'intervalle
+$\bar\Delta\pm1{,}96\,s_\Delta/\sqrt{m}$, où $s_\Delta$ est l'écart-type empirique des
+$m=12\,000$ différences, est un intervalle de confiance approximatif à $95\,\%$ fondé sur
+le théorème central limite. Entre la régression et les fréquences, il vaut
+$[-0{,}000125\,;\,+0{,}000014]$ et contient zéro.
+
+\paragraph{Répétitions indépendantes.} Pour l'étude de la quantité de données, l'unité
+statistique est le jeu de données complet. Avec cinq jeux, l'intervalle de confiance de
+la moyenne utilise le quantile de Student à quatre degrés de liberté, $t_{0{,}975}=2{,}776$,
+au lieu de $1{,}96$. Les tailles d'entraînement d'une même répétition sont des préfixes du
+même jeu : les statistiques sont donc calculées entre répétitions, à taille fixée.
+
+\paragraph{Calibration par issue.} La figure de calibration du dépôt compare chaque
+probabilité prédite à la fréquence observée sur le test, avec un intervalle de
+Wilson~\cite{wilson}. Pour une proportion observée $\hat p$ sur $m$ mains et
+$z=1{,}96$, cet intervalle vaut
+\[
+\frac{\hat p+\frac{z^2}{2m}\pm z\sqrt{\frac{\hat p(1-\hat p)}{m}+\frac{z^2}{4m^2}}}{1+\frac{z^2}{m}}.
+\]
+Il reste fiable pour les petites proportions, contrairement à l'intervalle
+$\hat p\pm z\sqrt{\hat p(1-\hat p)/m}$. Les soixante intervalles sont calculés point par
+point : ils ne forment pas une bande de confiance simultanée, et quelques points hors de
+leur intervalle sont attendus même pour un modèle parfait.
+
+%======================================================================
+\section{Synthèse}
+%======================================================================
+
+Le modèle 1 estime dix lois de probabilité à partir d'une seule variable catégorielle.
+Dans ce cadre, la régression logistique multinomiale est un modèle saturé : sans
+régularisation, elle redonne exactement les fréquences observées, et la régularisation
+ne l'en écarte que d'une quantité inversement proportionnelle à $C\,n_d$. Son erreur suit
+la loi asymptotique $25/n$ de l'estimation par fréquences, ce que confirment les mesures
+sur deux ordres de grandeur. Cette erreur se transmet à la valeur de rester avec une
+amplitude de l'ordre de $\sqrt{5/(n\,P(d))}$, soit quelques centièmes pour
+$60\,000$ mains. Elle ne modifie pourtant la politique limite que dans un seul des
+280 états, pour une perte de gain négligeable. Ces résultats expliquent pourquoi
+l'ablation ne distingue pas la régression des fréquences, et pourquoi l'avantage de
+l'agent hybride tient à l'information apportée par les mains simulées plutôt qu'à la
+forme du classifieur.
+
+\begin{thebibliography}{9}
+\bibitem{cover} T.~M. Cover et J.~A. Thomas, \emph{Elements of Information Theory},
+2\textsuperscript{e} édition, Wiley, 2006.
+\bibitem{gneiting} T.~Gneiting et A.~E. Raftery, « Strictly proper scoring rules,
+prediction, and estimation », \emph{Journal of the American Statistical Association},
+102(477), 2007, p.~359--378.
+\bibitem{hastie} T.~Hastie, R.~Tibshirani et J.~Friedman, \emph{The Elements of
+Statistical Learning}, 2\textsuperscript{e} édition, Springer, 2009, chapitre~4.
+\bibitem{nocedal} J.~Nocedal et S.~J. Wright, \emph{Numerical Optimization},
+2\textsuperscript{e} édition, Springer, 2006, chapitre~7.
+\bibitem{wilson} E.~B. Wilson, « Probable inference, the law of succession, and
+statistical inference », \emph{Journal of the American Statistical Association},
+22(158), 1927, p.~209--212.
+\end{thebibliography}
+
+\end{document}

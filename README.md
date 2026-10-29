@@ -245,7 +245,8 @@ quadratique sur les poids pour éviter des probabilités trop extrêmes. Le para
 de scikit-learn est l'inverse de l'intensité de cette pénalité : plus $C$ est petit, plus
 la régularisation est forte. Le problème d'optimisation est convexe mais n'a pas de
 solution explicite ; il est résolu numériquement par l'algorithme L-BFGS
-([src/supervised/model.py](src/supervised/model.py)).
+([src/supervised/model.py](src/supervised/model.py)). Les propriétés mathématiques du
+modèle utilisées dans cette section sont démontrées dans [docs/modele1.pdf](docs/modele1.pdf).
 
 ### 5.2 Choix de la régularisation
 
@@ -272,11 +273,16 @@ représenter n'importe quelle loi conditionnelle $P(D \mid d)$ : elle dispose d'
 paramètres pour fixer librement les six probabilités de chacune des dix cartes. Dans ce
 cas, la solution du maximum de vraisemblance sans régularisation est exactement la table
 des fréquences. La régularisation rapproche légèrement les dix lois les unes des autres,
-mais avec 4 500 à 18 400 mains d'entraînement selon la carte, cet effet est minime : la plus grande
-différence entre les probabilités du modèle livré et les fréquences vaut 0,0026.
+mais avec 4 500 à 18 400 mains d'entraînement selon la carte, cet effet est minime :
+la plus grande différence entre les probabilités du modèle livré et les fréquences vaut
+0,0026.
 La régression logistique se comporte donc ici comme un estimateur par fréquences
-légèrement lissé. Elle deviendrait réellement utile avec plusieurs variables d'entrée,
-par exemple pour un paquet fini où les cartes déjà sorties modifient les probabilités.
+légèrement lissé. Plus précisément, à l'optimum, l'écart entre la probabilité prédite et
+la fréquence observée vaut exactement $-w_{k,d}/(C\,n_d)$, où $w_{k,d}$ est le poids de
+la classe $k$ pour la carte $d$ et $n_d$ le nombre de mains de cette carte
+([docs/modele1.pdf](docs/modele1.pdf), section 4). La régression deviendrait réellement
+utile avec plusieurs variables d'entrée, par exemple pour un paquet fini où les cartes
+déjà sorties modifient les probabilités.
 
 ### 5.4 De la prédiction à la valeur de « rester »
 
@@ -365,7 +371,8 @@ et la qualité est mesurée sur un test de 24 000 mains. Le protocole complet es
 L'erreur diminue proportionnellement à l'inverse du nombre de mains, comme le prévoit
 la théorie asymptotique de l'estimation par maximum de vraisemblance. Pour des
 fréquences, l'excès moyen de log-loss vaut approximativement le nombre de paramètres
-libres divisé par deux fois la taille de l'échantillon, soit $10 \times 5 / (2n) = 25/n$.
+libres divisé par deux fois la taille de l'échantillon, soit $10 \times 5 / (2n) = 25/n$
+(démonstration dans [docs/modele1.pdf](docs/modele1.pdf), section 5).
 Les mesures sont en accord avec cette prédiction, ce qui confirme que l'erreur restante
 provient uniquement de la taille finie des données. À 60 000 mains, la différence
 moyenne entre régression et fréquences vaut −0,0000106, avec un intervalle approximatif
@@ -792,6 +799,7 @@ results/
   q_learning/             Réglage et premières expériences du modèle 2
   hybrid/                 Agents livrés, comparaison CONFIG/TUNED et ablation
 docs/
+  modele1.tex, modele1.pdf      Fondements mathématiques du modèle 1 et effet de son erreur
   modele2.tex, modele2.pdf      Fondements mathématiques du modèle 2 et de l'hybride
   protocole_complementaire.md   Protocole figé des expériences complémentaires
   wassim_source.json            Provenance et empreintes du code du modèle 2
@@ -811,7 +819,8 @@ scripts de chaque campagne ; ils décrivent les fichiers de mesures qui les acco
   ([docs/modele2.pdf](docs/modele2.pdf)).
 - **Alessandro Daouk** : simulation des données et modèle 1, estimateur par fréquences
   et évaluation probabiliste, assemblage de l'agent hybride, campagnes de comparaison
-  et d'ablation, vérification de la reproductibilité et documentation commune.
+  et d'ablation, vérification de la reproductibilité, fondements mathématiques du
+  modèle 1 ([docs/modele1.pdf](docs/modele1.pdf)) et documentation commune.
   Ce travail de développement a été assisté par des outils d'intelligence artificielle.
 
 Le code du Q-learning a été intégré sans modification depuis la branche de Wassim
