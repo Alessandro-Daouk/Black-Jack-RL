@@ -1,70 +1,66 @@
-# Blackjack : prédire le croupier pour apprendre à jouer plus vite
+# Blackjack : une estimation du croupier aide-t-elle le Q-learning ?
 
 Projet de Machine Learning 2 réalisé par Alessandro Daouk et Wassim Ghnaya.
 
-Ce dépôt étudie une manière de combiner apprentissage supervisé et apprentissage par
-renforcement. Un premier modèle apprend, à partir de mains simulées, la loi du résultat
-final du croupier en fonction de sa carte visible. Un second modèle, un Q-learning, apprend
-la valeur de l'action « tirer une carte ». L'agent hybride qui en résulte calcule la valeur
-de l'action « rester » à partir des prédictions du premier modèle et n'apprend par
-renforcement que la valeur de l'action « tirer ». Toutes les expériences sont
-reproductibles : les graines, les données agrégées, les modèles entraînés et leurs
-empreintes sont versionnés.
+Ce dépôt étudie un agent de Blackjack hybride. Un premier modèle, supervisé, estime
+à partir de mains simulées la loi du résultat final du croupier selon sa carte visible ;
+on en déduit la valeur de l'action « rester » (STAND). Un second modèle, un Q-learning
+tabulaire, n'apprend alors que la valeur de l'action « tirer » (HIT). La question
+étudiée est de savoir quand cette connaissance préalable rend l'apprentissage par
+renforcement plus efficace, et si l'avantage subsiste une fois compté le coût de
+l'estimation. Le dépôt contient la version historique du projet et un audit
+scientifique (v2) qui corrige plusieurs démonstrations et répète les expériences sur
+des données indépendantes ; les deux restent consultables et distinctes.
 
 ## Table des matières
 
-1. [Question et réponse en bref](#1-question-et-réponse-en-bref)
+1. [Question de recherche et résultat central](#1-question-de-recherche-et-résultat-central)
 2. [Installation et démonstration](#2-installation-et-démonstration)
-3. [Le jeu étudié](#3-le-jeu-étudié)
-4. [Les données](#4-les-données)
-5. [Modèle 1 : prédiction du croupier par apprentissage supervisé](#5-modèle-1--prédiction-du-croupier-par-apprentissage-supervisé)
-6. [Modèle 2 : Q-learning](#6-modèle-2--q-learning)
-7. [Combiner les deux modèles dans un agent hybride](#7-combiner-les-deux-modèles-dans-un-agent-hybride)
-8. [Protocole expérimental](#8-protocole-expérimental)
-9. [Résultats](#9-résultats)
-10. [Discussion et limites](#10-discussion-et-limites)
-11. [Reproduire les expériences](#11-reproduire-les-expériences)
-12. [Organisation du dépôt](#12-organisation-du-dépôt)
-13. [Auteurs et contributions](#13-auteurs-et-contributions)
+3. [Le jeu étudié et ses hypothèses](#3-le-jeu-étudié-et-ses-hypothèses)
+4. [Architecture](#4-architecture)
+5. [Données, oracle exact et baselines](#5-données-oracle-exact-et-baselines)
+6. [Protocole expérimental](#6-protocole-expérimental)
+7. [Résultats](#7-résultats)
+8. [Coûts : épisodes RL et coût total](#8-coûts--épisodes-rl-et-coût-total)
+9. [Résultat négatif : la régression n'apporte rien sur les fréquences](#9-résultat-négatif--la-régression-napporte-rien-sur-les-fréquences)
+10. [Limites et menaces à la validité](#10-limites-et-menaces-à-la-validité)
+11. [Reproduire les résultats](#11-reproduire-les-résultats)
+12. [Organisation du dépôt et documents](#12-organisation-du-dépôt-et-documents)
+13. [Auteurs, contributions et provenance](#13-auteurs-contributions-et-provenance)
 
-## 1. Question et réponse en bref
+## 1. Question de recherche et résultat central
 
-**Question.** Lorsqu'un agent dispose d'une estimation des probabilités de résultat du
-croupier, apprend-il une bonne politique de jeu avec moins d'épisodes d'apprentissage
-par renforcement qu'un Q-learning classique, qui doit apprendre seul la valeur des deux
-actions ?
+**Question.** Dans quelles conditions une estimation probabiliste préalable d'une
+composante de la fonction de valeur, ici la valeur de l'action terminale STAND,
+améliore-t-elle l'efficacité d'apprentissage d'un Q-learning, et quand cet avantage
+persiste-t-il après prise en compte du coût d'obtention de cette estimation ?
 
-**Démarche.** Nous avons procédé en trois étapes :
+**Résultat central.** Les chiffres suivants proviennent de la campagne v2 : 28 jeux de
+données supervisées indépendants, deux graines d'apprentissage par jeu, gain espéré
+exact, intervalles de confiance à 95 % calculés entre jeux indépendants.
 
-1. simuler des mains de croupier et entraîner un classifieur probabiliste qui prédit,
-   pour chaque carte visible, la probabilité que le croupier termine à 17, 18, 19, 20, 21
-   ou dépasse 21 ;
-2. entraîner un Q-learning standard, puis une variante hybride dans laquelle la valeur de
-   « rester » est calculée à partir de ces probabilités et n'est jamais apprise ;
-3. comparer les politiques obtenues par leur gain espéré exact, calculé analytiquement,
-   sur plusieurs graines d'entraînement indépendantes et avec un protocole qui sépare
-   le choix des réglages de l'évaluation finale.
+- Avec un modèle du croupier appris sur 20 000 mains et 100 000 épisodes de
+  renforcement, l'hybride gagne en moyenne **0,00214 de plus par partie** que le
+  Q-learning standard réglé, avec un intervalle de [0,00188 ; 0,00240]. Il est meilleur
+  dans les 56 paires d'entraînements. Cela représente environ 0,2 mise perdue en moins
+  pour 100 parties, dans un jeu où même la politique optimale perd 4,66 mises sur 100.
+- L'avantage dépend des budgets. Il est considérable avec peu d'épisodes, puis diminue.
+  Avec un modèle appris sur 1 000 mains seulement, **l'hybride devient moins bon** que le
+  standard à 200 000 épisodes (−0,0020 [−0,0033 ; −0,0006]) : il converge vers la
+  meilleure politique du modèle estimé, dont l'erreur dépasse alors celle du standard.
+- Mesuré en secondes de calcul et en cartes distribuées, en incluant la simulation des
+  mains et le choix de la régularisation, l'avantage persiste pour 5 000 à 60 000 mains
+  et des budgets de 2 à 20 secondes. Il disparaît lorsque l'estimation consomme presque
+  tout le budget, ou lorsque le modèle est trop imprécis.
+- La régression logistique et une simple table de fréquences donnent des agents
+  équivalents à ±0,001 près (test d'équivalence TOST), et les fréquences coûtent trois
+  fois moins de temps. Le classifieur n'est donc pas nécessaire dans ce problème.
 
-**Réponse.** Les principaux résultats sont les suivants.
-
-- À nombre égal d'épisodes de renforcement, l'agent hybride apprend nettement plus vite.
-  Après 10 000 épisodes, son écart moyen au gain optimal vaut 0,0069 par partie, contre
-  0,0199 pour le Q-learning standard. Après 100 000 épisodes, l'écart vaut 0,00079 contre
-  0,00290, et l'hybride est meilleur sur les 20 graines de test.
-- L'agent livré obtient un gain espéré exact de −0,047207 par partie, contre −0,046556
-  pour la politique optimale. Même la politique optimale perd de l'argent en moyenne
-  avec ces règles : l'objectif est de perdre le moins possible.
-- La régression logistique n'apporte aucun avantage mesurable sur un estimateur plus
-  simple, les fréquences observées dans les mêmes données. Ce n'est pas un défaut
-  d'entraînement : avec une seule variable d'entrée catégorielle, les deux estimateurs
-  sont mathématiquement très proches (section [5.3](#53-pourquoi-la-régression-et-les-fréquences-sont-presque-identiques)).
-- L'avantage de l'hybride dépend de la manière dont on compte le coût des mains simulées
-  pour entraîner le premier modèle. Si l'on impute ces mains au budget total, l'avantage
-  diminue et peut disparaître (section [9.5](#95-coût-des-données-supervisées)).
-
-Le projet montre donc qu'une estimation préalable de la valeur de « rester » accélère
-l'apprentissage par renforcement. Il ne montre pas qu'un classifieur sophistiqué est
-nécessaire pour obtenir cette estimation.
+Le projet ne revendique pas d'invention algorithmique : utiliser une connaissance
+partielle du modèle dans un apprentissage par renforcement est une idée connue
+([état de l'art](docs/etat_de_l_art.md)). Son apport est une étude de cas contrôlée,
+avec un oracle exact, des bornes adaptées, des coûts mesurés et des résultats négatifs
+conservés. Le jeu étudié est défavorable au joueur ; aucun agent ici ne gagne d'argent.
 
 ## 2. Installation et démonstration
 
@@ -77,15 +73,17 @@ git clone https://github.com/Alessandro-Daouk/Black-Jack-RL.git
 cd Black-Jack-RL
 uv sync --locked
 uv run --locked python -m scripts.verify_release
+uv run --locked python -m scripts.verify_audit
 uv run --locked pytest -q
 ```
 
 La première installation nécessite une connexion Internet ; tout le reste s'exécute
 localement. Aucun entraînement n'est nécessaire pour essayer le projet, car les modèles
-entraînés sont fournis. Le script `verify_release` vérifie les empreintes SHA-256 des
-modèles livrés, recalcule le gain espéré exact de l'agent et contrôle que les sources
-du Q-learning n'ont pas été modifiées. La suite de tests vérifie chaque composant
-séparément, puis leur intégration.
+entraînés sont fournis. `verify_release` vérifie les empreintes SHA-256 des modèles
+livrés, recalcule le gain espéré exact de l'agent et contrôle que les sources du
+Q-learning de Wassim Ghnaya n'ont pas été modifiées. `verify_audit` recalcule le gain
+exact des 418 agents archivés de la campagne v2 et vérifie que l'analyse publiée porte
+bien sur ces mesures. La suite de tests vérifie chaque composant puis leur intégration.
 
 Pour voir l'agent jouer cinq parties en expliquant chacune de ses décisions :
 
@@ -124,10 +122,10 @@ print(decision.action_name)           # HIT
 print(decision.stand_value, decision.hit_value)
 ```
 
-## 3. Le jeu étudié
+## 3. Le jeu étudié et ses hypothèses
 
-Nous utilisons l'environnement `Blackjack-v1` de la bibliothèque Gymnasium, avec les
-options `natural=False` et `sab=False`. Les règles sont les suivantes.
+Nous utilisons l'environnement `Blackjack-v1` de Gymnasium 1.4.0, avec les options
+`natural=False` et `sab=False`. Les règles sont les suivantes.
 
 - Les cartes sont tirées d'un paquet infini, c'est-à-dire avec remise. Les valeurs 1 à 9
   ont chacune une probabilité de 1/13 ; la valeur 10, qui regroupe le 10 et les figures,
@@ -136,694 +134,416 @@ options `natural=False` et `sab=False`. Les règles sont les suivantes.
 - Le joueur choisit à chaque étape entre tirer une carte (HIT) et rester (STAND).
   S'il dépasse 21, il perd immédiatement.
 - Lorsque le joueur reste, le croupier révèle sa carte cachée et tire tant que son
-  total est inférieur à 17. Il s'arrête à 17 ou plus, y compris sur un « 17 souple »
-  contenant un as compté 11.
+  total est inférieur à 17. Il s'arrête à 17 ou plus, y compris sur un « 17 souple ».
 - La partie rapporte +1 en cas de victoire, 0 en cas d'égalité et −1 en cas de défaite.
   Un blackjack naturel n'est pas payé davantage. Le partage, le doublement, l'assurance
   et le comptage des cartes ne sont pas modélisés.
 
 À chaque décision, l'agent observe un état `(total_joueur, carte_visible, as_utilisable)`.
-La carte cachée du croupier ne fait jamais partie de l'observation. Les états dans
-lesquels une décision a un sens sont au nombre de 280 : 180 sans as utilisable (totaux 4
-à 21) et 100 avec as utilisable (totaux 12 à 21), chacun combiné aux 10 cartes visibles.
-
-Ce jeu est un processus de décision markovien fini dont on peut calculer la solution
-exacte : chaque tirage augmente le total « dur » du joueur, donc aucun état ne peut être
-revisité, et les valeurs se calculent en remontant des totaux élevés vers les totaux
-faibles. La politique optimale π* obtient un gain espéré de −0,046556 par partie.
-**Nous n'utilisons jamais cette solution exacte pour entraîner les modèles.** Elle sert
-uniquement d'instrument de mesure : elle permet d'évaluer une politique apprise sans le
-bruit d'une simulation, et de mesurer l'erreur des probabilités prédites. C'est ce qui
-rend les comparaisons de ce projet précises, même lorsque les écarts entre méthodes
-sont de l'ordre du millième de récompense par partie.
-
-## 4. Les données
-
-### 4.1 Simulation d'une main de croupier
-
-Le premier modèle apprend à partir de mains de croupier simulées indépendamment du
-joueur. Une simulation tire la carte visible et la carte cachée, puis complète la main
-selon la règle d'arrêt à 17 (fichier [src/supervised/data.py](src/supervised/data.py)).
-Chaque simulation produit un exemple composé d'une entrée, la carte visible de 1 à 10,
-et d'une étiquette, le résultat final parmi six classes : 17, 18, 19, 20, 21 ou BUST
-(dépassement de 21).
-
-Dans un paquet infini, la main du joueur n'influence pas les cartes que tirera le
-croupier. La carte visible est donc la seule information utile pour prédire son résultat,
-et simuler le croupier séparément du joueur ne fait perdre aucune information.
-
-### 4.2 Découpage en entraînement, validation et test
-
-Le modèle livré utilise trois jeux de données indépendants, générés avec des graines
-distinctes :
-
-| Jeu | Mains | Graine | Usage |
-|---|---:|---:|---|
-| Entraînement | 60 000 | 42 | ajuster les paramètres du modèle |
-| Validation | 12 000 | 43 | choisir l'intensité de la régularisation |
-| Test | 12 000 | 123 | mesurer la qualité finale, sans aucun choix |
-
-Le jeu de test n'est généré qu'après le choix de la régularisation, ce qui garantit qu'il
-n'a influencé aucune décision. Le modèle n'est pas réentraîné sur la réunion de
-l'entraînement et de la validation. L'empreinte SHA-256 de chaque jeu est enregistrée
-dans [models/supervised/metadata.json](models/supervised/metadata.json), ce qui permet de
-vérifier qu'une reproduction utilise exactement les mêmes données. Les mains brutes ne
-sont pas versionnées, puisqu'elles se régénèrent à l'identique à partir des graines.
-
-### 4.3 Référence exacte et incertitude irréductible
-
-La loi exacte du résultat du croupier se calcule par récurrence sur son total
-([src/supervised/reference.py](src/supervised/reference.py)). Elle n'est jamais utilisée
-comme étiquette d'entraînement : elle sert uniquement à mesurer l'écart entre les
-probabilités prédites et les vraies probabilités. Le tableau suivant donne, pour chaque
-carte visible, l'issue la plus probable et la probabilité que le croupier dépasse 21.
-
-| Carte visible | Issue la plus probable | Probabilité de cette issue | P(BUST) exacte | P(BUST) prédite |
-|---:|---|---:|---:|---:|
-| As | 21 | 0,3616 | 0,1153 | 0,1154 |
-| 2 | BUST | 0,3536 | 0,3536 | 0,3528 |
-| 3 | BUST | 0,3739 | 0,3739 | 0,3796 |
-| 4 | BUST | 0,3945 | 0,3945 | 0,3863 |
-| 5 | BUST | 0,4164 | 0,4164 | 0,4064 |
-| 6 | BUST | 0,4232 | 0,4232 | 0,4041 |
-| 7 | 17 | 0,3686 | 0,2623 | 0,2589 |
-| 8 | 18 | 0,3593 | 0,2447 | 0,2446 |
-| 9 | 19 | 0,3508 | 0,2284 | 0,2161 |
-| 10 | 20 | 0,3422 | 0,2121 | 0,2086 |
-
-Ce tableau montre que le résultat d'une main reste très incertain, même lorsque l'on
-connaît parfaitement les probabilités : l'issue la plus probable ne se réalise que dans
-34 à 42 % des cas. Un prédicteur parfait qui annoncerait toujours l'issue la plus probable
-aurait donc une exactitude (accuracy) de 36,70 % seulement. De même, la meilleure
-log-loss atteignable, égale à l'entropie de la loi du croupier, vaut 1,6481 nat par main.
-Ces deux bornes indiquent ce qu'il est raisonnable d'attendre du modèle : il ne peut pas
-prédire le résultat d'une main, il peut seulement en estimer correctement les probabilités.
-
-### 4.4 Données du Q-learning
-
-Le Q-learning n'utilise pas de jeu de données fixé à l'avance. Il apprend en jouant des
-parties dans l'environnement Gymnasium ; un « épisode » correspond à une partie complète.
-La graine d'un entraînement détermine à la fois les cartes distribuées et les choix
-aléatoires d'exploration, ce qui rend chaque entraînement reproductible à l'identique.
-
-## 5. Modèle 1 : prédiction du croupier par apprentissage supervisé
-
-### 5.1 Le modèle
-
-La carte visible est encodée en « one-hot », c'est-à-dire sous la forme d'un vecteur
-$x \in \lbrace 0,1 \rbrace^{10}$ qui contient un seul 1 à la position de la carte. Une régression
-logistique multinomiale associe à chaque classe $k$ un vecteur de poids $w_k$ et un
-biais $b_k$, puis transforme les scores obtenus en probabilités par la fonction softmax :
-
-```math
-\hat P(D = k \mid d) = \frac{\exp(w_k^\top x + b_k)}{\sum_{j=1}^{6} \exp(w_j^\top x + b_j)}.
-```
-
-Les paramètres sont choisis en maximisant la vraisemblance des données d'entraînement,
-ce qui revient à minimiser la log-loss moyenne, à laquelle on ajoute une pénalité
-quadratique sur les poids pour éviter des probabilités trop extrêmes. Le paramètre $C$
-de scikit-learn est l'inverse de l'intensité de cette pénalité : plus $C$ est petit, plus
-la régularisation est forte. Le problème d'optimisation est convexe mais n'a pas de
-solution explicite ; il est résolu numériquement par l'algorithme L-BFGS
-([src/supervised/model.py](src/supervised/model.py)). Les propriétés mathématiques du
-modèle utilisées dans cette section sont démontrées dans [docs/modele1.pdf](docs/modele1.pdf).
-
-### 5.2 Choix de la régularisation
-
-Cinq valeurs de $C$ ont été essayées. Pour chacune, le modèle est entraîné sur le jeu
-d'entraînement puis évalué sur le jeu de validation ; la valeur retenue est celle qui
-minimise la log-loss de validation.
-
-| C | 0,01 | 0,1 | 1 | 10 | 100 |
-|---|---:|---:|---:|---:|---:|
-| Log-loss de validation | 1,641715 | **1,641194** | 1,641195 | 1,641195 | 1,641195 |
-
-La valeur C = 0,1 est retenue, mais les écarts entre C = 0,1 et C = 100 n'apparaissent
-qu'à la sixième décimale. Le modèle est donc pratiquement insensible à la régularisation,
-sauf lorsqu'elle devient très forte (C = 0,01). La section suivante explique pourquoi.
-
-### 5.3 Pourquoi la régression et les fréquences sont presque identiques
-
-Un estimateur plus simple consiste à compter, pour chaque carte visible, la proportion
-de mains d'entraînement qui se terminent dans chaque classe. Nous l'appelons
-« estimateur par fréquences » et l'utilisons comme référence.
-
-Avec une seule variable catégorielle encodée en one-hot, la régression logistique peut
-représenter n'importe quelle loi conditionnelle $P(D \mid d)$ : elle dispose d'assez de
-paramètres pour fixer librement les six probabilités de chacune des dix cartes. Dans ce
-cas, la solution du maximum de vraisemblance sans régularisation est exactement la table
-des fréquences. La régularisation rapproche légèrement les dix lois les unes des autres,
-mais avec 4 500 à 18 400 mains d'entraînement selon la carte, cet effet est minime :
-la plus grande différence entre les probabilités du modèle livré et les fréquences vaut
-0,0026.
-La régression logistique se comporte donc ici comme un estimateur par fréquences
-légèrement lissé. Plus précisément, à l'optimum, l'écart entre la probabilité prédite et
-la fréquence observée vaut exactement $-w_{k,d}/(C\,n_d)$, où $w_{k,d}$ est le poids de
-la classe $k$ pour la carte $d$ et $n_d$ le nombre de mains de cette carte
-([docs/modele1.pdf](docs/modele1.pdf), section 4). La régression deviendrait réellement
-utile avec plusieurs variables d'entrée, par exemple pour un paquet fini où les cartes
-déjà sorties modifient les probabilités.
-
-### 5.4 De la prédiction à la valeur de « rester »
-
-Si le joueur reste avec un total $p$, son gain dépend seulement du résultat final $D$ du
-croupier : il gagne si le croupier dépasse 21 ou termine sous $p$, fait égalité si le
-croupier termine à $p$, et perd sinon. On note $R(p, D) \in \lbrace -1, 0, +1 \rbrace$ ce gain.
-La valeur de « rester » est son espérance sous la loi prédite :
-
-```math
-\hat V_{\mathrm{STAND}}(p, d) = \sum_{k} \hat P(D = k \mid d) \, R(p, k).
-```
-
-Comme il n'existe que dix cartes visibles, cette valeur est calculée une fois pour toutes
-au chargement du modèle ([src/supervised/values.py](src/supervised/values.py)).
-L'as utilisable ne modifie pas cette valeur une fois le total fixé.
-
-Une erreur sur les probabilités se traduit directement en erreur sur cette valeur.
-Si $\varepsilon_{TV}$ désigne la plus grande distance en variation totale entre la loi
-prédite et la loi exacte, l'erreur sur $\hat V_{\mathrm{STAND}}$ est au plus
-$2\,\varepsilon_{TV}$ (lemme démontré dans [docs/modele2.pdf](docs/modele2.pdf), section 6).
-Pour le modèle livré, $\varepsilon_{TV} = 0{,}0229$, ce qui borne l'erreur par 0,0457 ;
-l'erreur maximale effectivement mesurée vaut 0,0387.
-
-### 5.5 Mesures de qualité
-
-Nous évaluons des probabilités, pas seulement des prédictions de classe. Les mesures
-utilisées sont les suivantes ; pour toutes, une valeur plus faible est meilleure, sauf
-pour l'exactitude.
-
-- **Log-loss** : moyenne de $-\log \hat P(\text{vraie classe})$, en nats par main. Elle
-  pénalise fortement une faible probabilité attribuée à l'issue qui se réalise.
-- **Score de Brier multiclasse** : somme, sur les six classes, des carrés des écarts entre
-  la probabilité prédite et l'indicatrice de la vraie classe, moyennée sur les mains.
-- **Excès exact de log-loss** : différence entre la log-loss espérée du modèle et celle de
-  la loi exacte, calculée analytiquement et pondérée par la fréquence réelle des cartes
-  visibles. C'est une divergence de Kullback-Leibler ; elle vaut 0 pour un prédicteur
-  parfait et ne dépend pas du bruit d'un jeu de test fini.
-- **Exactitude (accuracy)** et **F1 macro** : qualité de la classe la plus probable. Ces
-  mesures sont rapportées par souci de complétude, mais elles n'évaluent pas les
-  probabilités dont l'agent a besoin.
-
-### 5.6 Résultats sur le jeu de test
-
-| Estimateur | Log-loss | Brier | Exactitude | Excès exact de log-loss |
-|---|---:|---:|---:|---:|
-| Régression logistique (C = 0,1) | 1,651587 | 0,778452 | 36,49 % | 0,000429 |
-| Fréquences d'entraînement | 1,651642 | 0,778478 | 36,49 % | 0,000449 |
-| Loi exacte | 1,651709 | 0,778430 | 36,49 % | 0 |
-
-Les trois estimateurs ont la même exactitude parce qu'ils désignent la même classe la
-plus probable pour chacune des dix cartes. La loi exacte obtient une log-loss de test
-légèrement moins bonne que le modèle : elle minimise la log-loss *en espérance*, mais pas
-nécessairement sur un échantillon fini de 12 000 mains. C'est pourquoi nous utilisons
-l'excès exact, qui n'a pas ce bruit, pour comparer les estimateurs. La différence
-appariée de log-loss entre régression et fréquences vaut −0,000055, avec un intervalle
-de confiance approximatif à 95 % de [−0,000125 ; +0,000014] qui contient zéro.
-Aucun des deux estimateurs n'est donc significativement meilleur que l'autre.
-
-![Probabilités prédites, fréquences et loi exacte pour chaque issue et chaque carte visible](results/supervised/calibration.png)
-
-*Pour chaque issue, la figure compare la loi exacte (noir), la régression logistique
-(bleu), les fréquences d'entraînement (orange) et les fréquences observées dans le jeu
-de test avec leur intervalle de Wilson à 95 % (gris). Ces intervalles sont calculés point
-par point et ne forment pas une bande de confiance simultanée.*
-
-Le modèle ne présente pas de surapprentissage notable : sa log-loss vaut 1,6480 sur
-l'entraînement, 1,6412 sur la validation et 1,6516 sur le test. Ces écarts sont du même
-ordre que les fluctuations d'un échantillon à l'autre, ce qui est attendu pour un modèle
-qui n'estime que soixante probabilités à partir de 60 000 exemples.
-
-### 5.7 Effet de la quantité de données
-
-Pour mesurer la sensibilité du modèle à la quantité de données, nous avons répété
-l'entraînement sur cinq jeux de données indépendants et quatre tailles d'entraînement.
-Dans chaque répétition, la régularisation est choisie sur une validation de 12 000 mains
-et la qualité est mesurée sur un test de 24 000 mains. Le protocole complet est décrit
-à la [section 8.3](#83-expériences-complémentaires-définies-avant-leur-exécution).
-
-| Mains d'entraînement | Excès exact moyen (régression) | Écart-type entre jeux | Excès exact moyen (fréquences) | Prédiction théorique 25/n |
-|---:|---:|---:|---:|---:|
-| 5 000 | 0,004507 | 0,000697 | 0,005007 | 0,005000 |
-| 20 000 | 0,001257 | 0,000243 | 0,001310 | 0,001250 |
-| 60 000 | 0,000424 | 0,000090 | 0,000434 | 0,000417 |
-| 200 000 | 0,000129 | 0,000027 | 0,000119 | 0,000125 |
-
-L'erreur diminue proportionnellement à l'inverse du nombre de mains, comme le prévoit
-la théorie asymptotique de l'estimation par maximum de vraisemblance. Pour des
-fréquences, l'excès moyen de log-loss vaut approximativement le nombre de paramètres
-libres divisé par deux fois la taille de l'échantillon, soit $10 \times 5 / (2n) = 25/n$
-(démonstration dans [docs/modele1.pdf](docs/modele1.pdf), section 5).
-Les mesures sont en accord avec cette prédiction, ce qui confirme que l'erreur restante
-provient uniquement de la taille finie des données. À 60 000 mains, la différence
-moyenne entre régression et fréquences vaut −0,0000106, avec un intervalle approximatif
-de [−0,0000411 ; +0,0000199] : là encore, aucun avantage de la régression n'est établi.
-
-![Log-loss et excès exact de log-loss en fonction du nombre de mains d'entraînement](results/supervised/learning_curve/learning_curve.png)
-
-*À gauche, la log-loss moyenne sur les cinq jeux pour l'entraînement, la validation et
-le test. À droite, l'excès exact de log-loss en échelle logarithmique, avec une bande
-de ± 1 écart-type entre jeux.*
-
-Le modèle entraîné sur 200 000 mains n'a pas remplacé le modèle livré : cette étude
-mesure une sensibilité et ne sert pas à choisir un nouveau modèle sur des données de test.
-
-## 6. Modèle 2 : Q-learning
-
-### 6.1 Principe
-
-Le Q-learning apprend, pour chaque état $s$ et chaque action $a$, une estimation $Q(s, a)$
-du gain espéré lorsque l'on joue $a$ dans $s$ puis que l'on continue de jouer au mieux.
-Après chaque transition de $s$ vers $s'$ avec la récompense $r$, l'estimation est
-rapprochée d'une cible :
-
-```math
-Q(s, a) \leftarrow Q(s, a) + \alpha \big( y - Q(s, a) \big),
-\qquad
-y = \begin{cases} r & \text{si la partie est terminée,} \\ r + \max_{a'} Q(s', a') & \text{sinon.} \end{cases}
-```
-
-La partie étant courte et le gain final seul important, aucun facteur d'actualisation
-n'est appliqué ($\gamma = 1$). Le pas d'apprentissage vaut $\alpha = 1/N(s,a)^\omega$, où
-$N(s, a)$ compte les mises à jour déjà effectuées ; avec $\omega = 1$, l'estimation est
-exactement la moyenne des cibles observées. Pendant l'apprentissage, l'agent joue une
-action au hasard avec la probabilité $\varepsilon$ et sinon la meilleure action connue.
-Cette probabilité d'exploration décroît d'un facteur 0,99995 à chaque épisode, à partir de
-1, jusqu'à un plancher $\varepsilon_{\min}$. Le code se trouve dans
-[src/q_learning.py](src/q_learning.py).
-
-La version de base, appelée **Q-learning standard**, apprend ainsi les deux actions.
-La politique évaluée est toujours la politique gloutonne, qui choisit l'action de plus
-grande valeur sans aucune exploration. Les fondements mathématiques de ce modèle (processus
-de décision markovien, équations de Bellman, convergence et effet d'une erreur du
-modèle 1) sont détaillés dans [docs/modele2.pdf](docs/modele2.pdf).
-
-### 6.2 Évaluation exacte d'une politique
-
-Simuler 10 000 parties pour évaluer une politique donne une incertitude d'environ ± 0,02
-sur le gain moyen, alors que les écarts entre méthodes sont de l'ordre de 0,001. Nous
-calculons donc le gain espéré exact $J(\pi)$ d'une politique en parcourant le graphe des
-états, qui est acyclique, à partir de la loi exacte des cartes et de la distribution
-initiale de Gymnasium ([src/evaluate.py](src/evaluate.py)). L'écart $J^* - J(\pi)$ mesure
-ce que la politique perd par rapport à l'optimum. Ce calcul n'intervient jamais dans les
-mises à jour de l'apprentissage ; il est seulement enregistré tous les 2 000 épisodes
-pour tracer les courbes d'apprentissage.
-
-### 6.3 Réglage des hyperparamètres
-
-Le script [src/tune.py](src/tune.py) teste six valeurs de $\varepsilon_{\min}$
-(0,05 ; 0,1 ; 0,2 ; 0,4 ; 0,6 ; 1) et trois valeurs de $\omega$ (1 ; 0,8 ; 0,6) pour chacune
-des deux méthodes, sur trois graines réservées à ce réglage (100 à 102), soit
-108 entraînements de 100 000 épisodes. Les réglages retenus, appelés **TUNED**, sont :
-
-- pour le Q-learning standard, $\varepsilon_{\min} = 0{,}4$ et $\omega = 1$ ;
-- pour l'agent hybride, $\varepsilon_{\min} = 1$ et $\omega = 1$.
-
-Le réglage antérieur, appelé **CONFIG**, utilisait $\varepsilon_{\min} = 0{,}05$ pour les
-deux méthodes. Avec $\varepsilon_{\min} = 1$, l'agent hybride explore en jouant
-entièrement au hasard pendant l'apprentissage. Cela n'empêche pas d'apprendre la
-meilleure politique, car le Q-learning est une méthode « hors politique » : sa cible
-utilise la meilleure action suivante, quelle que soit l'action effectivement jouée.
-Ce réglage a été effectué avec la loi exacte du croupier pour l'hybride.
-
-### 6.4 Premières expériences
-
-Le notebook [train_model2.ipynb](train_model2.ipynb) compare, sur cinq graines
-(0 à 4), le Q-learning standard à un agent hybride qui utilise la loi exacte du
-croupier. Après 100 000 épisodes, l'écart moyen à l'optimum vaut 0,00354 pour le
-standard et 0,00071 pour l'hybride, et les politiques coïncident avec la politique
-optimale sur 95,1 % et 98,8 % des 280 états.
-
-![Écart au gain optimal en fonction du nombre d'épisodes, Q-learning standard et hybride exact](results/q_learning/learning_curve.png)
-
-*Moyenne et ± 1 écart-type sur cinq graines, en échelle logarithmique. La ligne
-pointillée correspond à la stratégie simple « tirer tant que le total est inférieur à 17 ».*
-
-Le notebook étudie aussi ce qui se passe lorsque la loi exacte est remplacée par des
-fréquences estimées sur $n$ mains de croupier. Après 100 000 épisodes, sans compter le
-coût des $n$ mains, l'écart moyen vaut 0,0193 pour $n = 100$, 0,0047 pour $n = 1\,000$,
-0,0015 pour $n = 10\,000$ et 0,0005 pour $n = 100\,000$. L'hybride n'est donc utile que si
-les probabilités sont estimées avec assez de données. Ces premières expériences ont
-motivé le modèle 1 et les campagnes décrites dans la suite. Leurs mesures sont dans
-[results/q_learning/](results/q_learning/).
-
-## 7. Combiner les deux modèles dans un agent hybride
-
-### 7.1 Idée
-
-Les deux actions n'ont pas la même difficulté. La valeur de « rester » ne dépend que de
-la loi du croupier : une fois cette loi estimée, elle se calcule directement, sans
-apprentissage par renforcement. La valeur de « tirer » dépend au contraire des décisions
-futures du joueur et doit être apprise. L'agent hybride confie donc la première au
-modèle 1 et la seconde au Q-learning.
+La carte cachée du croupier n'est jamais observée. Il existe 280 états de décision
+atteignables : 180 sans as utilisable (totaux 4 à 21) et 100 avec as utilisable (totaux
+12 à 21), chacun combiné aux dix cartes visibles. Chaque tirage augmente strictement le
+total « dur » du joueur (l'as compté 1), qui vaut au moins 2 avec deux as : aucun état
+n'est revisité et une partie comporte au plus 20 décisions. Le jeu est donc un processus
+de décision markovien fini et acyclique, que l'on peut résoudre exactement en remontant
+des totaux élevés vers les totaux faibles, sans facteur d'actualisation (γ = 1).
+La politique optimale π\* obtient un gain espéré de −0,046556 par partie.
+
+Deux hypothèses portent toute l'étude. D'abord, dans un paquet infini, le résultat du
+croupier ne dépend que de sa carte visible : la main du joueur n'apporte aucune
+information. Cette propriété disparaît avec un paquet fini. Ensuite, la valeur de
+STAND est l'espérance d'un gain terminal qui ne dépend plus d'aucune décision du
+joueur ; c'est ce qui permet de l'estimer hors ligne.
+
+## 4. Architecture
 
 ```mermaid
 flowchart LR
-    S["État observé<br/>(total, carte visible, as utilisable)"] --> M1["Modèle 1<br/>probabilités du croupier"]
+    D["Mains de croupier simulées<br/>(carte visible, résultat)"] --> M1["Modèle 1<br/>P(résultat | carte visible)"]
     M1 --> V["V_STAND<br/>espérance du gain si l'on reste"]
-    S --> M2["Modèle 2<br/>table Q_HIT apprise"]
-    V --> C{"Q_HIT > V_STAND ?"}
+    E["Parties jouées dans Gymnasium"] --> M2["Modèle 2<br/>Q-learning de Q_HIT"]
+    V --> M2
+    S["État (total, carte visible, as)"] --> C{"Q_HIT > V_STAND ?"}
+    V --> C
     M2 --> C
     C -->|oui| H[HIT]
     C -->|non| T[STAND]
 ```
 
-### 7.2 Apprentissage
+**Modèle 1 : loi du croupier.** Pour chaque carte visible $d$, le modèle estime la loi
+$\hat P(D \mid d)$ du résultat final $D \in \lbrace 17, 18, 19, 20, 21, \mathrm{BUST}\rbrace$.
+Le modèle livré est une régression logistique multinomiale sur la carte encodée en
+one-hot ([src/supervised/model.py](src/supervised/model.py)), régularisée par une
+pénalité quadratique dont l'intensité $1/C$ est choisie sur une validation.
+Avec une seule variable catégorielle, ce modèle est *saturé* : sans pénalité, il
+reproduit exactement les fréquences observées, et la pénalité ne les déplace que d'un
+terme d'ordre $1/N_d$ ([docs/modele1.pdf](docs/modele1.pdf)). Les fréquences brutes et
+les fréquences lissées de Jeffreys servent de comparaisons directes.
 
-Le modèle 1 est entraîné en premier, puis figé. Le Q-learning met ensuite à jour la seule
-valeur de « tirer », avec une cible dans laquelle la valeur de « rester » est fournie
-par le modèle 1 :
+**De la loi à la valeur de rester.** Si le joueur reste avec un total $p$, son gain
+$R(p, D) \in \lbrace -1, 0, +1 \rbrace$ ne dépend que de $D$. La valeur de STAND est
+$\hat V_{\mathrm{STAND}}(p, d) = \sum_k \hat P(D = k \mid d)\, R(p, k)$, calculée une
+fois pour toutes ([src/supervised/values.py](src/supervised/values.py)). Son erreur est
+au plus deux fois la distance en variation totale entre loi estimée et loi vraie.
 
-```math
-y = \begin{cases} r & \text{si la partie est terminée,} \\ r + \max\big(Q_{\mathrm{HIT}}(s'),\ \hat V_{\mathrm{STAND}}(s')\big) & \text{sinon.} \end{cases}
-```
+**Modèle 2 : Q-learning.** Le Q-learning standard apprend les deux actions. Après une
+transition de $s$ vers $s'$ avec la récompense $r$, il rapproche $Q(s,a)$ de la cible
+$y = r$ si la partie est finie, $y = r + \max_{a'} Q(s', a')$ sinon, avec un pas
+$\alpha = 1/N(s,a)^\omega$. Pendant l'apprentissage, il joue au hasard avec la
+probabilité $\varepsilon$, qui décroît d'un facteur 0,99995 par épisode jusqu'à un
+plancher $\varepsilon_{\min}$ ([src/q_learning.py](src/q_learning.py), code de Wassim Ghnaya).
 
-La valeur de « rester » n'est jamais modifiée par l'apprentissage. La section 5 de
-[docs/modele2.pdf](docs/modele2.pdf), rédigée par Wassim Ghnaya, explique pourquoi cette
-construction peut accélérer l'apprentissage. La cible est moins bruitée, car l'une des deux valeurs
-comparées est une espérance calculée et non une moyenne d'échantillons. Le biais de
-surestimation dû au maximum est réduit. Enfin, l'agent n'a plus qu'une table à apprendre
-au lieu de deux.
+**Hybride.** La valeur de STAND est fournie par le modèle 1 et n'est jamais modifiée ;
+seule $Q_{\mathrm{HIT}}$ est apprise, avec la cible
+$y = r + \max\big(Q_{\mathrm{HIT}}(s'), \hat V_{\mathrm{STAND}}(s')\big)$. L'agent
+choisit HIT si et seulement si $Q_{\mathrm{HIT}} > \hat V_{\mathrm{STAND}}$. La classe
+`HybridAgent` ([src/hybrid_agent.py](src/hybrid_agent.py)) vérifie au chargement que la
+table apprise correspond bien au prédicteur utilisé à l'entraînement.
 
-### 7.3 Décision
+**Ce que la théorie établit.** Les démonstrations sont dans [docs/modele2.pdf](docs/modele2.pdf).
+Sous des hypothèses de visitation, de pas et de bruit énoncées, l'hybride converge vers
+la meilleure politique **du modèle estimé**, et non vers l'optimum vrai. Si
+$\eta$ est l'erreur maximale de $\hat V_{\mathrm{STAND}}$, l'erreur sur la valeur
+optimale de HIT est au plus $\eta$ et la politique limite perd au plus $2\eta$ par partie ;
+une borne locale, pondérée par la fréquence de visite des états, est beaucoup plus fine.
+L'idée que fixer STAND réduit la variance des cibles et le biais du maximum est une
+explication plausible de l'accélération, pas une garantie démontrée.
 
-Pendant une partie, l'agent compare la valeur apprise de « tirer » à la valeur calculée
-de « rester » et choisit « tirer » si et seulement si la première est strictement plus
-grande ; en cas d'égalité, il reste. Aucune exploration n'a lieu pendant le jeu. La
-classe `HybridAgent` ([src/hybrid_agent.py](src/hybrid_agent.py)) assemble les deux
-modèles. Au chargement, elle vérifie l'empreinte SHA-256 du fichier du modèle 1 et la
-cohérence de la table de valeurs de « rester », afin d'empêcher d'associer une table
-apprise avec un autre prédicteur que celui utilisé pendant l'entraînement.
+## 5. Données, oracle exact et baselines
 
-## 8. Protocole expérimental
+**Données du modèle 1.** Une simulation tire la carte visible et la carte cachée du
+croupier, puis complète sa main selon la règle d'arrêt à 17
+([src/supervised/data.py](src/supervised/data.py)). Le modèle livré utilise 60 000 mains
+d'entraînement (graine 42), 12 000 de validation (graine 43) pour choisir $C$ et 12 000
+de test (graine 123), générées après ce choix. Les empreintes SHA-256 des jeux sont
+enregistrées dans [models/supervised/metadata.json](models/supervised/metadata.json).
+Dans la campagne v2, chaque jeu supervisé a ses propres graines d'entraînement, de
+validation et de test.
 
-### 8.1 Critère d'évaluation et unité statistique
+**Données du Q-learning.** Le Q-learning apprend en jouant des parties dans Gymnasium ;
+la graine d'un entraînement fixe les cartes et les tirages d'exploration.
 
-Le critère principal est le gain espéré exact $J$ de la politique gloutonne obtenue à la
-fin de l'entraînement, ou de manière équivalente son écart $J^* - J$ à l'optimum.
-L'unité statistique est l'entraînement : deux entraînements qui ne diffèrent que par la
-graine donnent des politiques différentes, et c'est cette variabilité que les
-comparaisons doivent prendre en compte. Lorsque plusieurs méthodes sont entraînées avec
-les mêmes graines, nous comparons les différences graine par graine (comparaison appariée).
+**Oracle exact.** Le gain espéré exact $J(\pi)$ d'une politique se calcule en parcourant
+le graphe acyclique des états ([src/evaluate.py](src/evaluate.py)). Un second oracle,
+écrit indépendamment pour l'audit, propage la masse du croupier vers l'avant et résout
+un système triangulaire à partir de mains explicites ([src/audit/oracle.py](src/audit/oracle.py)) ;
+les deux coïncident à $10^{-14}$ près et l'oracle d'audit coïncide avec Gymnasium sur
+toutes les transitions atteignables. L'oracle sert uniquement à mesurer : il n'entre
+jamais dans les mises à jour des agents supervisés ou standard. Seul le bras
+« STAND exacte », identifié comme un oracle privilégié, reçoit la vraie valeur de STAND.
+L'évaluation exacte est indispensable : même 100 000 parties simulées donnent un
+intervalle de largeur 0,012 sur le gain de la politique optimale, soit plus de cinq fois
+l'écart entre l'hybride et le standard.
 
-### 8.2 Séparation des graines
+**Incertitude irréductible.** Le résultat d'une main reste très incertain même avec la
+loi exacte : l'issue la plus probable ne se réalise que dans 34 à 42 % des cas selon la
+carte visible. Un prédicteur parfait aurait une exactitude de 36,70 % et une log-loss de
+1,6481 nat par main. Les scores utiles sont donc des scores de probabilités (log-loss,
+Brier, divergence de Kullback-Leibler à la loi exacte), pas l'exactitude.
 
-Chaque étape utilise des graines qui lui sont propres, de sorte qu'aucun résultat utilisé
-pour une décision ne sert ensuite à l'évaluer.
+**Baselines de politiques**, évaluées exactement et contrôlées par 100 000 parties
+Monte-Carlo chacune ([results/v2/diagnostics/baselines.csv](results/v2/diagnostics/baselines.csv)) :
 
-| Étape | Graines |
-|---|---|
-| Données du modèle 1 livré | entraînement 42, validation 43, test 123 |
-| Étude de la quantité de données (répétition i = 0 à 4) | entraînement 10000 + 3i, validation 10001 + 3i, test 10002 + 3i |
-| Réglage de $\varepsilon_{\min}$ et $\omega$ | 100 à 102 |
-| Premières expériences du notebook | 0 à 4 |
-| Choix entre CONFIG et TUNED (validation) | 200 à 219 |
-| Comparaison finale des méthodes (test) | 0 à 19 |
-| Ablation de l'estimateur de probabilités | 400 à 419 |
-| Entraînement de l'agent livré | 0 |
-| Parties d'évaluation de l'agent livré | 2027 |
+| Politique | Gain exact par partie |
+|---|---:|
+| Toujours tirer | −1 |
+| Aléatoire, HIT avec probabilité ½ | −0,3959 |
+| Toujours rester | −0,1864 |
+| Tirer tant que le total est inférieur à 17 | −0,0793 |
+| Politique optimale π\* | −0,0466 |
 
-Les graines 0 à 4 avaient déjà servi aux premières expériences du notebook ; elles n'ont
-servi à aucun choix de réglage ni de modèle.
+## 6. Protocole expérimental
 
-### 8.3 Expériences complémentaires définies avant leur exécution
+**Historique.** Les campagnes d'origine ont utilisé un seul prédicteur figé, vingt
+graines de validation pour choisir entre deux réglages (CONFIG et TUNED), puis vingt
+graines de test, et une ablation de l'estimateur sur vingt autres graines. Les
+hyperparamètres TUNED ($\varepsilon_{\min} = 0{,}4$ pour le standard, $\varepsilon_{\min} = 1$
+pour l'hybride, $\omega = 1$ pour les deux) ont été choisis par [src/tune.py](src/tune.py)
+sur trois graines réservées (108 entraînements), avec la loi exacte pour l'hybride.
+Avec $\varepsilon_{\min} = 1$, l'hybride explore entièrement au hasard : c'est possible
+parce que la cible du Q-learning utilise la meilleure action suivante, quelle que soit
+l'action jouée (apprentissage hors politique). Le protocole complémentaire historique
+est figé dans [docs/protocole_complementaire.md](docs/protocole_complementaire.md).
 
-L'étude de la quantité de données (section 5.7) et l'ablation de l'estimateur de
-probabilités (section 9.4) ont été définies par écrit avant d'être lancées, dans
-[docs/protocole_complementaire.md](docs/protocole_complementaire.md). Ce document fixe
-les tailles de données, les graines, la règle de choix de la régularisation, les méthodes
-comparées, le contraste principal et la manière de rapporter l'incertitude. Son
-empreinte SHA-256 est enregistrée dans les résultats de ces deux campagnes : le fichier
-doit donc rester inchangé pour que l'on puisse vérifier que le protocole suivi est bien
-celui qui a été écrit à l'avance. Les résultats antérieurs du projet étaient déjà connus
-à ce moment ; il ne s'agit donc pas d'une préinscription au sens strict.
+**Audit v2.** Le protocole ([docs/protocole_v2.md](docs/protocole_v2.md)) a été écrit
+avant les nouvelles mesures. Un pilote sur des graines de validation a fixé le nombre de
+jeux supervisés indépendants à 28, pour viser une précision de ±0,0005 sur le critère
+principal ([addendum](docs/protocole_v2_addendum.md)). Les déviations ultérieures sont
+consignées dans [docs/protocole_v2_deviations.md](docs/protocole_v2_deviations.md).
 
-### 8.4 Statistiques
+- **Critère principal** : différence de gain exact entre l'hybride logistique et le
+  standard réglé, à 20 000 mains et 100 000 épisodes. Une différence de **0,001 par
+  partie** est fixée à l'avance comme seuil d'intérêt pratique.
+- **Unité statistique** : un jeu de données supervisé indépendant. Les deux graines RL
+  d'un même jeu sont moyennées après appariement des méthodes ; les intervalles portent
+  sur les moyennes des jeux, ce qui propage à la fois la variabilité des données du
+  croupier et celle de l'apprentissage.
+- **Analyses secondaires** (9 premiers jeux, désignés avant les mesures) : tailles
+  supervisées 1 000, 5 000, 20 000 et 60 000 ; budgets de 0 à 200 000 épisodes ;
+  ablations de l'estimateur, de l'exploration, du pas et d'une erreur contrôlée de STAND ;
+  temps d'atteinte de seuils de regret, censurés lorsqu'ils ne sont pas atteints.
+- **Statistiques** : intervalle de Student sur les jeux, bootstrap des jeux entiers,
+  médiane et étendue. Une équivalence n'est affirmée que par un test TOST à la marge
+  de 0,001 ; un intervalle contenant zéro n'est jamais lu comme une équivalence. Les
+  contrastes secondaires ne sont pas corrigés pour la multiplicité.
+- **Séparation** : le choix de $C$ utilise la seule validation ; le test supervisé est
+  généré après ce choix ; aucun résultat v2 n'a servi à choisir un modèle ou un réglage.
+  L'agent et le prédicteur livrés sont ceux de la version historique.
 
-- Pour la comparaison entre CONFIG et TUNED, nous utilisons un test exact de permutation
-  des signes sur les différences appariées. Ce test suppose que, sous l'hypothèse nulle,
-  la distribution de chaque différence est symétrique autour de zéro.
-- Pour les expériences complémentaires, nous rapportons la moyenne, l'écart-type et un
-  intervalle de confiance approximatif à 95 % fondé sur la loi de Student, calculé entre
-  graines ou entre jeux de données indépendants.
-- Les comparaisons secondaires sont descriptives et ne font pas l'objet d'une correction
-  pour comparaisons multiples.
-- Un intervalle qui contient zéro signifie que la différence n'est pas établie ; il ne
-  prouve pas que les deux méthodes sont équivalentes. Aucun test d'équivalence n'a été
-  prévu.
+## 7. Résultats
 
-## 9. Résultats
+### 7.1 Réplication des résultats historiques
 
-Tous les entraînements de cette section utilisent 100 000 épisodes de renforcement et
-le modèle 1 livré, figé. Chaque campagne a son propre dossier dans [results/](results/),
-avec les mesures brutes (CSV), un résumé (JSON) et un rapport généré automatiquement.
+Les 240 entraînements des campagnes historiques et l'entraînement du modèle 1 livré ont
+été relancés depuis le code d'origine. Les gains exacts, les courbes d'apprentissage et
+les probabilités du modèle sont reproduits à l'identique (écart maximal nul). Après
+100 000 épisodes, l'écart moyen à l'optimum valait 0,00290 pour le Q-learning standard
+TUNED, 0,00079 pour l'hybride avec le modèle 1 et 0,00081 pour l'hybride avec la loi
+exacte, sur vingt graines de test. Ces campagnes historiques utilisent toutes le même
+prédicteur : leur reproduction prouve le déterminisme du code, tandis que la campagne v2
+ci-dessous répète la comparaison avec des données supervisées indépendantes.
 
-### 9.1 Choix du réglage sur la validation
+### 7.2 Critère principal
 
-Le choix entre CONFIG et TUNED pour l'hybride supervisé a été fait sur les vingt graines
-de validation, selon une règle fixée à l'avance : retenir le réglage de meilleur gain
-moyen, et CONFIG en cas d'égalité. TUNED obtient un gain moyen de −0,047222 contre
-−0,048243 pour CONFIG, et il est meilleur sur les vingt graines (p = 1,9 × 10⁻⁶).
-TUNED est donc retenu.
+À 20 000 mains et 100 000 épisodes, sur 28 jeux indépendants :
 
-### 9.2 Comparaison des méthodes sur le test
+| Méthode | Gain exact moyen | Intervalle à 95 % |
+|---|---:|---:|
+| Hybride, régression logistique | −0,047386 | [−0,047490 ; −0,047282] |
+| Q-learning standard réglé | −0,049523 | [−0,049814 ; −0,049232] |
+| **Différence appariée** | **+0,002137** | **[+0,001878 ; +0,002396]** |
 
-Les trois méthodes ont ensuite été entraînées avec les deux réglages sur vingt nouvelles
-graines de test, soit 120 entraînements. L'« hybride exact » utilise la vraie loi du
-croupier au lieu du modèle 1 ; il sert de référence pour isoler l'effet de l'erreur
-d'estimation.
+L'intervalle bootstrap des jeux, [+0,001902 ; +0,002387], la médiane (+0,002008) et
+les moyennes obtenues en retirant un jeu ([+0,002081 ; +0,002187]) confirment que ce
+résultat ne dépend pas d'un jeu extrême. La borne inférieure dépasse la différence
+d'intérêt pratique de 0,001.
 
-| Méthode | Gain moyen, CONFIG | Gain moyen, TUNED | Écart à l'optimum, TUNED | États différents de π*, TUNED |
-|---|---:|---:|---:|---:|
-| Hybride, modèle 1 | −0,048083 | −0,047347 | 0,000791 | 4,5 |
-| Hybride, loi exacte | −0,048624 | −0,047371 | 0,000815 | 4,2 |
-| Q-learning standard | −0,050667 | −0,049459 | 0,002904 | 11,5 |
+### 7.3 Vitesse d'apprentissage
 
-Avec le réglage TUNED, l'hybride qui utilise le modèle 1 dépasse le Q-learning standard
-de 0,002113 par partie en moyenne et le dépasse sur les vingt graines (p = 1,9 × 10⁻⁶).
-Aucune différence n'est mise en évidence avec l'hybride qui utilise la loi exacte : la
-différence moyenne vaut +0,000024 (meilleur sur 6 graines, égal sur 5, moins bon sur 9 ; p = 0,77).
-Le réglage TUNED améliore l'hybride supervisé sur 17 graines sur 20 (p = 0,0019).
+![Regret en fonction des épisodes, du temps et des cartes](results/v2/analysis/learning_and_cost.png)
 
-Le tableau suivant montre la vitesse d'apprentissage, mesurée par l'écart moyen à
-l'optimum après un nombre donné d'épisodes, avec le réglage TUNED.
+*À gauche, écart moyen au gain optimal à 20 000 mains, avec ± 1 écart-type entre jeux
+(dispersion, pas intervalle de confiance). Au centre et à droite, le même écart en
+fonction du temps et du nombre de cartes, coût d'estimation du modèle 1 inclus.*
 
-| Épisodes de renforcement | 10 000 | 20 000 | 50 000 | 100 000 |
-|---|---:|---:|---:|---:|
-| Hybride, modèle 1 | 0,00690 | 0,00374 | 0,00171 | 0,00079 |
-| Hybride, loi exacte | 0,00688 | 0,00352 | 0,00177 | 0,00081 |
-| Q-learning standard | 0,01994 | 0,01320 | 0,00593 | 0,00290 |
+L'hybride atteint en environ 10 000 épisodes l'écart que le standard atteint en 40 000,
+et en 40 000 épisodes un écart de 0,0016 que le standard n'atteint qu'après environ
+200 000 épisodes. Pour passer sous un regret de 0,002, les 18 entraînements hybrides y
+parviennent, en 40 000 épisodes en médiane, contre 13 sur 18 pour le standard, et
+seulement au dernier budget observé de 200 000 épisodes. Ce rapport de budgets dépend du seuil choisi : ce n'est pas un facteur de
+vitesse universel.
 
-À chaque étape, l'écart du Q-learning standard est environ trois à quatre fois plus grand
-que celui des hybrides (rapport de 2,9 à 3,7). Le Q-learning standard a besoin de 100 000 épisodes pour
-atteindre un écart que les hybrides atteignent entre 20 000 et 50 000 épisodes.
+### 7.4 Où l'hybride gagne et où il perd
 
-### 9.3 L'agent livré
+![Différence de gain selon la taille des données et le budget RL](results/v2/analysis/budget_surface.png)
+
+*Différence de gain exact entre l'hybride et le standard, moyenne sur 9 jeux ; l'étoile
+signale un intervalle à 95 % qui exclut zéro.*
+
+L'hybride gagne largement tant que le budget RL est petit, quelle que soit la taille des
+données du croupier. Avec 1 000 mains, il perd dès que le standard dispose d'assez
+d'épisodes : l'erreur de son modèle lui impose un plancher de regret d'environ 0,003,
+alors que le standard continue de converger vers l'optimum vrai. Ce plancher vaut environ
+0,0007 avec 5 000 mains, 0,00013 avec 20 000 et 0,00001 avec 60 000. Une expérience
+d'intervention le confirme : à expériences de jeu identiques, déplacer 5 % ou 20 % de la
+vraie probabilité du croupier vers le BUST augmente le regret de l'hybride à 100 000
+épisodes d'environ 0,003 et 0,030 par partie par rapport à la valeur de STAND exacte.
+
+### 7.5 L'agent livré
 
 L'agent livré ([models/hybrid/agent_tuned.npz](models/hybrid/agent_tuned.npz)) est
-l'hybride TUNED entraîné avec la graine 0, la même que celle du premier agent ; cette
-graine n'a pas été choisie parmi les meilleures graines de test. Son gain espéré exact vaut
-−0,047207 par partie, soit un écart de 0,000651 à l'optimum.
+l'hybride TUNED de la version historique, entraîné 100 000 épisodes avec la graine 0 et
+le modèle 1 livré. Son gain espéré exact vaut −0,047207, soit 0,000651 de moins que
+l'optimum. La meilleure politique compatible avec son modèle 1 ne diffère de l'optimum
+que dans l'état (12, 4, sans as), visité dans 0,9 % des parties, et ne perd que 0,000022 :
+l'écart de l'agent livré vient presque entièrement du nombre fini d'épisodes.
+Sur 10 000 parties simulées (graine 2027), il obtient 4 225 victoires, 1 005 égalités et
+4 770 défaites. L'audit n'a pas remplacé cet agent.
 
-Sur 10 000 nouvelles parties (graine 2027), il obtient 4 225 victoires, 1 005 égalités
-et 4 770 défaites, soit un gain moyen observé de −0,0545 avec un intervalle de confiance
-approximatif à 95 % de [−0,0731 ; −0,0359]. Cet intervalle, large de 0,037, est
-environ cinquante-sept fois plus grand que l'écart entre l'agent et l'optimum : c'est
-pourquoi les comparaisons de ce projet reposent sur le gain exact et non sur des parties
-simulées.
+## 8. Coûts : épisodes RL et coût total
 
-Le premier hybride entraîné, avec le réglage CONFIG, est conservé dans
-[models/hybrid/agent_config.npz](models/hybrid/agent_config.npz) avec ses résultats
-dans [results/hybrid/agent_config/](results/hybrid/agent_config/). Son gain exact vaut
-−0,047765. La campagne de comparaison le reproduit à l'identique, ce qui vérifie que les
-entraînements sont déterministes.
+Les comparaisons à nombre égal d'épisodes ignorent le coût du modèle 1. La campagne v2
+le mesure séparément, sur un même ordinateur (Intel i7-1255U, un seul fil de calcul).
 
-### 9.4 La régression est-elle nécessaire ?
-
-Cette ablation compare quatre méthodes sur vingt nouvelles graines (400 à 419), soit
-80 entraînements : l'hybride avec la régression logistique, l'hybride avec les fréquences
-calculées sur exactement les mêmes 60 000 mains, l'hybride avec la loi exacte et le
-Q-learning standard. Les réglages TUNED ont été fixés avant cette campagne.
-
-| Méthode | Gain moyen | Écart-type entre graines |
+| Étape | 20 000 mains | 60 000 mains |
 |---|---:|---:|
-| Hybride, régression logistique | −0,047349 | 0,000575 |
-| Hybride, fréquences | −0,047364 | 0,000568 |
-| Hybride, loi exacte | −0,047272 | 0,000436 |
-| Q-learning standard | −0,049405 | 0,001101 |
+| Simulation des mains d'entraînement | 0,31 s | 0,92 s |
+| Choix de $C$ (cinq ajustements et validation) | 0,63 s | 2,02 s |
+| Fréquences | 0,0003 s | 0,0009 s |
+| Acquisition complète, logistique | 1,03 s | 3,03 s |
+| Acquisition complète, fréquences | 0,31 s | 0,92 s |
+| 100 000 épisodes de Q-learning | 4,88 s | 4,88 s |
 
-Le contraste principal, régression moins fréquences, vaut +0,0000158 par partie avec un
-intervalle approximatif de [−0,0000197 ; +0,0000513]. Les deux hybrides obtiennent
-exactement le même gain sur 18 des 20 graines. **Cette expérience ne met en évidence
-aucun bénéfice propre de la régression logistique**, ce qui est cohérent avec
-l'explication de la section 5.3. En revanche, l'hybride avec régression dépasse le
-Q-learning standard de 0,00206 par partie, avec un intervalle de [0,00143 ; 0,00268],
-et il est meilleur sur 18 graines sur 20. Cela représente environ 0,2 unité de mise
-perdue en moins pour 100 parties, une amélioration réelle mais modeste dans un jeu qui
-reste défavorable au joueur.
+Une main de croupier distribue 2,9 cartes et coûte 0,015 ms ; une partie d'apprentissage
+distribue 5,3 cartes et coûte 0,048 ms. **Une main de croupier n'est donc pas équivalente
+à une partie**, ni en temps ni en cartes. Le calcul historique qui retranchait les mains
+du croupier d'un budget de parties, et concluait que l'avantage pouvait disparaître,
+reposait sur cette équivalence ; il n'est pas confirmé en unités mesurées.
 
-![Écart au gain optimal des quatre méthodes en fonction du nombre d'épisodes](results/hybrid/frequencies_ablation/learning_curve.png)
+À coût total égal, acquisition incluse, l'hybride à 20 000 mains dépasse le standard de
+0,0024 à 0,0028 par partie pour des budgets de 2 à 5 secondes, et d'environ 0,0009 à
+10–20 secondes. Il perd en revanche lorsque l'acquisition consomme le budget
+(60 000 mains pour 1 seconde : −0,026) et lorsque le modèle est trop imprécis (1 000 mains,
+10 à 20 secondes : −0,002). Si une table déjà apprise est réutilisée, son chargement
+coûte 0,25 ms et son coût d'acquisition se partage entre tous les agents qui l'utilisent.
+Le réglage des hyperparamètres (108 entraînements historiques) n'est imputé à aucune
+méthode. Ces secondes dépendent de la machine et de l'implémentation : le simulateur du
+croupier est une boucle Python, tandis que les parties passent par Gymnasium.
+Le détail des conventions de coût est dans le [rapport](docs/rapport_scientifique.md#55-coût-de-bout-en-bout-e3).
 
-*Moyenne et ± 1 écart-type sur vingt graines, en échelle logarithmique. Les courbes des
-trois hybrides sont presque superposées. La bande représente la dispersion entre
-entraînements et non l'incertitude sur la moyenne.*
+## 9. Résultat négatif : la régression n'apporte rien sur les fréquences
 
-### 9.5 Coût des données supervisées
+Avec une seule variable d'entrée catégorielle, la régression logistique peut représenter
+n'importe quelle loi conditionnelle ; sans régularisation, son maximum de vraisemblance
+est exactement la table des fréquences. La régularisation ne la déplace que d'un terme
+d'ordre $1/N_d$. La théorie ne prédit donc aucun avantage, et les mesures n'en montrent
+aucun :
 
-Les comparaisons précédentes donnent le même nombre d'épisodes de renforcement à toutes
-les méthodes, mais l'hybride bénéficie en plus des mains simulées pour entraîner le
-modèle 1. Pour en tenir compte, on peut fixer un budget total de 100 000 simulations et
-retirer du budget de l'hybride les mains utilisées par le modèle 1.
+- dans la campagne v2, à 20 000 mains et 100 000 épisodes, logistique et fréquences
+  donnent le même gain dans 17 paires d'entraînements sur 18 ; la différence moyenne
+  vaut −0,0000034 [−0,0000111 ; +0,0000044] et le test TOST établit l'équivalence à ±0,001 ;
+- dans l'ablation historique (20 graines, prédicteur unique), la différence valait
+  +0,0000158 [−0,0000197 ; +0,0000513] ;
+- sur le jeu de test du modèle livré, l'écart de log-loss entre les deux estimateurs
+  vaut −0,000055 [−0,000125 ; +0,000014], sans conséquence sur les décisions.
 
-| Méthode | Mains de croupier comptées | Épisodes restants | Écart moyen à l'optimum |
-|---|---|---:|---:|
-| Hybride, modèle 1 | 60 000 (entraînement) | 40 000 | 0,001740 |
-| Hybride, modèle 1 | 84 000 (entraînement, validation et test) | 16 000 | 0,004528 |
-| Q-learning standard | aucune | 100 000 | 0,002904 |
+La régression coûte en revanche trois fois plus de temps d'acquisition, à cause du choix
+de $C$ sur une validation. Elle pourrait devenir utile avec plusieurs variables, par
+exemple dans un paquet fini où les cartes déjà sorties modifient les probabilités ; ce
+cas n'est pas étudié ici.
 
-Si l'on compte seulement les mains d'entraînement, l'hybride reste meilleur. Si l'on
-compte aussi les mains de validation et de test, le Q-learning standard repasse devant.
-Cette comptabilité reste approximative : une main de croupier et une partie complète
-n'ont pas le même coût de calcul, et le coût du réglage des hyperparamètres n'est imputé
-à aucune méthode. La conclusion dépend donc de la ressource que l'on considère comme rare.
+**Correction de la loi en 25/n.** La version historique affirmait que l'excès moyen de
+log-loss des fréquences valait environ 25/n. C'est inexact : à toute taille finie, une
+case peut rester vide avec une probabilité positive, et la divergence de Kullback-Leibler
+est alors infinie, de sorte que son espérance l'est aussi. La valeur 25/n est la moyenne
+du terme quadratique du développement et l'espérance exacte, asymptotiquement, des
+fréquences lissées (Jeffreys, Laplace). Des simulations le confirment : à 1 000 mains,
+49 tirages sur 2 000 donnent un KL brut infini, tandis que $n \times$ KL de Jeffreys vaut
+24,85 [24,62 ; 25,09] ([docs/modele1.pdf](docs/modele1.pdf)).
 
-### 9.6 Limite atteignable avec le modèle 1
+## 10. Limites et menaces à la validité
 
-Avec un nombre infini d'épisodes, l'hybride convergerait vers la meilleure politique
-compatible avec les valeurs de « rester » estimées par le modèle 1. Cette politique
-limite ne diffère de la politique optimale que dans un seul des 280 états et ne perd que
-0,000022 par partie. L'erreur résiduelle du modèle 1 a donc un effet négligeable sur les
-décisions. L'écart restant de l'agent livré (0,000651) vient essentiellement du nombre
-fini d'épisodes de renforcement.
+- **Un seul environnement.** Paquet infini, croupier s'arrêtant sur 17 souple, deux
+  actions, une action terminale dont la loi ne dépend que d'une variable. La variante à
+  cartes uniformes (rapport, §5.8) change la loi des cartes mais pas la structure ; elle
+  ne démontre aucune généralisation à un paquet fini, à d'autres règles ou à un casino.
+- **Hyperparamètres historiques.** Les réglages ont été choisis sur trois graines, avec
+  la loi exacte pour l'hybride, puis conservés sans nouveau réglage afin de ne rien
+  choisir sur les données de test.
+- **Temps mesurés.** Un ordinateur portable non isolé, une session et une implémentation ;
+  les cartes distribuées sont une unité plus stable mais ne mesurent pas le calcul.
+- **Précision des analyses secondaires.** Neuf jeux seulement ; intervalles non
+  simultanés ; tailles supervisées emboîtées dans un même jeu ; grille de budgets grossière
+  au-delà de 100 000 épisodes.
+- **Bornes théoriques.** La borne locale de regret est informative pour la politique
+  limite ; la borne qui inclut l'erreur d'apprentissage d'un agent fini est vraie mais
+  très lâche, car les plus grandes erreurs se trouvent dans des états rarement visités.
+- **Statut des protocoles.** Les résultats historiques étaient connus lorsque les
+  protocoles ont été écrits : il s'agit de protocoles internes datés, pas de
+  préinscriptions externes.
 
-## 10. Discussion et limites
-
-**Réponse à la question.** Fournir au Q-learning une estimation de la valeur de « rester »
-accélère nettement l'apprentissage : à budget de renforcement égal, l'hybride atteint
-en 20 000 à 50 000 épisodes la qualité que le Q-learning standard atteint en 100 000.
-Cet avantage provient de l'information apportée par les mains simulées, pas de la forme
-particulière du classifieur : une simple table de fréquences fournit la même information.
-
-**Limites.**
-
-- Toutes les conclusions portent sur un seul environnement : paquet infini, arrêt du
-  croupier sur 17 souple, actions limitées à tirer et rester. Elles ne s'étendent pas
-  sans nouvelle étude à un paquet fini, à d'autres règles ou à un casino réel.
-- Les campagnes comptent vingt graines de renforcement et cinq jeux de données
-  supervisés. Les intervalles de confiance sont approximatifs, en particulier pour le
-  contraste entre régression et fréquences, où la plupart des différences sont nulles.
-- La variabilité du modèle 1 est étudiée séparément ; elle n'est pas propagée dans les
-  campagnes de renforcement, qui utilisent toutes le même modèle 1 figé.
-- Les réglages TUNED ont été choisis avec la loi exacte pour l'hybride, sur un nombre
-  limité de graines et de valeurs candidates.
-- Les jeux de test supervisés et les graines de test sont désormais connus. Tout nouveau
-  choix de modèle devrait utiliser de nouvelles graines de validation et de test.
-- La précision des probabilités, le résultat d'une partie et le gain d'une politique sont
-  trois critères distincts. Un bon agent perd tout de même plus de parties qu'il n'en
-  gagne, car le gain espéré de la politique optimale est négatif.
-
-## 11. Reproduire les expériences
+## 11. Reproduire les résultats
 
 Toutes les commandes s'exécutent depuis la racine du dépôt après `uv sync --locked`.
-Elles écrivent dans `models/reproduction/` et `results/reproduction/`, deux dossiers
-ignorés par Git, afin de ne jamais écraser les résultats publiés. Les durées indiquées
-sont des ordres de grandeur sur un ordinateur portable récent.
+Les scripts refusent d'écrire dans un dossier non vide : ils écrivent ici dans
+`results/reproduction/` et `models/reproduction/`, ignorés par Git. Les durées sont
+celles mesurées sur un Intel i7-1255U. Le détail (environnement, versions, commandes,
+comparaison des sorties) est dans [docs/reproductibilite.md](docs/reproductibilite.md).
 
-**Modèle 1** (moins d'une minute) :
+**Reproduction rapide (moins d'une minute, sans entraînement).**
+
+```bash
+uv run --locked python -m scripts.verify_release
+uv run --locked python -m scripts.verify_audit
+uv run --locked pytest -q
+```
+
+**Reproduction complète de l'audit v2** (environ 1 h 30 au total, séquentiellement) :
+
+```bash
+export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
+uv run --locked python -m src.audit.diagnostics --output results/reproduction/diagnostics
+uv run --locked python -m src.audit.pilot --output results/reproduction/pilot
+uv run --locked python -m src.audit.campaign --config experiments/v2/final_frozen.json --output results/reproduction/final
+uv run --locked python -m src.audit.replicate --output results/reproduction/replication --jobs 6
+uv run --locked python -m src.audit.variant --design experiments/v2/final_frozen.json --output results/reproduction/variant
+uv run --locked python -m src.audit.analyze --input results/reproduction/final --diagnostics results/reproduction/diagnostics --variant results/reproduction/variant --replication results/reproduction/replication --output results/reproduction/analysis
+```
+
+Les gains exacts et les tables sont déterministes ; les temps mesurés et l'empreinte de
+`runs.csv`, qui contient ces temps, diffèrent d'une exécution à l'autre. Sous PowerShell,
+remplacer la ligne `export` par `$env:OMP_NUM_THREADS=1` (et de même pour les deux autres).
+
+**Version historique.** Les campagnes d'origine se relancent individuellement :
 
 ```bash
 uv run --locked python -m src.supervised.train --model-dir models/reproduction/supervised --results-dir results/reproduction/supervised
-```
-
-**Agent hybride** (quelques secondes pour l'entraînement, davantage pour l'évaluation sur 10 000 parties) :
-
-```bash
 uv run --locked python -m src.train_hybrid --preset tuned --agent models/reproduction/agent_tuned.npz --results-dir results/reproduction/hybrid --episodes 100000 --seed 0
 uv run --locked python -m src.evaluate_hybrid --agent models/reproduction/agent_tuned.npz --output results/reproduction/hybrid/evaluation.json --games 10000 --seed 2027
-```
-
-Ces commandes utilisent le modèle 1 livré. Pour utiliser celui reproduit à l'étape
-précédente, ajouter `--model models/reproduction/supervised/dealer_model.joblib` aux deux
-commandes. L'entraînement refuse d'écraser un agent ou un dossier de résultats existant ;
-l'option `--overwrite` autorise ce remplacement et supprime alors l'ancienne évaluation,
-qui ne correspondrait plus à l'agent.
-
-**Campagnes de comparaison** (plusieurs minutes chacune ; `--jobs` fixe le nombre de
-processus parallèles) :
-
-```bash
 uv run --locked python -m src.compare_hybrid --output-dir results/reproduction/config_vs_tuned --jobs 2
 uv run --locked python -m src.supervised.learning_curve --output results/reproduction/learning_curve --jobs 2
 uv run --locked python -m src.compare_frequencies --output results/reproduction/frequencies_ablation --jobs 2
 ```
 
-La première commande reproduit la comparaison CONFIG/TUNED (160 entraînements), la
-deuxième l'étude de la quantité de données et la troisième l'ablation de l'estimateur
-de probabilités (80 entraînements). La figure de l'ablation peut être recréée à partir
-des mesures publiées, sans entraînement, avec `uv run --locked python -m scripts.make_summary_figures`.
+`uv run --locked python -m src.tune` relance les 108 entraînements du réglage et réécrit
+`results/q_learning/tuning.csv`. Le notebook `train_model2.ipynb` s'ouvre après
+`uv sync --locked --extra notebook`. Un modèle réentraîné sur un autre système peut ne
+pas être identique octet par octet, car la sérialisation dépend des versions : comparer
+alors les tables et les gains. Les deux PDF se recompilent avec
+`python scripts/build_docs.py` (pdflatex, babel français et lmodern requis).
 
-**Premières expériences du modèle 2.** `uv run --locked python -m src.tune` relance les
-108 entraînements du réglage et réécrit `results/q_learning/tuning.csv`. Le notebook
-`train_model2.ipynb` s'ouvre après `uv sync --locked --extra notebook`, qui installe le
-noyau Jupyter ; son exécution réécrit les fichiers de `results/q_learning/` et
-`models/q_learning/`.
+L'intégration continue exécute les tests, les deux vérifications et la démonstration
+sous Linux et Windows, et compile les documents mathématiques sous Linux.
 
-Un modèle réentraîné sur un autre système peut ne pas être identique octet par octet,
-car la sérialisation dépend des versions des bibliothèques : il faut alors comparer les
-tables et les scores plutôt que les fichiers binaires. L'intégration continue GitHub
-est configurée pour exécuter les tests, la vérification des modèles et la démonstration
-sous Linux et sous Windows à chaque envoi de modifications.
-
-## 12. Organisation du dépôt
+## 12. Organisation du dépôt et documents
 
 ```text
 src/
-  environment.py          Règles du jeu et transitions
-  stand_value.py          Loi exacte du croupier et valeur de « rester »
-  q_learning.py           Q-learning standard et hybride, réglages CONFIG et TUNED
-  evaluate.py             Gain espéré exact et politique optimale
+  environment.py, stand_value.py, q_learning.py, evaluate.py   Modèle 2 (Wassim Ghnaya)
   tune.py                 Réglage de ε_min et ω
   supervised/             Modèle 1 : simulation, entraînement, évaluation, courbes
   hybrid_agent.py         Assemblage des deux modèles et décision
-  train_hybrid.py         Entraînement de l'agent hybride avec le modèle 1 figé
-  evaluate_hybrid.py      Évaluation d'un agent sur des parties simulées
-  compare_hybrid.py       Comparaison CONFIG/TUNED et des trois méthodes
-  compare_frequencies.py  Ablation de l'estimateur de probabilités
+  train_hybrid.py, evaluate_hybrid.py, compare_hybrid.py, compare_frequencies.py
   play.py                 Démonstration en ligne de commande
-models/
-  supervised/             Modèle 1 livré, probabilités exportées et métadonnées
-  hybrid/                 Agent livré (agent_tuned.npz) et premier agent (agent_config.npz)
-  q_learning/             Table Q_HIT produite par le notebook
-  manifest.json           Empreintes SHA-256 des modèles livrés
+  audit/                  Audit v2 : oracle indépendant, campagnes, analyse
+models/                   Modèles livrés et manifeste d'empreintes
 results/
-  supervised/             Modèle 1 livré, puis étude de la quantité de données
-  q_learning/             Réglage et premières expériences du modèle 2
-  hybrid/                 Agents livrés, comparaison CONFIG/TUNED et ablation
-docs/
-  modele1.tex, modele1.pdf      Fondements mathématiques du modèle 1 et effet de son erreur
-  modele2.tex, modele2.pdf      Fondements mathématiques du modèle 2 et de l'hybride
-  protocole_complementaire.md   Protocole figé des expériences complémentaires
-  wassim_source.json            Provenance et empreintes du code du modèle 2
-scripts/                  Vérification des modèles livrés et figure de l'ablation
+  supervised/, q_learning/, hybrid/   Résultats historiques, inchangés
+  v2/                     Mesures de l'audit (diagnostics, pilote, finale, réplication,
+                          variante, analyse) ; voir results/README.md
+experiments/v2/           Configuration figée de la campagne finale
+docs/                     Documents listés ci-dessous
+scripts/                  Vérifications, figures, compilation des PDF
 tests/                    Tests unitaires et d'intégration
-train_model2.ipynb        Notebook des premières expériences du modèle 2
 ```
 
-Les rapports `report.md` présents dans `results/` sont produits automatiquement par les
-scripts de chaque campagne ; ils décrivent les fichiers de mesures qui les accompagnent.
+| Document | Contenu |
+|---|---|
+| [docs/modele1.pdf](docs/modele1.pdf) | Fondements statistiques du modèle 1, KL, lissage, objectif exact |
+| [docs/modele2.pdf](docs/modele2.pdf) | MDP, convergence, bornes de regret, limites des garanties |
+| [docs/rapport_scientifique.md](docs/rapport_scientifique.md) | Rapport complet de l'audit v2 |
+| [docs/etat_de_l_art.md](docs/etat_de_l_art.md) | Positionnement bibliographique et contribution |
+| [docs/audit_initial.md](docs/audit_initial.md) | Constat de départ, avant toute correction |
+| [docs/protocole_v2.md](docs/protocole_v2.md) | Protocole écrit avant les mesures, addendum et déviations |
+| [docs/reproductibilite.md](docs/reproductibilite.md) | Environnement, commandes, durées, régénération |
+| [docs/peer_review_response.md](docs/peer_review_response.md) | Réponse point par point au cahier des charges de l'audit |
+| [CHANGELOG.md](CHANGELOG.md) | Modifications et décisions |
 
-## 13. Auteurs et contributions
+## 13. Auteurs, contributions et provenance
 
 - **Wassim Ghnaya** : environnement de jeu et références exactes, Q-learning standard
   et hybride, réglage des hyperparamètres, premières expériences et ablations
-  (notebook), fondements mathématiques du modèle 2 et de l'hybride
-  ([docs/modele2.pdf](docs/modele2.pdf)).
+  (notebook), fondements mathématiques initiaux du modèle 2 et de l'hybride.
 - **Alessandro Daouk** : simulation des données et modèle 1, estimateur par fréquences
   et évaluation probabiliste, assemblage de l'agent hybride, campagnes de comparaison
   et d'ablation, vérification de la reproductibilité, fondements mathématiques du
-  modèle 1 ([docs/modele1.pdf](docs/modele1.pdf)) et documentation commune.
-  Ce travail de développement a été assisté par des outils d'intelligence artificielle.
+  modèle 1 et documentation commune.
 
-Le code du Q-learning a été intégré sans modification depuis la branche de Wassim
-Ghnaya ; ses empreintes sont enregistrées dans
-[docs/wassim_source.json](docs/wassim_source.json) et vérifiées par les tests.
-L'historique Git conserve l'auteur de chaque contribution.
+Le développement, puis l'audit scientifique v2 (corrections des démonstrations, oracle
+indépendant, campagnes v2, analyse et documentation), ont été assistés par des outils
+d'intelligence artificielle. Le code du Q-learning a été intégré sans modification depuis
+la branche de Wassim Ghnaya ; ses empreintes sont enregistrées dans
+[docs/wassim_source.json](docs/wassim_source.json) et vérifiées par les tests. Les
+versions antérieures des documents mathématiques sont conservées au commit `9c3d631`.
+L'historique Git conserve l'auteur de chaque contribution. Aucune licence n'est fournie :
+son choix revient aux auteurs.

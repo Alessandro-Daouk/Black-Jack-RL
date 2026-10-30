@@ -124,7 +124,8 @@ def run(folder, output, diagnostics=None, variant=None, replication=None):
             f = secondary[(secondary.n.isin([0, n])) & (secondary.episodes == episodes)]
             for method in ['logistic', 'frequencies', 'jeffreys']:
                 stats = paired(f, method, 'standard')
-                surfaces.append({'n': n, 'episodes': episodes, 'method': method, **stats})
+                # 'n' de paired compte les grappes ; il ne doit pas écraser la taille supervisée.
+                surfaces.append({**stats, 'clusters': stats['n'], 'n': n, 'episodes': episodes, 'method': method})
     dump(output/'surface.json', surfaces)
     first = thresholds(secondary, config['thresholds'])
     first.to_csv(output/'threshold_runs.csv', index=False)
@@ -151,7 +152,8 @@ def run(folder, output, diagnostics=None, variant=None, replication=None):
                 record = {'resource': resource, 'budget': float(budget), 'n': n, 'method': method,
                           'affordable_pairs': len(valid), 'required_pairs': 2*config['secondary_groups']}
                 if len(valid) == 2*config['secondary_groups']:
-                    record.update(paired(cell, method, 'standard'))
+                    stats = paired(cell, method, 'standard')
+                    record.update({**stats, 'clusters': stats['n'], 'n': n})
                 cost_contrasts.append(record)
     dump(output/'cost_contrasts.json', cost_contrasts)
     points = secondary[secondary.method.isin(['logistic','frequencies','jeffreys','standard'])].groupby(
@@ -235,15 +237,22 @@ def make_plots(curves, surfaces, points, frontier, output, diagnostics):
     plt.close(fig)
     fig, axes = plt.subplots(1, 3, figsize=(13,4),layout='constrained')
     data = pd.DataFrame(surfaces)
-    scale = max(abs(data['mean']).max(),1e-5)
+    # Couleurs saturées à ±0,005 : sinon les écarts décisifs (±0,002) sont invisibles.
+    scale = .005
+    data['low'] = data.ci95.str[0]
+    data['high'] = data.ci95.str[1]
     for ax, method in zip(axes,['logistic','frequencies','jeffreys'],strict=True):
-        p = data[data.method == method].pivot(index='n',columns='episodes',values='mean')
+        cell = data[data.method == method]
+        p = cell.pivot(index='n',columns='episodes',values='mean')
+        lo = cell.pivot(index='n',columns='episodes',values='low')
+        hi = cell.pivot(index='n',columns='episodes',values='high')
         im = ax.imshow(p,aspect='auto',cmap='RdBu',vmin=-scale,vmax=scale)
         ax.set(xticks=range(len(p.columns)),xticklabels=[f'{n//1000}k' for n in p.columns],
                yticks=range(len(p.index)),yticklabels=p.index,xlabel='Épisodes RL',ylabel='Mains supervisées',title=labels[method])
         for (i,j),v in np.ndenumerate(p.values):
-            ax.text(j,i,f'{v:+.3f}',ha='center',va='center',fontsize=8,color='white' if abs(v)>.6*scale else 'black')
-    fig.colorbar(im,ax=axes,label='J hybride − J standard (positif = gain hybride)')
+            mark = '*' if lo.values[i,j] > 0 or hi.values[i,j] < 0 else ''
+            ax.text(j,i,f'{v:+.4f}{mark}',ha='center',va='center',fontsize=7,color='white' if abs(v)>.6*scale else 'black')
+    fig.colorbar(im,ax=axes,label='J hybride − J standard, couleurs saturées à ±0,005\n* : IC 95 % sur 9 grappes excluant 0')
     fig.savefig(output/'budget_surface.png',dpi=170)
     plt.close(fig)
     fig, ax = plt.subplots(figsize=(8,5),layout='constrained')
@@ -306,6 +315,7 @@ def write_report(s, costs, output):
                      f"{stats['positive_pairs']} / {stats['equal_pairs']} / {stats['negative_pairs']} |")
     lines += ['', '![Courbes et coûts](learning_and_cost.png)', '',
               'Les bandes de la première figure sont ±1 écart-type des moyennes de grappes, pas des IC.',
+              'Les courbes Fréquences et Jeffreys sont presque confondues ; la première est masquée par la seconde.',
               'Le coût des deux autres panneaux inclut l’acquisition du prédicteur et la sélection de C ;',
               'les évaluations scientifiques sont exclues. Le bras exact est privilégié et omis des coûts.', '',
               '![Surface des budgets](budget_surface.png)', '', '![Frontière descriptive](pareto.png)', '',

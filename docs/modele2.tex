@@ -12,6 +12,7 @@
 \newcommand{\1}{\mathbf 1}
 \newcommand{\VS}{V_{\mathrm{STAND}}}
 \newcommand{\QH}{Q^*_{\mathrm{HIT}}}
+\newcommand{\TV}{\operatorname{TV}}
 \title{Blackjack : fondements du Q-learning hybride\\\large Version révisée après audit scientifique}
 \author{Projet d'Alessandro Daouk et Wassim Ghnaya}
 \date{30 octobre 2026}
@@ -327,6 +328,19 @@ $J=-0{,}04720665$, contre $J^*=-0{,}04655598$ : son regret est
 $0{,}00065068$, distinct du regret limite.
 Les nouvelles perturbations vers BUST et 21 conservent des probabilités valides ;
 leurs erreurs, occupations et regrets sont publiés, même lorsque l'hybride se dégrade.
+
+Sur la campagne finale v2 (9 jeux supervisés de 20\,000 mains, deux graines RL chacun,
+\texttt{results/v2/analysis/}), l'erreur moyenne vaut $\eta\approx0{,}053$ : la borne
+$2\eta\approx0{,}105$ n'est pas informative. La borne locale moyenne vaut $0{,}0012$
+pour un regret limite réel de $0{,}00013$, soit environ 90 fois mieux que $2\eta$ mais
+encore 9 fois trop large. Pour les agents entraînés 200\,000 épisodes, la borne
+$2\eta+\delta\,\E_{\pi_N}T$ vaut en moyenne $0{,}29$ pour un regret réel de $0{,}0006$ :
+elle est vraie mais inutile en pratique, car $\delta\approx0{,}12$ provient d'états
+rarement visités. L'identité de différence de performance est vérifiée à
+$1{,}7\cdot10^{-17}$ près sur les 418 agents. Avec 1\,000 mains, le regret limite
+moyen ($\approx0{,}003$) dépasse le regret du Q-learning standard à 200\,000 épisodes
+($0{,}0014$) : la convergence vers l'optimum du \emph{modèle} se traduit alors par une
+perte mesurée face au standard.
 
 \section{Paramètres et interprétation expérimentale}
 \begin{center}\begin{tabular}{lrr}\toprule

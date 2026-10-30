@@ -301,7 +301,12 @@ d'estimation aux tailles historiques. Elles ne prouvent ni l'absence de
 surapprentissage, ni l'absence d'optimisme de sélection. Un IC contenant zéro
 n'établit pas l'équivalence entre logistique et fréquences. Une conclusion
 d'équivalence exige une marge fixée à l'avance et une procédure adaptée, comme le
-double test unilatéral \cite{tost} : le protocole v2 fixe la marge à 0,001 par partie. Les expériences
+double test unilatéral \cite{tost} : le protocole v2 fixe la marge à 0,001 par partie.
+Sur 9 jeux supervisés indépendants de 20\,000 mains, les agents hybrides obtenus avec
+la logistique et avec les fréquences ont le même gain exact dans 17 paires sur 18 ;
+la différence moyenne vaut $-3{,}4\cdot10^{-6}$ et le TOST établit l'équivalence à
+$\pm0{,}001$ ($p<10^{-17}$). Cette équivalence porte sur le gain de l'agent, pas sur
+toutes les métriques probabilistes, et seulement dans ce problème à une variable. Les expériences
 n'autorisent pas de conclusion générale sur d'autres jeux ou sur un casino.
 Les fichiers de résultats historiques sont conservés ; les textes corrigés et les
 mesures v2 font foi pour les interprétations nouvelles.
