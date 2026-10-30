@@ -1,0 +1,87 @@
+{
+  "episodes": 100000,
+  "seeds": [
+    400,
+    401,
+    402,
+    403,
+    404,
+    405,
+    406,
+    407,
+    408,
+    409,
+    410,
+    411,
+    412,
+    413,
+    414,
+    415,
+    416,
+    417,
+    418,
+    419
+  ],
+  "methods": [
+    "logistic",
+    "frequencies",
+    "exact",
+    "standard"
+  ],
+  "tuning": "Paramètres TUNED fixés avant l'expérience ; aucun choix sur ces graines.",
+  "dealer_model_sha256": "b91c797fcffa18ef421f73fff0ef7c088bcdacbad0d787d3ec819f67a9ebbfc1",
+  "splits": {
+    "train": {
+      "samples": 60000,
+      "seed": 42,
+      "sha256": "ddd4bf9dc4be938c21979e02a129ef7458c82b68cf9149bc345b53aad4993171"
+    },
+    "validation": {
+      "samples": 12000,
+      "seed": 43,
+      "sha256": "160de7e6bef5aaa61900e7286e98c2e9f2f3fef16f4568ca41afb98edd37d9b2"
+    },
+    "test": {
+      "samples": 12000,
+      "seed": 123,
+      "sha256": "9183706ffd8e59c2d57cc2be255621444ca1aa291a7bed532a8694289e2f7893"
+    }
+  },
+  "frequency_source": "Même jeu d'entraînement que la régression ; aucune donnée supplémentaire.",
+  "presets": {
+    "standard": {
+      "episodes": 100000,
+      "eps0": 1.0,
+      "eps_min": 0.4,
+      "decay": 0.99995,
+      "gamma": 1.0,
+      "omega": 1.0,
+      "eval_every": 2000,
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    "hybrid": {
+      "episodes": 100000,
+      "eps0": 1.0,
+      "eps_min": 1.0,
+      "decay": 0.99995,
+      "gamma": 1.0,
+      "omega": 1.0,
+      "eval_every": 2000,
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    }
+  },
+  "primary_contrast": "logistic - frequencies, gain exact final par graine",
+  "uncertainty": "IC de Student approximatif de la différence moyenne appariée ; pas de test d'équivalence"
+}

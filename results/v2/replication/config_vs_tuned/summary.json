@@ -1,0 +1,446 @@
+{
+  "question": "Hybride supervisé : CONFIG (précédent) ou TUNED['hybrid'] (58f5ce3), à budget RL égal ?",
+  "protocol": {
+    "episodes_per_run": 100000,
+    "validation_seeds": [
+      200,
+      201,
+      202,
+      203,
+      204,
+      205,
+      206,
+      207,
+      208,
+      209,
+      210,
+      211,
+      212,
+      213,
+      214,
+      215,
+      216,
+      217,
+      218,
+      219
+    ],
+    "test_seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "decision_rule": "meilleur gain exact moyen de l'hybride supervisé sur les graines de validation ; égalité → config ; le test ne sert à aucun choix.",
+    "metric": "gain exact J de la politique gloutonne finale (récurrence de Wassim, vraie loi du croupier).",
+    "paired_statistics": "différences par graine ; test exact de permutation des signes, bilatéral.",
+    "presets": {
+      "config": {
+        "episodes": 100000,
+        "eps0": 1.0,
+        "eps_min": 0.05,
+        "decay": 0.99995,
+        "gamma": 1.0,
+        "omega": 1.0,
+        "eval_every": 2000,
+        "seeds": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "tuned_hybrid": {
+        "episodes": 100000,
+        "eps0": 1.0,
+        "eps_min": 1.0,
+        "decay": 0.99995,
+        "gamma": 1.0,
+        "omega": 1.0,
+        "eval_every": 2000,
+        "seeds": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "tuned_standard": {
+        "episodes": 100000,
+        "eps0": 1.0,
+        "eps_min": 0.4,
+        "decay": 0.99995,
+        "gamma": 1.0,
+        "omega": 1.0,
+        "eval_every": 2000,
+        "seeds": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      }
+    }
+  },
+  "dealer_model": {
+    "sha256": "b91c797fcffa18ef421f73fff0ef7c088bcdacbad0d787d3ec819f67a9ebbfc1",
+    "simulated_hands": {
+      "train": 60000,
+      "validation": 12000,
+      "test": 12000
+    }
+  },
+  "optimal_exact_expected_reward": -0.046555977066697535,
+  "supervised_limit": {
+    "exact_expected_reward": -0.04657781112030356,
+    "gap_to_optimal": 2.1834053606027692e-05,
+    "states_differing_from_optimal": 1,
+    "reachable_states": 280
+  },
+  "validation": {
+    "arms": [
+      {
+        "method": "hybrid_supervised",
+        "preset": "config",
+        "eps_min": 0.05,
+        "seeds": 20,
+        "exact_expected_reward_mean": -0.04824303492221187,
+        "exact_expected_reward_sd": 0.0007903197749400793,
+        "gap_to_optimal_mean": 0.0016870578555143324,
+        "gap_to_limit_mean": 0.0016652238019083047,
+        "states_differing_from_optimal_mean": 5.45,
+        "states_differing_from_limit_mean": 5.85
+      },
+      {
+        "method": "hybrid_supervised",
+        "preset": "tuned",
+        "eps_min": 1.0,
+        "seeds": 20,
+        "exact_expected_reward_mean": -0.047221827262913386,
+        "exact_expected_reward_sd": 0.00032861836846693896,
+        "gap_to_optimal_mean": 0.0006658501962158451,
+        "gap_to_limit_mean": 0.0006440161426098174,
+        "states_differing_from_optimal_mean": 4.3,
+        "states_differing_from_limit_mean": 4.1
+      }
+    ],
+    "tuned_minus_config": {
+      "reference": [
+        "hybrid_supervised",
+        "config"
+      ],
+      "candidate": [
+        "hybrid_supervised",
+        "tuned"
+      ],
+      "seeds": 20,
+      "mean": 0.0010212076592984874,
+      "standard_error": 0.0001644243879107136,
+      "candidate_better": 20,
+      "equal": 0,
+      "candidate_worse": 0,
+      "sign_flip_p_value": 1.9073486328125e-06
+    },
+    "retained_preset": "tuned"
+  },
+  "test": {
+    "arms": [
+      {
+        "method": "hybrid_supervised",
+        "preset": "config",
+        "eps_min": 0.05,
+        "seeds": 20,
+        "exact_expected_reward_mean": -0.0480834808819044,
+        "exact_expected_reward_sd": 0.0009952371230421762,
+        "gap_to_optimal_mean": 0.0015275038152068577,
+        "gap_to_limit_mean": 0.00150566976160083,
+        "states_differing_from_optimal_mean": 5.25,
+        "states_differing_from_limit_mean": 5.75
+      },
+      {
+        "method": "hybrid_supervised",
+        "preset": "tuned",
+        "eps_min": 1.0,
+        "seeds": 20,
+        "exact_expected_reward_mean": -0.047346611242333046,
+        "exact_expected_reward_sd": 0.0003447866870475317,
+        "gap_to_optimal_mean": 0.0007906341756355181,
+        "gap_to_limit_mean": 0.0007688001220294904,
+        "states_differing_from_optimal_mean": 4.5,
+        "states_differing_from_limit_mean": 4.1
+      },
+      {
+        "method": "hybrid_exact",
+        "preset": "config",
+        "eps_min": 0.05,
+        "seeds": 20,
+        "exact_expected_reward_mean": -0.048624240455970004,
+        "exact_expected_reward_sd": 0.0013648919254603733,
+        "gap_to_optimal_mean": 0.002068263389272469,
+        "gap_to_limit_mean": 0.002068263389272469,
+        "states_differing_from_optimal_mean": 5.55,
+        "states_differing_from_limit_mean": 5.55
+      },
+      {
+        "method": "hybrid_exact",
+        "preset": "tuned",
+        "eps_min": 1.0,
+        "seeds": 20,
+        "exact_expected_reward_mean": -0.047370801625271484,
+        "exact_expected_reward_sd": 0.0004683073396107109,
+        "gap_to_optimal_mean": 0.0008148245585739494,
+        "gap_to_limit_mean": 0.0008148245585739494,
+        "states_differing_from_optimal_mean": 4.2,
+        "states_differing_from_limit_mean": 4.2
+      },
+      {
+        "method": "standard",
+        "preset": "config",
+        "eps_min": 0.05,
+        "seeds": 20,
+        "exact_expected_reward_mean": -0.0506667312938164,
+        "exact_expected_reward_sd": 0.0018134981409444677,
+        "gap_to_optimal_mean": 0.004110754227118864,
+        "gap_to_limit_mean": 0.004110754227118864,
+        "states_differing_from_optimal_mean": 13.0,
+        "states_differing_from_limit_mean": 13.0
+      },
+      {
+        "method": "standard",
+        "preset": "tuned",
+        "eps_min": 0.4,
+        "seeds": 20,
+        "exact_expected_reward_mean": -0.049459477606337954,
+        "exact_expected_reward_sd": 0.0009325309574216078,
+        "gap_to_optimal_mean": 0.002903500539640421,
+        "gap_to_limit_mean": 0.002903500539640421,
+        "states_differing_from_optimal_mean": 11.5,
+        "states_differing_from_limit_mean": 11.5
+      }
+    ],
+    "comparisons": {
+      "supervised_tuned_minus_config": {
+        "reference": [
+          "hybrid_supervised",
+          "config"
+        ],
+        "candidate": [
+          "hybrid_supervised",
+          "tuned"
+        ],
+        "seeds": 20,
+        "mean": 0.0007368696395713397,
+        "standard_error": 0.00020915263868652917,
+        "candidate_better": 17,
+        "equal": 0,
+        "candidate_worse": 3,
+        "sign_flip_p_value": 0.001903533935546875
+      },
+      "exact_tuned_minus_config": {
+        "reference": [
+          "hybrid_exact",
+          "config"
+        ],
+        "candidate": [
+          "hybrid_exact",
+          "tuned"
+        ],
+        "seeds": 20,
+        "mean": 0.00125343883069852,
+        "standard_error": 0.0003039048600219987,
+        "candidate_better": 16,
+        "equal": 0,
+        "candidate_worse": 4,
+        "sign_flip_p_value": 0.000354766845703125
+      },
+      "supervised_minus_exact_retained": {
+        "reference": [
+          "hybrid_exact",
+          "tuned"
+        ],
+        "candidate": [
+          "hybrid_supervised",
+          "tuned"
+        ],
+        "seeds": 20,
+        "mean": 2.4190382938431287e-05,
+        "standard_error": 7.267194819666098e-05,
+        "candidate_better": 6,
+        "equal": 5,
+        "candidate_worse": 9,
+        "sign_flip_p_value": 0.767578125
+      },
+      "supervised_retained_minus_standard_tuned": {
+        "reference": [
+          "standard",
+          "tuned"
+        ],
+        "candidate": [
+          "hybrid_supervised",
+          "tuned"
+        ],
+        "seeds": 20,
+        "mean": 0.002112866364004903,
+        "standard_error": 0.0002364367696697001,
+        "candidate_better": 20,
+        "equal": 0,
+        "candidate_worse": 0,
+        "sign_flip_p_value": 1.9073486328125e-06
+      }
+    },
+    "gap_to_optimal_by_rl_episodes": [
+      {
+        "method": "hybrid_supervised",
+        "preset": "config",
+        "10000": 0.006924495293338687,
+        "20000": 0.003547204398243049,
+        "50000": 0.002256477820998001,
+        "100000": 0.0015275038152068577
+      },
+      {
+        "method": "hybrid_supervised",
+        "preset": "tuned",
+        "10000": 0.00689581029815829,
+        "20000": 0.0037378544271333284,
+        "50000": 0.0017071169050968805,
+        "100000": 0.0007906341756355181
+      },
+      {
+        "method": "hybrid_exact",
+        "preset": "config",
+        "10000": 0.007464609154062553,
+        "20000": 0.004227593170830752,
+        "50000": 0.0025500410983318447,
+        "100000": 0.002068263389272469
+      },
+      {
+        "method": "hybrid_exact",
+        "preset": "tuned",
+        "10000": 0.006879260115037174,
+        "20000": 0.0035236912619728555,
+        "50000": 0.0017724554613370656,
+        "100000": 0.0008148245585739494
+      },
+      {
+        "method": "standard",
+        "preset": "config",
+        "10000": 0.019940957408320414,
+        "20000": 0.012562135557224945,
+        "50000": 0.006090198588783528,
+        "100000": 0.004110754227118864
+      },
+      {
+        "method": "standard",
+        "preset": "tuned",
+        "10000": 0.019940957408320414,
+        "20000": 0.01320045084461039,
+        "50000": 0.0059265426302379815,
+        "100000": 0.002903500539640421
+      }
+    ],
+    "total_budget": {
+      "total_simulations": 100000,
+      "supervised_rl_episodes": {
+        "train_hands": 40000,
+        "all_hands": 16000
+      },
+      "gap_to_optimal_mean": [
+        {
+          "method": "hybrid_supervised",
+          "preset": "config",
+          "dealer_hands_counted": "train_hands",
+          "rl_episodes": 40000,
+          "value": 0.002263544454618345
+        },
+        {
+          "method": "hybrid_supervised",
+          "preset": "tuned",
+          "dealer_hands_counted": "train_hands",
+          "rl_episodes": 40000,
+          "value": 0.0017399955147476356
+        },
+        {
+          "method": "hybrid_supervised",
+          "preset": "config",
+          "dealer_hands_counted": "all_hands",
+          "rl_episodes": 16000,
+          "value": 0.004472956552423274
+        },
+        {
+          "method": "hybrid_supervised",
+          "preset": "tuned",
+          "dealer_hands_counted": "all_hands",
+          "rl_episodes": 16000,
+          "value": 0.004528141239252723
+        },
+        {
+          "method": "standard",
+          "preset": "config",
+          "dealer_hands_counted": "none",
+          "rl_episodes": 100000,
+          "value": 0.004110754227118864
+        },
+        {
+          "method": "standard",
+          "preset": "tuned",
+          "dealer_hands_counted": "none",
+          "rl_episodes": 100000,
+          "value": 0.002903500539640421
+        },
+        {
+          "method": "hybrid_exact",
+          "preset": "config",
+          "dealer_hands_counted": "none",
+          "rl_episodes": 100000,
+          "value": 0.002068263389272469
+        },
+        {
+          "method": "hybrid_exact",
+          "preset": "tuned",
+          "dealer_hands_counted": "none",
+          "rl_episodes": 100000,
+          "value": 0.0008148245585739494
+        }
+      ]
+    }
+  },
+  "checks": {
+    "stand_frozen_in_hybrid_runs": true,
+    "legacy_agent_reproduced": true
+  },
+  "provenance": {
+    "wassim_source_commit": "58f5ce35880ae18c107187f4b64f23f2fa005ded",
+    "rl_source_sha256": {
+      "src/environment.py": "803cc796dd023bf31ded9975d6112795691bafa2dd8418e385f91a15f1848b21",
+      "src/q_learning.py": "c3d65ccfa4d88b9fabaf5acdc0fd217754b569e17614614e1899a0c07499998f",
+      "src/stand_value.py": "038a2f6872d4e2c3c3a8cf82417729807c86e3a81976e15de755a756e3b6a472",
+      "src/evaluate.py": "82b93ac233578c59f319a31a72a146a1e26f94b8f594f6ffc12d2322a5366997"
+    },
+    "versions": {
+      "python": "3.12.7",
+      "numpy": "2.5.4",
+      "gymnasium": "1.4.0",
+      "scikit-learn": "1.9.1",
+      "joblib": "1.6.0"
+    },
+    "wall_seconds": 384.4835444350001
+  }
+}

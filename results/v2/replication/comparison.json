@@ -1,0 +1,33 @@
+{
+  "checks": {
+    "config_vs_tuned/runs.csv": {
+      "rows": 160,
+      "max_absolute_difference": 0.0,
+      "matched_indices": true,
+      "tolerance_1e-9_passed": true
+    },
+    "config_vs_tuned/learning_curves.csv": {
+      "rows": 8000,
+      "max_absolute_difference": 0.0,
+      "matched_indices": true,
+      "tolerance_1e-9_passed": true
+    },
+    "frequencies_ablation/runs.csv": {
+      "rows": 80,
+      "max_absolute_difference": 0.0,
+      "matched_indices": true,
+      "tolerance_1e-9_passed": true
+    },
+    "frequencies_ablation/learning_curves.csv": {
+      "rows": 4000,
+      "max_absolute_difference": 0.0,
+      "matched_indices": true,
+      "tolerance_1e-9_passed": true
+    },
+    "supervised_max_probability_difference": 0.0,
+    "supervised_tolerance_1e-7_passed": true
+  },
+  "all_checks_passed": true,
+  "wall_seconds": 583.1638424780003,
+  "scope": "160 CONFIG/TUNED + 80 ablation + modele supervise ; tuning 108 runs et notebook non reexecutes"
+}
