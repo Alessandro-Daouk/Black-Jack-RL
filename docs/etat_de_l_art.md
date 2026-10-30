@@ -98,6 +98,6 @@ discutée dans le [rapport](rapport_scientifique.md#6-discussion).
     Bioavailability*, Journal of Pharmacokinetics and Biopharmaceutics 15(6),
     657–680. [DOI](https://doi.org/10.1007/BF01068419).
 
-Le résultat de risque lissé en (K−1)/(2m) est démontré dans `modele1.tex` ; nous
+Le résultat de risque lissé en (K−1)/(2m) est démontré dans `modele1.pdf` ; nous
 n'avons pas pu vérifier dans une source primaire l'énoncé exact attribué parfois à
 la littérature sur les estimateurs « add-β », et ne citons donc aucune source pour lui.

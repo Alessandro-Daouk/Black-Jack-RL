@@ -123,7 +123,7 @@ les résultats, les coûts mesurés et les ablations sont dans le
 ## Reproduire
 
 Les tests ci-dessus prennent quelques secondes. La campagne complète
-(environ 1 h 30), les campagnes historiques et la recompilation des PDF sont décrites
+(environ 1 h 30) et les campagnes historiques sont décrites
 dans [docs/reproductibilite.md](docs/reproductibilite.md). Les gains exacts sont
 déterministes ; seules les durées varient. La CI exécute les tests et la
 démonstration sous Linux et Windows.

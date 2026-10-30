@@ -12,7 +12,6 @@ peut différer lors d'une reproduction.
 | Processeur | Intel Core i7-1255U (2 cœurs performance, 8 cœurs efficacité, 12 fils), 30 Gio |
 | Python | 3.12.7, installé par uv à partir de `.python-version` |
 | Bibliothèques | NumPy 2.5.4, SciPy 1.18.1, scikit-learn 1.9.1, Gymnasium 1.4.0, pandas et joblib figés par `uv.lock` |
-| LaTeX | pdfTeX 3.141592653-2.6-1.40.28 (TeX Live 2025, Debian), babel français, lmodern |
 
 Chaque campagne écrit un `config.json` qui contient ses paramètres.
 
@@ -93,7 +92,6 @@ exécution réécrit les fichiers de `results/q_learning/` et `models/q_learning
 | Variante à cartes uniformes (54 entraînements) | 3,6 min | un processus |
 | Analyse et figures | 6 s | |
 | Tests | quelques secondes | 113 tests |
-| Compilation des deux PDF | quelques secondes | deux passes chacun |
 
 ## Ce qui doit être identique, et ce qui peut différer
 
@@ -113,7 +111,4 @@ exécution réécrit les fichiers de `results/q_learning/` et `models/q_learning
 `src.audit.analyze` relit uniquement les fichiers bruts et régénère `summary.json`,
 `surface.json`, `cost_contrasts.json`, les CSV dérivés, les figures et `report.md` de
 `results/v2/analysis/`. Les chiffres du README et du rapport scientifique proviennent de
-ces fichiers. `python scripts/build_docs.py` recompile les deux PDF (deux passes,
-échec en cas de référence indéfinie ou de débordement) ; `--check` compile dans un
-dossier temporaire sans remplacer les PDF publiés. Variables d'environnement fixées par
-le script : `SOURCE_DATE_EPOCH` au 30 octobre 2026.
+ces fichiers.
