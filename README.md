@@ -196,4 +196,4 @@ modification, pour que la réplication porte sur le code d'origine.
 
 Code sous licence [MIT](LICENSE). L'historique Git conserve l'auteur de chaque
 contribution ; les versions antérieures des documents mathématiques sont au commit
-`9c3d631`.
+`6f397e8`.
