@@ -1,0 +1,8 @@
+{
+  "status": "complete",
+  "runs": 418,
+  "wall_seconds": 3738.5777318660002,
+  "optimal_j": -0.04655597706669756,
+  "run_table_sha256": "53858fcfe238971645e00b3e0a5468ec2d169b74536709aadf9605ee3cee2f08",
+  "curve_table_sha256": "15adb7eb7baaaa107764fe151a3f244666376eb607525e54efde8302e79f9ea2"
+}

@@ -1,0 +1,55 @@
+{
+  "schema": 2,
+  "phase": "final",
+  "groups": 28,
+  "secondary_groups": 9,
+  "rl_per_group": 2,
+  "sizes": [
+    1000,
+    5000,
+    20000,
+    60000
+  ],
+  "checkpoints": [
+    0,
+    100,
+    500,
+    1000,
+    2000,
+    5000,
+    10000,
+    20000,
+    40000,
+    60000,
+    100000,
+    200000
+  ],
+  "validation_size": 6000,
+  "test_size": 12000,
+  "data_seed_base": 41000,
+  "rl_seed_base": 51000,
+  "order_seed": 49000,
+  "pilot_design_sha256": "920a376ca8477aaae3a41f4779daa098b0260639a6439d2ba37b0475555e2adf",
+  "methods": [
+    "logistic",
+    "frequencies",
+    "jeffreys",
+    "exact",
+    "standard",
+    "standard_common"
+  ],
+  "ablations": true,
+  "thresholds": [
+    0.01,
+    0.005,
+    0.002,
+    0.001
+  ],
+  "primary": {
+    "size": 20000,
+    "episodes": 100000,
+    "contrast": "logistic-standard"
+  },
+  "practical_effect": 0.001,
+  "target_half_width": 0.0005
+}
