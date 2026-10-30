@@ -1,5 +1,7 @@
 # Comparaison CONFIG / TUNED de l'hybride supervisé
 
+> Rapport généré par la version historique du projet ; ses mesures sont inchangées. Certaines interprétations ont été corrigées depuis : en cas de désaccord, le [README](../../../README.md) et le [rapport scientifique](../../../docs/rapport_scientifique.md) font foi.
+
 Sources RL de Wassim : commit `58f5ce35880ae18c107187f4b64f23f2fa005ded`.
 Prédicteur supervisé figé : `b91c797fcffa18ef421f73fff0ef7c088bcdacbad0d787d3ec819f67a9ebbfc1`.
 

@@ -1,5 +1,7 @@
 # Taille des données et généralisation
 
+> Rapport généré par la version historique du projet ; ses mesures sont inchangées. Certaines interprétations ont été corrigées depuis : en cas de désaccord, le [README](../../../README.md) et le [rapport scientifique](../../../docs/rapport_scientifique.md) font foi.
+
 C choisi sur validation ; test indépendant et référence analytique consultés après sélection.
 Les tailles partagent des préfixes d'un même jeu dans chaque répétition ; les répétitions sont indépendantes.
 Les modèles livrés ne sont pas remplacés par cette étude de sensibilité.

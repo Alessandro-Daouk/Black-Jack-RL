@@ -1,5 +1,7 @@
 # Évaluation de l'agent hybride
 
+> Rapport généré par la version historique du projet ; ses mesures sont inchangées. Certaines interprétations ont été corrigées depuis : en cas de désaccord, le [README](../../../README.md) et le [rapport scientifique](../../../docs/rapport_scientifique.md) font foi.
+
 Le prédicteur supervisé reste figé pendant le Q-learning. Les sources RL de
 Wassim proviennent du commit `0780a4f32335540c5b59a602f38c08de3b3f01f6`.
 

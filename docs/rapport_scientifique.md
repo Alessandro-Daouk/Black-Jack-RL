@@ -1,7 +1,6 @@
 # Rapport scientifique — audit v2 du Blackjack hybride
 
-Alessandro Daouk et Wassim Ghnaya. Audit et campagnes v2 réalisés le 30 octobre 2026,
-avec l'assistance d'outils d'IA.
+Alessandro Daouk et Wassim Ghnaya. Campagnes v2 réalisées le 30 octobre 2026.
 Ce rapport décrit les nouvelles mesures et leur portée ; les fondements mathématiques
 sont démontrés dans [modele1.pdf](modele1.pdf) et [modele2.pdf](modele2.pdf).
 

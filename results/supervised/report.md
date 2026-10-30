@@ -1,5 +1,7 @@
 # Première expérience supervisée
 
+> Rapport généré par la version historique du projet ; ses mesures sont inchangées. Certaines interprétations ont été corrigées depuis : en cas de désaccord, le [README](../../README.md) et le [rapport scientifique](../../docs/rapport_scientifique.md) font foi.
+
 Prédicteur du résultat du croupier dans Blackjack-v1, natural=False, sab=False.
 Une carte visible en entrée ; six probabilités en sortie. Aucun état caché en entrée.
 
