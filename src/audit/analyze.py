@@ -201,7 +201,12 @@ def run(folder, output, diagnostics=None, variant=None, replication=None):
         vfinal = vf[vf.episodes == 100000]
         summary['variant'] = {'oracle':json.loads((Path(variant)/'oracle_mc.json').read_text(encoding='utf-8')),
             'frequencies_minus_standard':paired(vfinal,'frequencies','standard'),
-            'jeffreys_minus_standard':paired(vfinal,'jeffreys','standard')}
+            'jeffreys_minus_standard':paired(vfinal,'jeffreys','standard'),
+            # Ajouté après lecture du contraste à 100 000 épisodes : description, pas test préétabli.
+            'descriptive_by_budget':[{'episodes':int(e), 'regret_means':{m:float(f[f.method==m].groupby('group').regret.mean().mean())
+                                        for m in ('frequencies','jeffreys','standard')},
+                                      **({'frequencies_minus_standard':paired(f,'frequencies','standard')} if e > 0 else {})}
+                                     for e, f in vf.groupby('episodes')]}
     if replication:
         summary['replication'] = json.loads((Path(replication)/'comparison.json').read_text(encoding='utf-8'))
     dump(output/'summary.json', summary)
@@ -358,6 +363,14 @@ def write_report(s, costs, output):
         lines += ['## Variante à cartes uniformes', '', f"J optimal de la variante : {v['oracle']['j_star']:+.8f}.",
                   f"Fréquences − standard : {fmt(v['frequencies_minus_standard'])}.",
                   f"Jeffreys − standard : {fmt(v['jeffreys_minus_standard'])}.",
+                  f"TOST à ±0,001 (fréquences − standard) : p = {v['frequencies_minus_standard']['tost_p']:.3g}.", '',
+                  'Description par budget, ajoutée après lecture du contraste préétabli (IC non simultanés) :', '',
+                  '| Épisodes | Regret fréquences | Regret standard | Fréquences − standard |', '|---:|---:|---:|---:|']
+        for r in v['descriptive_by_budget']:
+            if r['episodes'] > 0:
+                lines.append(f"| {r['episodes']} | {r['regret_means']['frequencies']:.5f} | {r['regret_means']['standard']:.5f} | "
+                             f"{fmt(r['frequencies_minus_standard'])} |")
+        lines += ['',
                   'Les modèles sont réentraînés ; il s’agit d’une robustesse locale, pas d’un transfert sans apprentissage.', '']
     if 'replication' in s:
         lines += ['## Réplication historique', '', 'Résultats des contrôles :', '', '```json',

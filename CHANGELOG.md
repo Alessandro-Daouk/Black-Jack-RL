@@ -57,6 +57,24 @@ historiques sont inchangés ; `scripts.verify_release` le contrôle.
 - `.gitattributes` : les fichiers de `results/v2/` sont conservés octet par octet
   pour que leurs empreintes restent valables sous Windows.
 
+### Campagnes et résultats v2
+
+- Réplication stricte des 240 entraînements historiques et du modèle 1 : écart nul.
+- Campagne finale : 28 jeux supervisés indépendants, 418 entraînements, 76 millions
+  d'épisodes. Critère principal : +0,00214 [+0,00188 ; +0,00240] pour l'hybride.
+- Régions de perte de l'hybride identifiées (1 000 mains et budgets RL longs ;
+  acquisition qui consomme le budget) ; coûts mesurés en secondes et en cartes.
+- Équivalence logistique / fréquences établie par TOST à ±0,001.
+- Variante à cartes uniformes : avantage aux petits budgets seulement.
+
+### Défauts corrigés pendant l'audit
+
+- `modele2.tex` ne compilait pas (macro `\TV` non définie) ; PDF régénérés.
+- Analyse : la taille supervisée était écrasée par le nombre de grappes dans les
+  tableaux de surface et de coûts ; corrigé avant l'analyse publiée (déviation D5).
+- Réplication : une assertion aurait interrompu la campagne au lieu de consigner un
+  écart ; remplacée par un enregistrement explicite (déviation D2).
+
 ### Documentation
 
 - README restructuré autour de la question de recherche, des résultats v2 avec

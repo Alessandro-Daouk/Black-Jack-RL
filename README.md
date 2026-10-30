@@ -49,12 +49,13 @@ exact, intervalles de confiance à 95 % calculés entre jeux indépendants.
   standard à 200 000 épisodes (−0,0020 [−0,0033 ; −0,0006]) : il converge vers la
   meilleure politique du modèle estimé, dont l'erreur dépasse alors celle du standard.
 - Mesuré en secondes de calcul et en cartes distribuées, en incluant la simulation des
-  mains et le choix de la régularisation, l'avantage persiste pour 5 000 à 60 000 mains
-  et des budgets de 2 à 20 secondes. Il disparaît lorsque l'estimation consomme presque
-  tout le budget, ou lorsque le modèle est trop imprécis.
+  mains et le choix de la régularisation, l'avantage persiste avec 20 000 mains pour des
+  budgets de 2 à 20 secondes ; avec 5 000 ou 60 000 mains, il ne tient que sur une partie
+  de cette plage. Il disparaît lorsque l'estimation consomme presque tout le budget, ou
+  lorsque le modèle est trop imprécis.
 - La régression logistique et une simple table de fréquences donnent des agents
-  équivalents à ±0,001 près (test d'équivalence TOST), et les fréquences coûtent trois
-  fois moins de temps. Le classifieur n'est donc pas nécessaire dans ce problème.
+  équivalents à ±0,001 près (test d'équivalence TOST), et, à 20 000 ou 60 000 mains,
+  les fréquences coûtent environ trois fois moins de temps d'acquisition. Le classifieur n'est donc pas nécessaire dans ce problème.
 
 Le projet ne revendique pas d'invention algorithmique : utiliser une connaissance
 partielle du modèle dans un apprentissage par renforcement est une idée connue
@@ -407,8 +408,8 @@ aucun :
 - sur le jeu de test du modèle livré, l'écart de log-loss entre les deux estimateurs
   vaut −0,000055 [−0,000125 ; +0,000014], sans conséquence sur les décisions.
 
-La régression coûte en revanche trois fois plus de temps d'acquisition, à cause du choix
-de $C$ sur une validation. Elle pourrait devenir utile avec plusieurs variables, par
+La régression coûte en revanche environ trois fois plus de temps d'acquisition à 20 000
+ou 60 000 mains (dix fois plus à 1 000 mains), à cause du choix de $C$ sur une validation. Elle pourrait devenir utile avec plusieurs variables, par
 exemple dans un paquet fini où les cartes déjà sorties modifient les probabilités ; ce
 cas n'est pas étudié ici.
 
@@ -424,9 +425,12 @@ fréquences lissées (Jeffreys, Laplace). Des simulations le confirment : à 1 0
 ## 10. Limites et menaces à la validité
 
 - **Un seul environnement.** Paquet infini, croupier s'arrêtant sur 17 souple, deux
-  actions, une action terminale dont la loi ne dépend que d'une variable. La variante à
-  cartes uniformes (rapport, §5.8) change la loi des cartes mais pas la structure ; elle
-  ne démontre aucune généralisation à un paquet fini, à d'autres règles ou à un casino.
+  actions, une action terminale dont la loi ne dépend que d'une variable. Avec des
+  cartes équiprobables (rapport, §5.8), l'avantage de l'hybride subsiste aux petits
+  budgets mais n'est plus établi à 100 000 épisodes (+0,0003 [−0,0001 ; +0,0008]) :
+  l'amplitude mesurée sur Blackjack-v1 n'est pas une constante de la méthode. Cette
+  variante ne démontre aucune généralisation à un paquet fini, à d'autres règles ou à
+  un casino.
 - **Hyperparamètres historiques.** Les réglages ont été choisis sur trois graines, avec
   la loi exacte pour l'hybride, puis conservés sans nouveau réglage afin de ne rien
   choisir sur les données de test.

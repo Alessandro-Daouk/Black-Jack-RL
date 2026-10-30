@@ -5,8 +5,13 @@ conservées sans réécriture de leurs valeurs ou rapports générés. Les affir
 de ces anciens rapports doivent être lues avec les corrections de l'audit v2,
 notamment sur le KL brut, les unités de coût et la portée des intervalles.
 
-`v2/` contient les campagnes de l'audit. Un `completion.json` indique la fin
-d'une campagne ; l'absence de ce fichier signifie que ses sorties sont partielles.
+`v2/` contient les campagnes de l'audit : `baseline/` (environnement de départ),
+`diagnostics/` (oracle, baselines Monte-Carlo, KL, bornes du modèle livré), `pilot/`
+(dimensionnement sur validation), `final/` (418 entraînements, tables Q archivées),
+`replication/` (240 entraînements historiques relancés), `variant/` (cartes
+uniformes) et `analysis/` (tableaux, figures et `report.md` régénérés depuis les
+mesures brutes). Un `completion.json` indique la fin d'une campagne ; l'absence de ce
+fichier signifie que ses sorties sont partielles.
 Les configurations et empreintes du code lors de chaque lancement figurent dans
 `provenance.json`. Les résultats finaux ne servent pas à sélectionner l'agent livré.
 

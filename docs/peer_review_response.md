@@ -59,7 +59,7 @@ est justifié.
 | E3 coût de bout en bout | Postes chronométrés séparément ; cartes physiques comptées | Quatre conventions de coût ; contrastes à coût égal | rapport §5.5, `stage_costs.csv`, `cost_contrasts.json` | Fait (énergie non mesurée : aucun compteur fiable) |
 | E4 surface budget supervisé × RL | 4 tailles × 5 budgets × 3 estimateurs, 9 grappes indépendantes | Régions de gain et de perte identifiées | `surface.json`, `budget_surface.png` | Fait |
 | E5 ablations mécanistiques | Estimateurs, bruit contrôlé, exploration, ω, échantillonnage direct | Identité directe = fréquences vérifiée (2,2·10⁻¹⁶) | rapport §5.6 | Fait (variante « STAND ajustable » non faite : hors de la question étudiée) |
-| E6 robustesse | <!-- E6-STATUT --> | Variante à cartes uniformes avec oracle adapté | `results/v2/variant/` | <!-- E6-FAIT --> |
+| E6 robustesse | Oracle adapté contrôlé par Monte-Carlo ; 9 grappes × 2 graines × 3 méthodes ; avantage à 100 000 épisodes non établi | Variante à cartes uniformes avec oracle adapté | `results/v2/variant/` | Fait (robustesse locale seulement) |
 | E7 statistique | Unité = jeu supervisé ; IC Student, bootstrap des grappes, TOST, effets standardisés | Multiplicité signalée, contrastes secondaires descriptifs | `src/audit/analyze.py`, `results/v2/analysis/summary.json` | Fait |
 
 ## Code, reproductibilité et documentation (§6–7)

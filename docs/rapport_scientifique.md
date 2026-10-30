@@ -25,18 +25,22 @@ cet avantage persiste-t-il lorsque l'on compte le coût d'obtention de l'estimat
    épisodes), décroît avec le nombre d'épisodes, et **s'inverse** lorsque le modèle du
    croupier est estimé sur 1 000 mains seulement : à 200 000 épisodes, l'hybride perd
    0,0020 [0,0006 ; 0,0033] par partie **[observé]**. L'erreur asymptotique du modèle
-   (regret limite ≈ 0,0027) dépasse alors l'erreur d'apprentissage du standard.
+   (regret limite de 0,0027 à 0,0030 selon l'estimateur) dépasse alors l'erreur d'apprentissage du standard.
 3. Mesuré en secondes réelles et en cartes distribuées, coût d'acquisition inclus,
-   l'avantage persiste pour 5 000 à 60 000 mains et des budgets de 2 à 20 s **[observé]**,
-   mais il disparaît ou s'inverse si l'acquisition consomme presque tout le budget
+   l'avantage persiste avec 20 000 mains pour des budgets de 2 à 20 s, et sur une partie
+   de cette plage avec 5 000 ou 60 000 mains **[observé]** ; il disparaît ou s'inverse
+   si l'acquisition consomme presque tout le budget
    (60 000 mains pour 1 s) ou si le modèle est trop imprécis (1 000 mains, 10–20 s).
    Ces secondes sont propres à une machine et à une implémentation.
 4. La régression logistique et les fréquences sont **équivalentes à ±0,001** sur le gain
    final (TOST, p < 10⁻¹⁷ sur 9 grappes ; 17 paires sur 18 identiques) **[observé]**.
-   La logistique coûte en revanche environ trois fois plus de temps d'acquisition, à
-   cause de la sélection de C. Ce résultat négatif sur la valeur propre du classifieur est
+   La logistique coûte en revanche environ trois fois plus de temps d'acquisition à
+   20 000 ou 60 000 mains (dix fois plus à 1 000), à cause de la sélection de C. Ce résultat négatif sur la valeur propre du classifieur est
    conforme à la théorie du modèle saturé **[démontré]**.
-5. Les mécanismes théoriques de réduction de variance et de biais ne sont **pas
+5. Avec des cartes équiprobables (variante E6), l'avantage subsiste aux petits budgets
+   mais n'est plus établi à 100 000 épisodes (+0,00032 [−0,00012 ; +0,00076]) : son
+   amplitude dépend de l'environnement **[observé]**.
+6. Les mécanismes théoriques de réduction de variance et de biais ne sont **pas
    démontrés** comme garanties générales ; seule la stabilité des décisions sous une
    erreur bornée de STAND l'est (bornes 2η et locale).
 
@@ -371,7 +375,34 @@ mesurable sur le gain. Seul C = 0,01 est nettement moins bon aux petites tailles
 
 ### 5.8 Robustesse : cartes uniformes (E6)
 
-<!-- E6 -->
+Variante contrôlée du MDP : les dix valeurs de cartes deviennent équiprobables (1/10
+au lieu de 4/13 pour le 10), avec les mêmes règles, états et gains. L'oracle est
+recalculé pour cette loi (J* = −0,031375) et contrôlé par 100 000 parties
+Monte-Carlo : −0,0271 [−0,0329 ; −0,0213], intervalle qui contient J*. Neuf jeux de
+20 000 mains (graines 71000 + 10i), deux graines RL par jeu (81000 + 10i + j). Les
+hyperparamètres sont ceux de Blackjack-v1, sans nouveau réglage ; la logistique n'est
+pas incluse, les fréquences et Jeffreys suffisant à tester l'hypothèse.
+
+**[observé]** Au contraste prévu (100 000 épisodes), l'hybride à fréquences n'est pas
+nettement meilleur que le standard : +0,00032 [−0,00012 ; +0,00076], et le TOST conclut
+même à l'équivalence à ±0,001 (p = 0,004). Les deux estimateurs donnent des gains
+identiques. La description par budget, ajoutée après lecture de ce résultat (déviation
+D4), montre le même profil qu'avec les cartes de Blackjack-v1 mais une convergence plus
+rapide du standard :
+
+| Épisodes | 1 000 | 5 000 | 20 000 | 60 000 | 100 000 | 200 000 |
+|---|---:|---:|---:|---:|---:|---:|
+| Regret, hybride fréquences | 0,0524 | 0,0073 | 0,0028 | 0,0007 | 0,0006 | 0,0003 |
+| Regret, standard réglé | 0,1536 | 0,0370 | 0,0056 | 0,0014 | 0,0009 | 0,0005 |
+| Différence (IC 95 %, non simultané) | +0,101 [+0,083 ; +0,119] | +0,030 [+0,020 ; +0,039] | +0,0027 [+0,0006 ; +0,0048] | +0,0007 [−0,0000 ; +0,0015] | +0,0003 [−0,0001 ; +0,0008] | +0,0002 [+0,0001 ; +0,0004] |
+
+L'avantage aux petits budgets est donc robuste à ce changement de loi ; son amplitude
+au budget de 100 000 épisodes ne l'est pas, ce qui interdit de présenter l'écart mesuré
+sur Blackjack-v1 comme une constante de la méthode. Pourquoi le standard converge plus
+vite ici n'a pas été étudié **[non démontré]**. Le regret de l'hybride n'est pas
+monotone au tout début (0,044 avant apprentissage, 0,081 à 500 épisodes) : les premières
+cibles de HIT modifient des décisions initialement correctes. Cette variante reste une
+robustesse locale dans la même famille de jeux, pas une validation de généralisation.
 
 ## 6. Discussion
 

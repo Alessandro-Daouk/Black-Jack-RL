@@ -71,7 +71,7 @@ fichier existant.
 | Pilote de validation (16 entraînements) | 80 s | un processus |
 | Campagne finale (418 entraînements, 76 millions d'épisodes) | 62 min | un processus, un fil numérique ; 61 min de Q-learning |
 | Réplication historique (240 entraînements et modèle 1) | 9,7 min | 6 processus parallèles |
-| Variante à cartes uniformes (54 entraînements) | <!-- DUREE-E6 --> | un processus |
+| Variante à cartes uniformes (54 entraînements) | 3,6 min | un processus |
 | Analyse et figures | 6 s | |
 | Tests | 9 s | 112 tests |
 | Compilation des deux PDF | quelques secondes | deux passes chacun |
