@@ -7,7 +7,7 @@ from pathlib import Path
 from joblib import Parallel, delayed, parallel_config
 import numpy as np
 
-from src.environment import HIT, STAND
+from src.environment import STAND
 from src.evaluate import J, J_STAR, V_TRUE
 from src.experiment_utils import describe
 from src.hybrid_agent import file_sha256

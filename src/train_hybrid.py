@@ -9,7 +9,7 @@ import numpy as np
 
 from src.environment import HIT, STAND
 from src.evaluate import REACH
-from src.hybrid_agent import DEFAULT_AGENT, HybridAgent, file_sha256, load_agent, results_dir_for
+from src.hybrid_agent import HybridAgent, file_sha256, load_agent, results_dir_for
 from src.q_learning import CONFIG, TUNED, train
 from src.supervised.data import require_integer
 from src.supervised.model import DEFAULT_MODEL, load_model
