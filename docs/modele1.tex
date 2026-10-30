@@ -99,7 +99,7 @@ poids de classes ni d'exemples. Pour scikit-learn \textbf{1.9.1}, l'objectif est
 soit, à un facteur positif près, $\mathcal L_C=\|W\|_F^2/2+C\sum_i-\log u_{d_i}(D_i)$.
 Le biais n'est pas pénalisé. Ceci est vérifié dans le source installé
 (\texttt{l2\_reg\_strength=1/(C*sw\_sum)}), et pas déduit d'une convention
-supposée universelle. Les empreintes et résidus numériques sont enregistrés dans
+supposée universelle. Les résidus numériques sont enregistrés dans
 \texttt{results/v2/diagnostics/sklearn\_objective.json} \cite{sklearn}.
 
 \begin{proposition}[Existence et convexité sur un quotient]
@@ -292,7 +292,7 @@ Le modèle historique utilise 60 000 mains train (42), 12 000 validation (43),
 12 000 test (123), $C\in\{.01,.1,1,10,100\}$ choisi sur validation et sans
 refit. Les intervalles sur ses pertes de test conditionnent sur le modèle fixé.
 Ils n'estiment pas la variabilité de nouveaux jeux d'entraînement.
-Le protocole v2 propage séparément graines supervisées et RL et calcule ses
+La campagne v2 propage séparément graines supervisées et RL et calcule ses
 intervalles sur des grappes indépendantes, après moyenne des graines RL internes.
 
 La faible dimension et la bonne spécification rendent plausible une faible erreur
@@ -300,7 +300,7 @@ d'estimation aux tailles historiques. Elles ne prouvent ni l'absence de
 surapprentissage, ni l'absence d'optimisme de sélection. Un IC contenant zéro
 n'établit pas l'équivalence entre logistique et fréquences. Une conclusion
 d'équivalence exige une marge fixée à l'avance et une procédure adaptée, comme le
-double test unilatéral \cite{tost} : le protocole v2 fixe la marge à 0,001 par partie.
+double test unilatéral \cite{tost} : la campagne v2 fixe la marge à 0,001 par partie.
 Sur 9 jeux supervisés indépendants de 20\,000 mains, les agents hybrides obtenus avec
 la logistique et avec les fréquences ont le même gain exact dans 17 paires sur 18 ;
 la différence moyenne vaut $-3{,}4\cdot10^{-6}$ et le TOST établit l'équivalence à
@@ -315,8 +315,8 @@ mesures v2 font foi pour les interprétations nouvelles.
 Rules, Prediction, and Estimation. \emph{JASA}, 102(477), 359--378.
 \href{https://doi.org/10.1198/016214506000001437}{doi:10.1198/016214506000001437}.
 \bibitem{sklearn} Scikit-learn, version installée 1.9.1.
-\emph{LogisticRegression} et \emph{LinearModelLoss}, fichiers sources et empreintes
-contrôlés dans les résultats v2.
+\emph{LogisticRegression} et \emph{LinearModelLoss}, sources vérifiées dans les
+résultats v2.
 \url{https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression}.
 \bibitem{cover} T. M. Cover et J. A. Thomas (2006).
 \emph{Elements of Information Theory}, deuxième édition, Wiley.

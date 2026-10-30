@@ -41,21 +41,8 @@
     "infinite_deck": true,
     "stand_on_soft_17": true
   },
-  "wassim_source_commit": "58f5ce35880ae18c107187f4b64f23f2fa005ded",
-  "rl_source_sha256": {
-    "src/environment.py": "803cc796dd023bf31ded9975d6112795691bafa2dd8418e385f91a15f1848b21",
-    "src/q_learning.py": "c3d65ccfa4d88b9fabaf5acdc0fd217754b569e17614614e1899a0c07499998f",
-    "src/stand_value.py": "038a2f6872d4e2c3c3a8cf82417729807c86e3a81976e15de755a756e3b6a472",
-    "src/evaluate.py": "82b93ac233578c59f319a31a72a146a1e26f94b8f594f6ffc12d2322a5366997"
-  },
   "training_seconds": 4.443631206999271,
   "reachable_states": 280,
   "visited_hit_states": 280,
-  "stand_frozen": true,
-  "versions": {
-    "python": "3.12.7",
-    "numpy": "2.5.4",
-    "gymnasium": "1.4.0",
-    "scikit-learn": "1.9.1"
-  }
+  "stand_frozen": true
 }

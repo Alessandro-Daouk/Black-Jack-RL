@@ -5,7 +5,7 @@
 Prédicteur du résultat du croupier dans Blackjack-v1, natural=False, sab=False.
 Une carte visible en entrée ; six probabilités en sortie. Aucun état caché en entrée.
 
-## Protocole
+## Plan expérimental
 
 - train : 60,000 mains, graine 42.
 - validation : 12,000 mains, graine 43.
@@ -57,9 +57,9 @@ L'erreur moyenne sur STAND utilise un poids uniforme sur les 180 couples total/c
 - `calibration.csv` : les 60 probabilités, fréquences de test et références.
 - `calibration.png` : comparaison par issue, IC de Wilson à 95 % point par point.
 - `stand_error.png` : carte des erreurs de gain espéré de STAND.
-- `evaluation.json` : résultats, graine de test et empreinte du modèle.
+- `evaluation.json` : résultats et graine de test.
 
-Les paramètres, versions, graines, empreintes des jeux et fréquences d'apprentissage
+Les paramètres, graines et fréquences d'apprentissage
 sont enregistrés dans `models/supervised/metadata.json`.
 
 ![Probabilités du croupier](calibration.png)

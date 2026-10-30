@@ -15,7 +15,7 @@ from .core import dump, new_output
 
 
 def run(output, jobs=2):
-    output = new_output(output, {"phase": "replication", "reference_commit": "9c3d6318fe3d499e4f8e50b5680df1aabf459ff8", "jobs": jobs})
+    output = new_output(output, {"phase": "replication", "jobs": jobs})
     started = time.perf_counter()
     compare(output_dir=output/'config_vs_tuned', jobs=jobs)
     ablation(output=output/'frequencies_ablation', jobs=jobs)

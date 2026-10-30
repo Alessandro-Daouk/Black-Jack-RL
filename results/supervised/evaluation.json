@@ -45,6 +45,5 @@
   ],
   "interval_scope": "Incertitude du jeu de test uniquement, prédicteurs entraînés fixés ; approximation normale.",
   "test_seed": 123,
-  "elapsed_seconds": 13.548679266001272,
-  "model_sha256": "b91c797fcffa18ef421f73fff0ef7c088bcdacbad0d787d3ec819f67a9ebbfc1"
+  "elapsed_seconds": 13.548679266001272
 }

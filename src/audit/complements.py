@@ -1,6 +1,6 @@
-"""Compléments après relecture (E7) : planification, Double Q-learning, réglage sans privilège.
+"""Compléments après relecture (E8) : planification, Double Q-learning, réglage sans privilège.
 
-Protocole : docs/protocole_v2_complements.md. Lit la campagne finale sans la modifier.
+Lit la campagne finale sans la modifier.
 uv run --locked python -m src.audit.complements --output results/v2/complements
 """
 import argparse
@@ -18,7 +18,7 @@ from src.supervised.evaluate import write_csv
 from src.evaluate import PI_STAR, simulate
 from src.supervised.train import fingerprint
 from src.supervised.values import build_stand_table
-from .core import dataset, digest, dump, fit_estimators, interval, new_output, train
+from .core import dataset, dump, fit_estimators, interval, new_output, train
 from .oracle import Oracle
 
 FINAL = Path("results/v2/final")
@@ -118,10 +118,8 @@ def tune(kind, oracle, stands):
 
 def run(output):
     config = json.loads((FINAL / "config.json").read_text(encoding="utf-8"))
-    output = new_output(output, {"protocol": "docs/protocole_v2_complements.md", "grid": GRID,
-                                 "tuning_seeds": TUNING_SEEDS, "tuning_data_seeds": TUNING_DATA_SEEDS,
-                                 "final_config_sha256": digest(FINAL / "config.json"),
-                                 "final_runs_sha256": digest(FINAL / "runs.csv")})
+    output = new_output(output, {"grid": GRID, "tuning_seeds": TUNING_SEEDS,
+                                 "tuning_data_seeds": TUNING_DATA_SEEDS})
     started = time.perf_counter()
     oracle = Oracle()
     groups = range(config["groups"])
@@ -190,7 +188,7 @@ def run(output):
         summary["hybrid_retuned_minus_standard_100000"] = grouped(
             {k: v - points["standard", *k, 100000] for k, v in retuned.items()}, groups)
 
-    # A4 : repères pour le seuil de 0,001 — regret d'une seule décision différente de pi*.
+    # A4 : repères pour le seuil de 0,001, regret d'une seule décision différente de pi*.
     occupancy = oracle.occupation(oracle.policy)
     single = []
     for k, state in enumerate(oracle.states):
@@ -211,8 +209,7 @@ def run(output):
             "games_for_half_width_threshold": float((1.96 * sd / config["practical_effect"]) ** 2)}
 
     dump(output / "summary.json", summary)
-    dump(output / "completion.json", {"status": "complete", "wall_seconds": time.perf_counter() - started,
-                                      "summary_sha256": digest(output / "summary.json")})
+    dump(output / "completion.json", {"status": "complete", "wall_seconds": time.perf_counter() - started})
 
 
 if __name__ == "__main__":

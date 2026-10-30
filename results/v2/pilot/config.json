@@ -1,0 +1,10 @@
+{
+  "phase": "pilot",
+  "groups": 4,
+  "rl_per_group": 2,
+  "train_size": 20000,
+  "validation_size": 6000,
+  "episodes": 100000,
+  "precision_half_width": 0.0005,
+  "pilot_sd_inflation": 1.5
+}

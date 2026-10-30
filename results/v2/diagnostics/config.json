@@ -1,0 +1,17 @@
+{
+  "phase": "diagnostics",
+  "mc_games": 100000,
+  "mc_seed_base": 35000,
+  "kl_seed": 61000,
+  "kl_repeats": 2000,
+  "kl_sizes": [
+    50,
+    100,
+    500,
+    1000,
+    5000,
+    20000,
+    60000,
+    200000
+  ]
+}

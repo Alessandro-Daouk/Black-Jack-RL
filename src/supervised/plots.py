@@ -35,7 +35,7 @@ def make_plots(learned, baseline, reference, counts, output: Path) -> None:
         ax.grid(alpha=0.18)
     handles, labels = axes[0, 0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="lower center", ncol=2, frameon=False)
-    fig.suptitle("Probabilités du croupier par carte visible — modèle, fréquences et référence")
+    fig.suptitle("Probabilités du croupier par carte visible (modèle, fréquences et référence)")
     fig.tight_layout(rect=(0, 0.09, 1, 0.95))
     fig.savefig(output / "calibration.png", dpi=160)
     plt.close(fig)

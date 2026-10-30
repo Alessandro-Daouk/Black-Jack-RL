@@ -1,12 +1,7 @@
-"""Résumés et provenance communs aux expériences complémentaires."""
-
-from importlib.metadata import version
-import platform
+"""Résumés statistiques communs aux expériences complémentaires."""
 
 import numpy as np
 from scipy.stats import t
-
-from src.hybrid_agent import ROOT, file_sha256
 
 
 def describe(values):
@@ -19,10 +14,3 @@ def describe(values):
     return {"n": len(values), "mean": mean, "sd": sd, "min": float(values.min()),
             "max": float(values.max()), "mean_approx_95pct_interval": [mean - half, mean + half]}
 
-
-def provenance():
-    paths = sorted((ROOT / "src").rglob("*.py"))
-    return {"versions": {"python": platform.python_version(), **{name: version(name) for name in
-            ("numpy", "scipy", "scikit-learn", "gymnasium", "joblib")}},
-            "source_sha256": {str(p.relative_to(ROOT)): file_sha256(p) for p in paths},
-            "protocol_sha256": file_sha256(ROOT / "docs/protocole_complementaire.md")}

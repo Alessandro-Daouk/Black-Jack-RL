@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import t as student
 
-from .core import digest, dump, interval, new_output
+from .core import dump, interval, new_output
 from .oracle import Oracle
 
 
@@ -18,7 +18,7 @@ def cluster_summary(values, seed=91000, margin=.001):
     """Une valeur par grappe indépendante ; ne rééchantillonne pas les lignes RL.
 
     TOST : équivalence à 5 % si l'IC de Student à 90 % est inclus dans ]-margin, margin[.
-    La marge est la différence pratique minimale fixée par le protocole avant les mesures.
+    La marge est la différence pratique minimale fixée avant les mesures.
     """
     a = np.asarray(values, dtype=float)
     result = interval(a)
@@ -109,7 +109,6 @@ def run(folder, output, diagnostics=None, variant=None, replication=None):
         raise ValueError('Campagne incomplète.')
     config = json.loads((folder/'config.json').read_text(encoding='utf-8'))
     output = new_output(output, {'phase': 'analysis', 'input': str(folder),
-        'runs_sha256': digest(folder/'runs.csv'), 'curves_sha256': digest(folder/'curves.csv'),
         'bootstrap_seed': 91000, 'bootstrap_samples': 10000})
     runs, curves = pd.read_csv(folder/'runs.csv'), pd.read_csv(folder/'curves.csv')
     primary = curves[(curves.episodes == 100000) & (curves.n.isin([0, 20000]))]
@@ -296,7 +295,7 @@ def fmt(stats):
 
 def write_report(s, costs, output):
     p=s['primary']
-    lines=['# Mesures v2 — rapport généré depuis les résultats bruts','',
+    lines=['# Mesures v2 : rapport généré depuis les résultats bruts','',
         'Les intervalles entre crochets sont des IC de Student approximatifs à 95 % sur les grappes indépendantes.',
         'Les comparaisons secondaires sont descriptives et leurs intervalles ne sont pas simultanés.','',
         '## Contraste principal préspécifié','',

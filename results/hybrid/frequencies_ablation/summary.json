@@ -232,42 +232,5 @@
       "worse": 2
     }
   },
-  "optimal_exact_expected_reward": -0.046555977066697535,
-  "provenance": {
-    "versions": {
-      "python": "3.12.7",
-      "numpy": "2.5.4",
-      "scipy": "1.18.1",
-      "scikit-learn": "1.9.1",
-      "gymnasium": "1.4.0",
-      "joblib": "1.6.0"
-    },
-    "source_sha256": {
-      "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "src/compare_frequencies.py": "25ca24b6e3c27bdd8a82e1828e77277b88e47c1e5c0789f38fdb0fad069ed9b8",
-      "src/compare_hybrid.py": "ffea3df48dc057138828ea2ac1f6bb67321d4fd4db683c538e50e586afeea845",
-      "src/environment.py": "803cc796dd023bf31ded9975d6112795691bafa2dd8418e385f91a15f1848b21",
-      "src/evaluate.py": "82b93ac233578c59f319a31a72a146a1e26f94b8f594f6ffc12d2322a5366997",
-      "src/evaluate_hybrid.py": "0365ab50fb09876b6c68528136cacc44b4cc9afaad7132d7f437f5ef5b88d57c",
-      "src/experiment_utils.py": "47c6a299a7706ec5e934568f835247da9533b31ea3ec7c9c6bef4ff9f6a9c111",
-      "src/hybrid_agent.py": "1056ff45481d57e4c290c78ae593560c769905de399fd6347f34dcafce5728f8",
-      "src/play.py": "cf53c066eb33d1daf857eed75c3d2f92f0367ab6b3ef6f71353514cd7e5d65a4",
-      "src/q_learning.py": "c3d65ccfa4d88b9fabaf5acdc0fd217754b569e17614614e1899a0c07499998f",
-      "src/stand_value.py": "038a2f6872d4e2c3c3a8cf82417729807c86e3a81976e15de755a756e3b6a472",
-      "src/supervised/__init__.py": "1c61bea1d618717eed1a24196a2a9b0390eea7c348f724160ec8aea91e11d617",
-      "src/supervised/constants.py": "ec6f2b313a91a9d71be50a3aa967b8947659cdcc3aa4b1cfd0ed7bbfd9beffa7",
-      "src/supervised/data.py": "487b66a5eed3bf3bc8954d7566a9e6eac3db12b2add3a5fc875f0ed10efbd0dc",
-      "src/supervised/demo.py": "c0a9b03ca7c1ae50cc4fd09765fba3df04285cec3eb7ee5bde96f726e846fdb8",
-      "src/supervised/evaluate.py": "a9022408bd3372bc297f02912dce7cd817165e06f8c920682feeeb7e0ee7d5d7",
-      "src/supervised/learning_curve.py": "97353e16a99ed01f9bf66483e7fbcfa31a9494c81644b3a072f83fcf972ee72f",
-      "src/supervised/model.py": "b953a7b386fd593af612c8a5893a486c78b657fc8e5797857a462a63fee48d67",
-      "src/supervised/plots.py": "46d3e3bab340d401d5f1dfb7e39cd7d2f45bd182c68c3bad38bd0b598276eb23",
-      "src/supervised/reference.py": "5359499075c241e7227a17956327c8646fb9a2a6924aa2b5cc1d3b3369e47b95",
-      "src/supervised/train.py": "901c86bab6b456c0ecd88481cfff631c626f1638ba118a50534252bf82c02717",
-      "src/supervised/values.py": "fda972af2e90c2d09ce4a7a78da0ec21822c0d4c9aedb5ec057d2c5d34a84806",
-      "src/train_hybrid.py": "c31ad461752d936969a23cbe90ed48637a4d5188c57761d2187e0d8ceb7482db",
-      "src/tune.py": "9a14cdd04aa473748bfc865e9c9afd3f27c89e94a4e60499abce4b74f21cc804"
-    },
-    "protocol_sha256": "811a16d2a5b446f57375a39c52c9438e642aca9656c00b70dbe9ea44a689bcc8"
-  }
+  "optimal_exact_expected_reward": -0.046555977066697535
 }

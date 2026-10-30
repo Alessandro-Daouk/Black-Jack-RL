@@ -2,10 +2,9 @@
 
 > Rapport généré par la version historique du projet ; ses mesures sont inchangées. Certaines interprétations ont été corrigées depuis : en cas de désaccord, le [README](../../../README.md) et le [rapport scientifique](../../../docs/rapport_scientifique.md) font foi.
 
-Le prédicteur supervisé reste figé pendant le Q-learning. Les sources RL de
-Wassim proviennent du commit `58f5ce35880ae18c107187f4b64f23f2fa005ded`.
+Le prédicteur supervisé reste figé pendant le Q-learning.
 
-## Protocole
+## Plan expérimental
 
 - RL : 100,000 épisodes, graine 0.
 - Réglage RL : `tuned` ; eps0=1, eps_min=1,
@@ -42,10 +41,8 @@ Même la politique optimale a une espérance négative dans ces règles.
 - STAND est resté figé pendant l'apprentissage.
 - HIT a été observé dans 280 des 280 états atteignables.
 - 0 décision HIT sans observation préalable de cette action pendant le test.
-- Empreinte du prédicteur : `b91c797fcffa18ef421f73fff0ef7c088bcdacbad0d787d3ec819f67a9ebbfc1`.
-- Empreinte de l'agent : `f8774e458407f4f97d7611c125ad1fda09bfae633d866e4e7db8c370a88f55df`.
 
-`training.json` contient les paramètres, versions et empreintes des sources RL.
+`training.json` contient les paramètres d'entraînement.
 `learning_curve.csv` contient les évaluations exactes pendant l'entraînement.
 Ce rapport décrit un seul entraînement RL : il ne suffit pas à comparer des méthodes.
 La comparaison sur plusieurs graines des réglages CONFIG et TUNED, avec le Q-learning

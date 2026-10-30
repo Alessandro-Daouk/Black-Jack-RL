@@ -17,7 +17,5 @@
   "gap_to_optimal_exact": 0.000650675660370359,
   "decisions": 15537,
   "unvisited_hit_decisions": 0,
-  "dealer_model_sha256": "b91c797fcffa18ef421f73fff0ef7c088bcdacbad0d787d3ec819f67a9ebbfc1",
-  "scope": "Un seul entraînement RL. IC du test conditionnel à cet agent fixé ; pas de conclusion de supériorité sur le Q-learning standard.",
-  "agent_sha256": "f8774e458407f4f97d7611c125ad1fda09bfae633d866e4e7db8c370a88f55df"
+  "scope": "Un seul entraînement RL. IC du test conditionnel à cet agent fixé ; pas de conclusion de supériorité sur le Q-learning standard."
 }

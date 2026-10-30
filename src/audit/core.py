@@ -1,11 +1,8 @@
 """Instrumentation v2 sans changer les trajectoires du Q-learning historique."""
 import hashlib
-from importlib.metadata import version
 import json
-import os
 from pathlib import Path
 import platform
-import subprocess
 import time
 
 import numpy as np
@@ -27,25 +24,12 @@ def digest(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def provenance(config):
-    def git(*args):
-        return subprocess.check_output(["git", *args], text=True, encoding="utf-8").strip()
-    return {"config": config, "commit": git("rev-parse", "HEAD"), "git_status": git("status", "--short"),
-            "python": platform.python_version(), "platform": platform.platform(),
-            "versions": {n: version(n) for n in ("numpy", "scipy", "scikit-learn", "gymnasium", "joblib")},
-            "thread_environment": {n: os.environ.get(n) for n in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS")},
-            "source_sha256": {str(p): digest(p) for p in sorted(Path("src").rglob("*.py"))},
-            "protocol_sha256": digest("docs/protocole_v2.md"),
-            "protocol_addendum_sha256": digest("docs/protocole_v2_addendum.md") if Path("docs/protocole_v2_addendum.md").exists() else None,
-            "lock_sha256": digest("uv.lock")}
-
-
 def new_output(path, config):
     path = Path(path)
     path.mkdir(parents=True, exist_ok=True)
     if any(path.iterdir()):
         raise ValueError(f"Sortie non vide, refus d'écraser : {path}")
-    dump(path / "provenance.json", provenance(config))
+    dump(path / "config.json", config)
     return path
 
 

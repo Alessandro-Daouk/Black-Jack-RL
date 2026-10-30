@@ -1,6 +1,6 @@
 """Comparer CONFIG et TUNED["hybrid"] pour l'hybride supervisé, à budget RL égal.
 
-Protocole fixé avant d'exécuter la comparaison :
+Plan de la comparaison :
 
 1. Validation, graines 200 à 219 : l'hybride qui utilise la V_STAND du prédicteur figé
    est entraîné avec CONFIG puis avec TUNED["hybrid"], aux mêmes graines et avec le même
@@ -15,10 +15,8 @@ outil d'évaluation : l'agent supervisé ne l'utilise jamais pendant l'apprentis
 
 import argparse
 import csv
-from importlib.metadata import version
 import json
 from pathlib import Path
-import platform
 import time
 
 import numpy as np
@@ -182,7 +180,6 @@ def compare(model_path=DEFAULT_MODEL, episodes=100_000, output_dir=DEFAULT_OUTPU
     eval_every = preset_config("hybrid_supervised", "config", episodes)["eval_every"]
     hands = {name: split["samples"] for name, split in predictor.metadata["splits"].items()}
     budgets = {"train_hands": episodes - hands["train"], "all_hands": episodes - sum(hands.values())}
-    manifest = json.loads((ROOT / "docs/wassim_source.json").read_text(encoding="utf-8"))
     summary = {
         "question": "Hybride supervisé : CONFIG (précédent) ou TUNED['hybrid'] (58f5ce3), à budget RL égal ?",
         "protocol": {
@@ -195,7 +192,7 @@ def compare(model_path=DEFAULT_MODEL, episodes=100_000, output_dir=DEFAULT_OUTPU
                         "tuned_hybrid": preset_config("hybrid_supervised", "tuned", episodes),
                         "tuned_standard": preset_config("standard", "tuned", episodes)},
         },
-        "dealer_model": {"sha256": file_sha256(model_path), "simulated_hands": hands},
+        "dealer_model": {"simulated_hands": hands},
         "optimal_exact_expected_reward": J_STAR,
         "supervised_limit": {
             "exact_expected_reward": limit[1], "gap_to_optimal": J_STAR - limit[1],
@@ -232,13 +229,7 @@ def compare(model_path=DEFAULT_MODEL, episodes=100_000, output_dir=DEFAULT_OUTPU
                     for m in ("standard", "hybrid_exact") for p in PRESETS]}},
         "checks": {"stand_frozen_in_hybrid_runs": True,
                    "legacy_agent_reproduced": legacy_reproduced(test, model_path, episodes)},
-        "provenance": {
-            "wassim_source_commit": manifest["commit"],
-            "rl_source_sha256": {name: file_sha256(ROOT / name) for name in (
-                "src/environment.py", "src/q_learning.py", "src/stand_value.py", "src/evaluate.py")},
-            "versions": {"python": platform.python_version(), **{
-                name: version(name) for name in ("numpy", "gymnasium", "scikit-learn", "joblib")}},
-            "wall_seconds": time.perf_counter() - started},
+        "wall_seconds": time.perf_counter() - started,
     }
 
     output_dir = Path(output_dir)
@@ -286,8 +277,6 @@ def write_report(summary: dict, output: Path) -> None:
     supervised_test = test["comparisons"]["supervised_tuned_minus_config"]
     lines = [
         "# Comparaison CONFIG / TUNED de l'hybride supervisé", "",
-        f"Sources RL de Wassim : commit `{summary['provenance']['wassim_source_commit']}`.",
-        f"Prédicteur supervisé figé : `{summary['dealer_model']['sha256']}`.", "",
         "## Question et réglages", "",
         "À budget RL égal, l'agent hybride qui utilise notre V_STAND estimée apprend-il mieux",
         "avec la configuration précédente `CONFIG` ou avec `TUNED[\"hybrid\"]` du commit 58f5ce3 ?", "",
@@ -297,7 +286,7 @@ def write_report(summary: dict, output: Path) -> None:
         "Avec eps_min = 1, le comportement pendant l'apprentissage est entièrement aléatoire ; la politique",
         "évaluée reste gloutonne, le Q-learning étant hors politique. Wassim a réglé TUNED avec la V_STAND",
         "exacte (graines 100–102) : ce réglage n'était pas encore vérifié avec notre V_STAND estimée.", "",
-        "## Protocole", "",
+        "## Plan expérimental", "",
         f"- Budget : {protocol['episodes_per_run']:,} épisodes RL par entraînement, identique pour tous les bras.",
         "- Les deux réglages de l'hybride supervisé partagent le même prédicteur, donc le même coût de",
         f"  simulation du croupier : {hands['train']:,} mains d'entraînement, plus {hands['validation']:,} de",
@@ -338,7 +327,7 @@ def write_report(summary: dict, output: Path) -> None:
         "| Méthode | Réglage | " + " | ".join(f"{int(n):,}" for n in checkpoints) + " |",
         "|---|---|" + "---:|" * len(checkpoints),
         *[f"| {METHOD_NAMES[row['method']]} | {row['preset']} | "
-          + " | ".join(f"{row[n]:.6f}" if row[n] is not None else "—" for n in checkpoints) + " |"
+          + " | ".join(f"{row[n]:.6f}" if row[n] is not None else "n.d." for n in checkpoints) + " |"
           for row in test["gap_to_optimal_by_rl_episodes"]], "",
         "### Budget total de simulations", "",
         f"Si l'on compte les mains simulées pour le prédicteur, un budget total de "
@@ -348,7 +337,7 @@ def write_report(summary: dict, output: Path) -> None:
         "| Méthode | Réglage | Mains du croupier comptées | Épisodes RL | Écart moyen à l'optimum |",
         "|---|---|---|---:|---:|",
         *[f"| {METHOD_NAMES[row['method']]} | {row['preset']} | {HANDS_COUNTED[row['dealer_hands_counted']]} | "
-          f"{row['rl_episodes']:,} | " + (f"{row['value']:.6f}" if row["value"] is not None else "—") + " |"
+          f"{row['rl_episodes']:,} | " + (f"{row['value']:.6f}" if row["value"] is not None else "n.d.") + " |"
           for row in test["total_budget"]["gap_to_optimal_mean"]], "",
         "L'hybride exact utilise la loi analytique du croupier : son coût de simulation n'est pas compté,",
         "c'est une référence avec probabilités exactes, pas une borne de performance à budget RL fini.",
@@ -377,7 +366,7 @@ def write_report(summary: dict, output: Path) -> None:
         "## Fichiers", "",
         "- `runs.csv` : une ligne par entraînement (phase, méthode, réglage, graine, métriques).",
         f"- `learning_curves.csv` : gain exact tous les {cfg['eval_every']:,} épisodes pour chaque entraînement.",
-        "- `summary.json` : protocole, résumés, tests appariés, versions et empreintes.", "",
+        "- `summary.json` : plan expérimental, résumés et tests appariés.", "",
     ])
     (output / "report.md").write_text("\n".join(lines), encoding="utf-8")
 

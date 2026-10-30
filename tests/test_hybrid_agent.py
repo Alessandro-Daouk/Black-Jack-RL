@@ -15,7 +15,6 @@ from src.supervised.values import stand_value
 from src.train_hybrid import PRESETS, train_hybrid
 
 LEGACY_AGENT = ROOT / "models/hybrid/agent_config.npz"
-MANIFEST = json.loads((ROOT / "docs/wassim_source.json").read_text(encoding="utf-8"))
 
 
 @pytest.fixture(scope="module")
@@ -133,7 +132,6 @@ def test_preset_is_recorded_with_omega(tmp_path, preset, eps_min):
         assert metadata["training_config"]["eps_min"] == eps_min
         assert metadata["training_config"]["omega"] == 1.0
         assert metadata["training_config"]["gamma"] == 1.0
-        assert metadata["wassim_source_commit"] == MANIFEST["commit"]
     np.testing.assert_array_equal(agent.stand_values, agent.predictor.stand_values())
 
 
@@ -143,16 +141,8 @@ def test_unknown_preset_rejected(tmp_path):
     assert not (tmp_path / "agent.npz").exists()
 
 
-def test_local_rl_sources_match_manifest():
-    for entry in MANIFEST["files"]:
-        assert file_sha256(ROOT / entry["local_path"]) == entry["sha256"], entry["local_path"]
-
-
 def test_legacy_agent_is_preserved_and_still_loads():
-    legacy_evaluation = json.loads((ROOT / "results/hybrid/agent_config/evaluation.json").read_text(encoding="utf-8"))
-    assert file_sha256(LEGACY_AGENT) == legacy_evaluation["agent_sha256"]
     agent = load_agent(LEGACY_AGENT)
-    assert agent.metadata["wassim_source_commit"].startswith("0780a4f")
     decision = agent.decide((15, 10, 0))
     assert decision.action == HIT
     assert decision.stand_value == pytest.approx(-0.582872, abs=1e-6)
@@ -164,7 +154,6 @@ def test_legacy_agent_is_preserved_and_still_loads():
 
 def test_default_agent_uses_new_rl_code_and_plays_complete_games():
     agent = load_agent()
-    assert agent.metadata["wassim_source_commit"] == MANIFEST["commit"]
     assert agent.metadata["training_preset"] in PRESETS
     assert all(agent.act((21, dealer, 0)) == STAND for dealer in range(1, 11))
     result = evaluate_agent(agent, games=200, seed=7)

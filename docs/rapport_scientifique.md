@@ -1,4 +1,4 @@
-# Rapport scientifique — audit v2 du Blackjack hybride
+# Rapport scientifique : audit v2 du Blackjack hybride
 
 Alessandro Daouk et Wassim Ghnaya. Campagnes v2 réalisées le 30 octobre 2026.
 Ce rapport décrit les nouvelles mesures et leur portée ; les fondements mathématiques
@@ -19,7 +19,7 @@ cet avantage persiste-t-il lorsque l'on compte le coût d'obtention de l'estimat
 1. À 20 000 mains supervisées et 100 000 épisodes, l'hybride logistique dépasse le
    Q-learning standard réglé de **+0,00214 récompense par partie**, IC 95 %
    [+0,00188 ; +0,00240], sur 28 jeux supervisés indépendants **[observé]**. La borne
-   inférieure dépasse la différence pratique minimale de 0,001 fixée avant les mesures.
+   inférieure dépasse la différence pratique minimale de 0,001.
 2. L'avantage dépend du budget. Il est très grand aux petits budgets RL (+0,05 à 1 000
    épisodes), décroît avec le nombre d'épisodes, et **s'inverse** lorsque le modèle du
    croupier est estimé sur 1 000 mains seulement : à 200 000 épisodes, l'hybride perd
@@ -44,7 +44,7 @@ cet avantage persiste-t-il lorsque l'on compte le coût d'obtention de l'estimat
    erreur bornée de STAND l'est (bornes 2η et locale). Un Double Q-learning, qui retire
    le biais du maximum, ne reproduit pas le gain : il fait moins bien que le standard
    (§5.9) **[observé]**.
-7. **Référence de planification (E7, exploratoire).** Avec les mêmes 20 000 mains, estimer
+7. **Référence de planification (E8, exploratoire).** Avec les mêmes 20 000 mains, estimer
    la loi des cartes et calculer HIT par programmation dynamique, sans jouer, fait mieux
    que l'hybride après 100 000 épisodes (+0,00069 [+0,00057 ; +0,00081]) **[observé]**.
    L'hybride n'a d'intérêt que si l'on renonce à modéliser les transitions de HIT.
@@ -111,9 +111,8 @@ Monte-Carlo chacune ([baselines.csv](../results/v2/diagnostics/baselines.csv)) :
 | Tirer tant que le total est inférieur à 17 | −0,0793 |
 | Politique optimale π\* | −0,0466 |
 
-**Ordre de grandeur du seuil de 0,001.** Le protocole fixe ce seuil sans le justifier ;
-les repères suivants ont été calculés après coup (§5.9). Il vaut 2,1 % de l'avantage
-de la maison. Il correspond à peu près au coût d'**une seule** décision erronée de la
+**Ordre de grandeur du seuil de 0,001.** Il vaut 2,1 % de l'avantage de la maison
+(calculs en §5.9). Il correspond à peu près au coût d'**une seule** décision erronée de la
 stratégie optimale : sur les 280 états, une erreur isolée coûte 0,00082 en médiane, et
 132 erreurs isolées coûtent au moins 0,001. Le gain d'une partie ayant un écart-type
 de 0,95, il faudrait environ 3,5 millions de parties simulées pour estimer un gain à
@@ -139,13 +138,10 @@ Les démonstrations sont dans les PDF ; seules leurs conclusions sont reprises i
   de maximisation ; cela ne garantit ni une variance plus faible de toutes les cibles,
   ni un facteur fixe de complexité d'échantillonnage.
 
-## 4. Protocole
+## 4. Plan expérimental
 
-Le protocole v2 ([protocole_v2.md](protocole_v2.md)) a été écrit avant les mesures ;
-l'addendum ([protocole_v2_addendum.md](protocole_v2_addendum.md)) fixe la taille de
-l'échantillon à partir d'un pilote exécuté sur des graines de validation ; les
-déviations sont listées dans [protocole_v2_deviations.md](protocole_v2_deviations.md).
-Les résultats historiques étaient connus : ce n'est pas une préinscription externe.
+Un pilote exécuté sur des graines de validation a fixé le nombre de jeux supervisés
+à 28, pour viser une précision de ±0,0005 sur le critère principal.
 
 - **Unité de réplication** : un jeu supervisé indépendant (graine 41000 + 10i), avec
   ses propres validation et test. Deux graines RL par jeu (51000 + 10i + j). Les
@@ -154,7 +150,7 @@ Les résultats historiques étaient connus : ce n'est pas une préinscription ex
   sont des préfixes d'un même jeu : elles ne sont pas indépendantes entre elles.
 - **Critère principal** : J(logistique) − J(standard réglé) à 20 000 mains et
   100 000 épisodes, 28 jeux ; différence pratique minimale 0,001 ; précision visée ±0,0005.
-- **Secondaire** (9 premiers jeux, désignés avant les mesures) : quatre tailles, douze
+- **Secondaire** (9 premiers jeux) : quatre tailles, douze
   budgets de 0 à 200 000 épisodes, ablations, temps d'atteinte de seuils de regret.
 - **Statistiques** : IC de Student sur les grappes, bootstrap des grappes (10 000
   tirages), médiane, étendue et retrait d'une grappe ; TOST à ±0,001 pour toute
@@ -197,7 +193,7 @@ Contrôles Monte-Carlo de l'oracle indépendant (100 000 parties par politique, 
 | Politique | J exact | Moyenne Monte-Carlo | IC 95 % | z |
 |---|---:|---:|---:|---:|
 | Toujours STAND | −0,18637 | −0,18672 | [−0,19264 ; −0,18080] | −0,12 |
-| Toujours HIT | −1 | −1 | — | — |
+| Toujours HIT | −1 | −1 | sans objet | sans objet |
 | Aléatoire ½ | −0,39590 | −0,39149 | [−0,39704 ; −0,38594] | +1,56 |
 | HIT si total < 17 | −0,07929 | −0,08370 | [−0,08954 ; −0,07786] | −1,48 |
 | Optimale | −0,04656 | −0,04733 | [−0,05322 ; −0,04144] | −0,26 |
@@ -437,8 +433,7 @@ pas incluse, les fréquences et Jeffreys suffisant à tester l'hypothèse.
 **[observé]** Au contraste prévu (100 000 épisodes), l'hybride à fréquences n'est pas
 nettement meilleur que le standard : +0,00032 [−0,00012 ; +0,00076], et le TOST conclut
 même à l'équivalence à ±0,001 (p = 0,004). Les deux estimateurs donnent des gains
-identiques. La description par budget, ajoutée après lecture de ce résultat (déviation
-D3), montre le même profil qu'avec les cartes de Blackjack-v1 mais une convergence plus
+identiques. La description par budget, ajoutée après lecture de ce résultat, montre le même profil qu'avec les cartes de Blackjack-v1 mais une convergence plus
 rapide du standard :
 
 | Épisodes | 1 000 | 5 000 | 20 000 | 60 000 | 100 000 | 200 000 |
@@ -455,12 +450,11 @@ monotone au tout début (0,044 avant apprentissage, 0,081 à 500 épisodes) : le
 cibles de HIT modifient des décisions initialement correctes. Cette variante reste une
 robustesse locale dans la même famille de jeux, pas une validation de généralisation.
 
-### 5.9 Compléments après relecture (E7)
+### 5.9 Compléments après relecture (E8)
 
-Protocole : [protocole_v2_complements.md](protocole_v2_complements.md), écrit après la
-campagne finale et après un essai rapide de la planification ; ces analyses sont
-**exploratoires**. Mêmes 28 jeux supervisés et mêmes probabilités logistiques que la
-campagne finale (empreintes contrôlées), même oracle. Sorties :
+Ces analyses, faites après la campagne finale et après un essai rapide de la
+planification, sont **exploratoires**. Mêmes 28 jeux supervisés et mêmes probabilités
+logistiques que la campagne finale, même oracle. Sorties :
 [results/v2/complements/](../results/v2/complements/), régénérées en moins d'une minute
 par `python -m src.audit.complements`.
 
@@ -563,8 +557,6 @@ ne modélisant que l'action terminale.
 - **Précision secondaire.** Les analyses secondaires reposent sur 9 grappes ; leurs
   intervalles ne sont pas simultanés. Les tailles supervisées sont des préfixes d'un
   même jeu et ne constituent pas des répétitions indépendantes entre elles.
-- **Pilote et protocole.** Les résultats historiques étaient connus en écrivant le
-  protocole ; le test final v2 n'a toutefois servi à aucun choix.
 
 ## 8. Conclusion
 

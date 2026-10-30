@@ -30,4 +30,4 @@ Les conclusions concernent ce simulateur à paquet infini, pas d'autres règles 
 Cette étude ne propage pas la variabilité des jeux supervisés à de nouveaux entraînements RL.
 
 `runs.csv` contient les métriques par jeu, `fits.json` les graines, empreintes, choix de C et probabilités.
-`summary.json` contient les agrégats et la provenance. Reproduction : `python -m src.supervised.learning_curve`.
+`summary.json` contient les agrégats. Reproduction : `python -m src.supervised.learning_curve`.

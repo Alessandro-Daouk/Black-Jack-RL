@@ -9,7 +9,7 @@ import numpy as np
 
 from src.environment import HIT, STAND
 from src.evaluate import J, J_STAR, V_TRUE
-from src.experiment_utils import describe, provenance
+from src.experiment_utils import describe
 from src.hybrid_agent import file_sha256
 from src.q_learning import TUNED, greedy_policy, train
 from src.supervised.evaluate import write_csv
@@ -55,7 +55,7 @@ def run(output=Path("results/hybrid/frequencies_ablation"), model_path=DEFAULT_M
                 "presets": TUNED, "primary_contrast": "logistic - frequencies, gain exact final par graine",
                 "uncertainty": "IC de Student approximatif de la différence moyenne appariée ; pas de test d'équivalence"}
     output.mkdir(parents=True, exist_ok=True)
-    (output / "protocol.json").write_text(json.dumps(protocol, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    (output / "parameters.json").write_text(json.dumps(protocol, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"Ablation : {len(seeds)*len(METHODS)} entraînements de {episodes:,} épisodes…", flush=True)
     with parallel_config(backend="loky", inner_max_num_threads=1):
         results = Parallel(n_jobs=jobs)(delayed(run_one)(m, seed, episodes, tables)
@@ -72,7 +72,7 @@ def run(output=Path("results/hybrid/frequencies_ablation"), model_path=DEFAULT_M
         paired["logistic_minus_" + reference] = {**describe(d), "better": int((d > 0).sum()),
                                                 "equal": int((d == 0).sum()), "worse": int((d < 0).sum())}
     summary = {"protocol": protocol, "arms": arms, "paired": paired,
-               "optimal_exact_expected_reward": J_STAR, "provenance": provenance()}
+               "optimal_exact_expected_reward": J_STAR}
     write_csv(output / "runs.csv", rows)
     write_csv(output / "learning_curves.csv", curves)
     (output / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -105,7 +105,7 @@ def report(summary, output):
               "L'évaluation exacte J n'a pas de bruit de simulation pour une politique fixée.",
               f"Les {protocol['episodes']:,} épisodes par entraînement n'incluent ni les mains supervisées ni le coût du réglage initial.",
               f"Graines : {protocol['seeds']}. Elles ne servent pas à changer le modèle livré.", "",
-              "Reproduction : `python -m src.compare_frequencies`. Paramètres effectifs dans `protocol.json`.",
+              "Reproduction : `python -m src.compare_frequencies`. Paramètres effectifs dans `parameters.json`.",
               "Mesures par entraînement dans `runs.csv`, trajectoires dans `learning_curves.csv`, agrégats dans `summary.json`."]
     (output / "report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 

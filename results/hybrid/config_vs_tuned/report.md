@@ -2,9 +2,6 @@
 
 > Rapport généré par la version historique du projet ; ses mesures sont inchangées. Certaines interprétations ont été corrigées depuis : en cas de désaccord, le [README](../../../README.md) et le [rapport scientifique](../../../docs/rapport_scientifique.md) font foi.
 
-Sources RL de Wassim : commit `58f5ce35880ae18c107187f4b64f23f2fa005ded`.
-Prédicteur supervisé figé : `b91c797fcffa18ef421f73fff0ef7c088bcdacbad0d787d3ec819f67a9ebbfc1`.
-
 ## Question et réglages
 
 À budget RL égal, l'agent hybride qui utilise notre V_STAND estimée apprend-il mieux
@@ -19,7 +16,7 @@ Avec eps_min = 1, le comportement pendant l'apprentissage est entièrement aléa
 évaluée reste gloutonne, le Q-learning étant hors politique. Wassim a réglé TUNED avec la V_STAND
 exacte (graines 100–102) : ce réglage n'était pas encore vérifié avec notre V_STAND estimée.
 
-## Protocole
+## Plan expérimental
 
 - Budget : 100,000 épisodes RL par entraînement, identique pour tous les bras.
 - Les deux réglages de l'hybride supervisé partagent le même prédicteur, donc le même coût de
@@ -125,4 +122,4 @@ Seule la politique optimale π* fournit la borne supérieure du gain espéré.
 
 - `runs.csv` : une ligne par entraînement (phase, méthode, réglage, graine, métriques).
 - `learning_curves.csv` : gain exact tous les 2,000 épisodes pour chaque entraînement.
-- `summary.json` : protocole, résumés, tests appariés, versions et empreintes.
+- `summary.json` : plan expérimental, résumés et tests appariés.

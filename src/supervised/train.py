@@ -2,10 +2,8 @@
 
 import argparse
 import hashlib
-from importlib.metadata import version
 import json
 from pathlib import Path
-import platform
 import time
 
 import numpy as np
@@ -63,8 +61,6 @@ def run_experiment(train_size=60_000, validation_size=12_000, test_size=12_000,
         "selection": "Minimum de log-loss sur validation ; apprentissage sur train uniquement, sans refit.",
         "empirical_probabilities": baseline.tolist(),
         "training_counts": conditional_counts(X_train, y_train).tolist(),
-        "versions": {"python": platform.python_version(), **{
-            name: version(name) for name in ("numpy", "scikit-learn", "scipy", "gymnasium", "joblib", "matplotlib")}},
     }
     predictor = DealerPredictor(pipelines[selected], metadata)
     model_dir, results_dir = Path(model_dir), Path(results_dir)
@@ -80,8 +76,7 @@ def run_experiment(train_size=60_000, validation_size=12_000, test_size=12_000,
     from .evaluate import evaluate_predictor, write_csv
     write_csv(results_dir / "validation.csv", candidates)
     summary = evaluate_predictor(predictor, X_test, y_test, results_dir)
-    summary.update({"test_seed": test_seed, "elapsed_seconds": time.perf_counter() - start,
-                    "model_sha256": hashlib.sha256(model_path.read_bytes()).hexdigest()})
+    summary.update({"test_seed": test_seed, "elapsed_seconds": time.perf_counter() - start})
     (results_dir / "evaluation.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     write_report(metadata, summary, results_dir)
     print(f"Modèle : {model_path}\nRapport : {results_dir / 'report.md'}", flush=True)
@@ -95,7 +90,7 @@ def write_report(metadata: dict, summary: dict, output: Path) -> None:
         "# Première expérience supervisée", "",
         "Prédicteur du résultat du croupier dans Blackjack-v1, natural=False, sab=False.",
         "Une carte visible en entrée ; six probabilités en sortie. Aucun état caché en entrée.", "",
-        "## Protocole", "",
+        "## Plan expérimental", "",
         *[f"- {name} : {split['samples']:,} mains, graine {split['seed']}." for name, split in metadata["splits"].items()],
         f"- C choisi sur validation : {metadata['selected_C']:g}, parmi 0.01, 0.1, 1, 10 et 100.",
         "- La validation n'est pas réutilisée pour l'apprentissage. Le test ne sert à aucun choix.",
@@ -139,8 +134,8 @@ def write_report(metadata: dict, summary: dict, output: Path) -> None:
         "- `calibration.csv` : les 60 probabilités, fréquences de test et références.",
         "- `calibration.png` : comparaison par issue, IC de Wilson à 95 % point par point.",
         "- `stand_error.png` : carte des erreurs de gain espéré de STAND.",
-        "- `evaluation.json` : résultats, graine de test et empreinte du modèle.", "",
-        "Les paramètres, versions, graines, empreintes des jeux et fréquences d'apprentissage",
+        "- `evaluation.json` : résultats et graine de test.", "",
+        "Les paramètres, graines et fréquences d'apprentissage",
         "sont enregistrés dans `models/supervised/metadata.json`.", "",
         "![Probabilités du croupier](calibration.png)", "",
         "![Erreur sur STAND](stand_error.png)", "",

@@ -8,7 +8,7 @@ from joblib import Parallel, delayed, parallel_config
 import numpy as np
 from sklearn.metrics import log_loss
 
-from src.experiment_utils import describe, provenance
+from src.experiment_utils import describe
 from .constants import CARDS, CLASSES
 from .data import empirical_probabilities, generate_dataset
 from .evaluate import metrics, sample_losses, write_csv
@@ -69,7 +69,7 @@ def run(output=Path("results/supervised/learning_curve"), sizes=SIZES, repeats=5
                 "selection": "C sur validation, sans refit ; aucun remplacement du modèle livré.",
                 "nested_training_sizes": True, "independent_unit": "jeu simulé (répétition)",
                 "uncertainty": "écart-type et IC de Student approximatif de la moyenne entre répétitions"}
-    (output / "protocol.json").write_text(json.dumps(protocol, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    (output / "parameters.json").write_text(json.dumps(protocol, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"Courbes : {repeats} jeux indépendants, tailles {sizes}…", flush=True)
     with parallel_config(backend="loky", inner_max_num_threads=1):
         results = Parallel(n_jobs=jobs)(delayed(replicate)(i, sizes, validation_size, test_size)
@@ -85,7 +85,7 @@ def run(output=Path("results/supervised/learning_curve"), sizes=SIZES, repeats=5
              and r["method"] == "logistic") - next(r["exact_excess_log_loss"] for r in rows
              if r["replicate"] == i and r["train_size"] == n and r["method"] == "frequencies")
         for i in range(repeats)])} for n in sizes]
-    summary = {"protocol": protocol, "arms": arms, "paired": paired, "provenance": provenance()}
+    summary = {"protocol": protocol, "arms": arms, "paired": paired}
     write_csv(output / "runs.csv", rows)
     (output / "fits.json").write_text(json.dumps([m for _, m in results], indent=2) + "\n", encoding="utf-8")
     (output / "summary.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -142,7 +142,7 @@ def report(summary, output):
               "Les conclusions concernent ce simulateur à paquet infini, pas d'autres règles de blackjack.",
               "Cette étude ne propage pas la variabilité des jeux supervisés à de nouveaux entraînements RL.", "",
               "`runs.csv` contient les métriques par jeu, `fits.json` les graines, empreintes, choix de C et probabilités.",
-              "`summary.json` contient les agrégats et la provenance. Reproduction : `python -m src.supervised.learning_curve`."]
+              "`summary.json` contient les agrégats. Reproduction : `python -m src.supervised.learning_curve`."]
     (output / "report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 

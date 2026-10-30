@@ -13,6 +13,6 @@
 *.png binary
 *.pdf binary
 
-# Les empreintes des artefacts v2 portent sur leurs octets, y compris les fins de ligne.
+# Les artefacts v2 sont conservés octet par octet, fins de ligne comprises.
 # Ne pas normaliser les CSV entre Windows, Linux et l'objet stocké dans Git.
 results/v2/** -text

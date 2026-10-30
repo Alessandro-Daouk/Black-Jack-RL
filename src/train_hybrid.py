@@ -2,16 +2,14 @@
 
 import argparse
 import csv
-from importlib.metadata import version
 import json
 from pathlib import Path
-import platform
 
 import numpy as np
 
 from src.environment import HIT, STAND
 from src.evaluate import REACH
-from src.hybrid_agent import DEFAULT_AGENT, ROOT, HybridAgent, file_sha256, load_agent, results_dir_for
+from src.hybrid_agent import DEFAULT_AGENT, HybridAgent, file_sha256, load_agent, results_dir_for
 from src.q_learning import CONFIG, TUNED, train
 from src.supervised.data import require_integer
 from src.supervised.model import DEFAULT_MODEL, load_model
@@ -49,22 +47,16 @@ def train_hybrid(model_path=DEFAULT_MODEL, agent_path=None, episodes=100_000,
     result = train("hybrid", seed=seed, V=V, cfg=cfg)
     if not np.array_equal(result["Q"][STAND], V) or np.any(result["N"][STAND]):
         raise RuntimeError("La valeur de STAND a été modifiée pendant l'apprentissage.")
-    manifest = json.loads((ROOT / "docs/wassim_source.json").read_text(encoding="utf-8"))
-    source_hashes = {name: file_sha256(ROOT / name) for name in (
-        "src/environment.py", "src/q_learning.py", "src/stand_value.py", "src/evaluate.py")}
     metadata = {
         "schema_version": 1, "kind": "hybrid_supervised", "seed": seed,
         "training_preset": preset, "training_config": cfg, "dealer_model_sha256": file_sha256(model_path),
         "dealer_model_filename": Path(model_path).name,
         "dealer_training_splits": predictor.metadata["splits"],
         "rules": predictor.metadata["rules"],
-        "wassim_source_commit": manifest["commit"], "rl_source_sha256": source_hashes,
         "training_seconds": result["seconds"],
         "reachable_states": int(REACH.sum()),
         "visited_hit_states": int(np.count_nonzero(result["N"][HIT][REACH])),
         "stand_frozen": True,
-        "versions": {"python": platform.python_version(), **{
-            name: version(name) for name in ("numpy", "gymnasium", "scikit-learn")}},
     }
     agent = HybridAgent(predictor, result["Q"][HIT], result["N"][HIT], metadata)
     # Les évaluations précédentes ne décrivent plus le modèle dès qu'il est remplacé.

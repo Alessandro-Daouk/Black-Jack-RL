@@ -2,10 +2,9 @@
 
 > Rapport généré par la version historique du projet ; ses mesures sont inchangées. Certaines interprétations ont été corrigées depuis : en cas de désaccord, le [README](../../../README.md) et le [rapport scientifique](../../../docs/rapport_scientifique.md) font foi.
 
-Le prédicteur supervisé reste figé pendant le Q-learning. Les sources RL de
-Wassim proviennent du commit `0780a4f32335540c5b59a602f38c08de3b3f01f6`.
+Le prédicteur supervisé reste figé pendant le Q-learning.
 
-## Protocole
+## Plan expérimental
 
 - RL : 100,000 épisodes, graine 0.
 - Évaluation : 10,000 parties, graine 2026, sans exploration.
@@ -40,10 +39,8 @@ Même la politique optimale a une espérance négative dans ces règles.
 - STAND est resté figé pendant l'apprentissage.
 - HIT a été observé dans 280 des 280 états atteignables.
 - 0 décision HIT sans observation préalable de cette action pendant le test.
-- Empreinte du prédicteur : `b91c797fcffa18ef421f73fff0ef7c088bcdacbad0d787d3ec819f67a9ebbfc1`.
-- Empreinte de l'agent : `52ecd4296c9bf039611558215b5e8c2cdae4d792323cd533a21502b21d9e1843`.
 
-`training.json` contient les paramètres, versions et empreintes des sources RL.
+`training.json` contient les paramètres d'entraînement.
 `learning_curve.csv` contient les évaluations exactes pendant l'entraînement.
 Cette expérience ne démontre pas un avantage sur le Q-learning standard.
 Il reste à comparer plusieurs graines et des budgets explicites pour les agents

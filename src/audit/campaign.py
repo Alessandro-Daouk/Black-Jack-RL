@@ -44,7 +44,6 @@ def run(config_path, output):
     if any(k not in config for k in required) or config['groups'] < 2:
         raise ValueError('Configuration incomplète.')
     output = new_output(output, config)
-    dump(output/'config.json', config)
     oracle = Oracle()
     order = np.random.default_rng(config['order_seed'])
     started = time.perf_counter()

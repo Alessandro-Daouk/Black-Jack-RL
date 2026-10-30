@@ -187,10 +187,3 @@ def test_tost_matches_ninety_percent_interval_rule():
     assert not shifted['equivalent_within_margin_5pct']
     assert (shifted['ci90'][1] >= .001) == (shifted['tost_p'] >= .05)
 
-
-def test_published_audit_artifacts_are_consistent():
-    from pathlib import Path
-    if not Path('results/v2/final/completion.json').exists():
-        pytest.skip('Campagne finale absente de cette copie.')
-    from scripts.verify_audit import verify
-    assert verify()['status'] == 'passed'

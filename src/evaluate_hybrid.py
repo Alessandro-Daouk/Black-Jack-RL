@@ -8,7 +8,7 @@ import numpy as np
 
 from src.environment import HIT, make_env
 from src.evaluate import J, J_STAR
-from src.hybrid_agent import DEFAULT_AGENT, file_sha256, load_agent, results_dir_for
+from src.hybrid_agent import DEFAULT_AGENT, load_agent, results_dir_for
 from src.supervised.data import require_integer
 from src.supervised.model import DEFAULT_MODEL
 
@@ -45,7 +45,6 @@ def evaluate_agent(agent, games=10_000, seed=2026) -> dict:
         "exact_expected_reward": float(exact_reward), "optimal_exact_expected_reward": float(J_STAR),
         "gap_to_optimal_exact": float(J_STAR - exact_reward),
         "decisions": decisions, "unvisited_hit_decisions": unvisited_hit_decisions,
-        "dealer_model_sha256": agent.metadata["dealer_model_sha256"],
         "scope": "Un seul entraînement RL. IC du test conditionnel à cet agent fixé ; "
                  "pas de conclusion de supériorité sur le Q-learning standard.",
     }
@@ -57,10 +56,9 @@ def write_report(result: dict, metadata: dict, output: Path) -> None:
     # Les agents antérieurs à 58f5ce3 n'enregistraient ni le réglage ni omega (alpha = 1/N, soit omega = 1).
     text = f"""# Évaluation de l'agent hybride
 
-Le prédicteur supervisé reste figé pendant le Q-learning. Les sources RL de
-Wassim proviennent du commit `{metadata['wassim_source_commit']}`.
+Le prédicteur supervisé reste figé pendant le Q-learning.
 
-## Protocole
+## Plan expérimental
 
 - RL : {result['rl_training_episodes']:,} épisodes, graine {result['rl_training_seed']}.
 - Réglage RL : `{metadata.get('training_preset', 'non enregistré')}` ; eps0={cfg['eps0']:g}, eps_min={cfg['eps_min']:g},
@@ -97,10 +95,8 @@ Même la politique optimale a une espérance négative dans ces règles.
 - STAND est resté figé pendant l'apprentissage.
 - HIT a été observé dans {metadata['visited_hit_states']} des {metadata['reachable_states']} états atteignables.
 - {result['unvisited_hit_decisions']} décision HIT sans observation préalable de cette action pendant le test.
-- Empreinte du prédicteur : `{result['dealer_model_sha256']}`.
-- Empreinte de l'agent : `{result['agent_sha256']}`.
 
-`training.json` contient les paramètres, versions et empreintes des sources RL.
+`training.json` contient les paramètres d'entraînement.
 `learning_curve.csv` contient les évaluations exactes pendant l'entraînement.
 Ce rapport décrit un seul entraînement RL : il ne suffit pas à comparer des méthodes.
 La comparaison sur plusieurs graines des réglages CONFIG et TUNED, avec le Q-learning
@@ -123,7 +119,6 @@ def main() -> None:
         result = evaluate_agent(agent, args.games, args.seed)
     except (ValueError, FileNotFoundError) as error:
         parser.error(str(error))
-    result["agent_sha256"] = file_sha256(args.agent)
     output = args.output or results_dir_for(args.agent) / "evaluation.json"
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

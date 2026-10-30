@@ -2,9 +2,5 @@
   "C": 0.1,
   "max_probability_stationarity_residual": 1.4983594498994834e-07,
   "max_bias_gradient_normalized": 7.883503204286306e-09,
-  "objective": "mean negative log likelihood + ||W||^2 / (2*C*n); intercept unpenalized",
-  "source_files": {
-    "_logistic.py": "1f4a019bfad745184ddf29f0ada8719e3f0a24c6659901683480ab6052f9915f",
-    "_linear_loss.py": "de2bd04db9869a54321365f5965f691674e2279d8a275d7b891a730c2934621b"
-  }
+  "objective": "mean negative log likelihood + ||W||^2 / (2*C*n); intercept unpenalized"
 }

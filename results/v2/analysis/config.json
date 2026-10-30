@@ -1,0 +1,6 @@
+{
+  "phase": "analysis",
+  "input": "results/v2/final",
+  "bootstrap_seed": 91000,
+  "bootstrap_samples": 10000
+}

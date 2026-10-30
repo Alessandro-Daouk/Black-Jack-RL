@@ -1,4 +1,4 @@
-# Mesures v2 — rapport généré depuis les résultats bruts
+# Mesures v2 : rapport généré depuis les résultats bruts
 
 Les intervalles entre crochets sont des IC de Student approximatifs à 95 % sur les grappes indépendantes.
 Les comparaisons secondaires sont descriptives et leurs intervalles ne sont pas simultanés.

@@ -2,7 +2,6 @@
 
 import argparse
 import csv
-import hashlib
 import json
 from pathlib import Path
 
@@ -108,7 +107,6 @@ def main() -> None:
     X, y = generate_dataset(args.samples, args.seed)
     summary = evaluate_predictor(predictor, X, y, args.output)
     summary["test_seed"] = args.seed
-    summary["model_sha256"] = hashlib.sha256(args.model.read_bytes()).hexdigest()
     (args.output / "evaluation.json").write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps(summary, indent=2, ensure_ascii=False))
 

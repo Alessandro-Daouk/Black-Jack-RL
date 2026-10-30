@@ -29,8 +29,6 @@ Linux, macOS ou Windows. Aucun entraînement n'est nécessaire : les modèles so
 git clone https://github.com/Alessandro-Daouk/Black-Jack-RL.git
 cd Black-Jack-RL
 uv sync --locked
-uv run --locked python -m scripts.verify_release   # empreintes et gain exact de l'agent livré
-uv run --locked python -m scripts.verify_audit     # gain exact des 418 agents archivés de la v2
 uv run --locked pytest -q
 ```
 
@@ -70,9 +68,8 @@ son modèle du croupier**, pas vers l'optimum vrai (démontré dans
 [docs/modele2.pdf](docs/modele2.pdf)). L'architecture et ses justifications sont
 détaillées dans le [rapport](docs/rapport_scientifique.md#2-cadre).
 
-**Protocole.** 28 jeux de données du croupier indépendants, deux graines
-d'apprentissage par jeu ; intervalles à 95 % calculés entre jeux. Le protocole a été
-écrit avant les mesures ([docs/protocole_v2.md](docs/protocole_v2.md)). Une différence
+**Plan expérimental.** 28 jeux de données du croupier indépendants, deux graines
+d'apprentissage par jeu ; intervalles à 95 % calculés entre jeux. Une différence
 de 0,001 par partie est fixée comme seuil d'intérêt : c'est à peu près le coût d'une
 seule décision fausse de la stratégie optimale, et 2,1 % de l'avantage de la maison.
 
@@ -109,7 +106,7 @@ seule décision fausse de la stratégie optimale, et 2,1 % de l'avantage de la m
 parties (9 jeux) ; l'étoile signale un intervalle à 95 % qui exclut zéro.*
 
 Les points 5 et 6 viennent d'analyses complémentaires exploratoires, faites après la
-campagne principale ([protocole](docs/protocole_v2_complements.md)). Le détail de tous
+campagne principale. Le détail de tous
 les résultats, les coûts mesurés et les ablations sont dans le
 [rapport scientifique](docs/rapport_scientifique.md).
 
@@ -122,15 +119,13 @@ les résultats, les coûts mesurés et les ablations sont dans le
   identique, les deux agents jouent les mêmes parties), pas pourquoi.
 - **Temps mesurés** sur un seul ordinateur portable et une implémentation.
 - **Analyses secondaires** sur 9 jeux, sans correction de multiplicité.
-- **Protocoles internes datés**, écrits alors que les résultats historiques étaient
-  connus ; ce ne sont pas des préinscriptions externes.
 
 ## Reproduire
 
-Les trois vérifications ci-dessus prennent moins d'une minute. La campagne complète
+Les tests ci-dessus prennent quelques secondes. La campagne complète
 (environ 1 h 30), les campagnes historiques et la recompilation des PDF sont décrites
 dans [docs/reproductibilite.md](docs/reproductibilite.md). Les gains exacts sont
-déterministes ; seules les durées varient. La CI exécute tests, vérifications et
+déterministes ; seules les durées varient. La CI exécute les tests et la
 démonstration sous Linux et Windows.
 
 ## Organisation
@@ -140,26 +135,25 @@ src/                Modèle 2 (Wassim Ghnaya) : environment, stand_value, q_lear
 src/supervised/     Modèle 1 : simulation, entraînement, évaluation
 src/hybrid_agent.py Assemblage et décision ; play.py : démonstration
 src/audit/          Campagne v2 : oracle indépendant, campagnes, analyse, compléments
-models/             Modèles livrés et manifeste d'empreintes
-results/v2/         Mesures v2 (provenance et attestation de fin par campagne)
-results/            Résultats historiques, conservés tels quels
-docs/               Rapport, PDF mathématiques, protocoles, reproductibilité
+models/             Modèles livrés
+results/v2/         Mesures v2 (configuration et résultats par campagne)
+results/            Résultats historiques
+docs/               Rapport, PDF mathématiques, reproductibilité
 ```
 
 Le code est volontairement dupliqué à deux endroits : `src/audit/` réimplémente la
 simulation et l'entraînement pour mesurer les coûts **sans changer les tirages
 aléatoires** du code historique, et son oracle est écrit indépendamment pour contrôler
-le premier. Les sources de Wassim Ghnaya sont intégrées sans modification et
-vérifiées par empreinte ([docs/wassim_source.json](docs/wassim_source.json)), ce qui
-garantit que la réplication historique porte sur le code d'origine ; leur temps
-d'entraînement inclut les évaluations, que la v2 mesure à part.
+le premier. Les sources de Wassim Ghnaya sont intégrées sans modification, pour que
+la réplication historique porte sur le code d'origine ; leur temps d'entraînement
+inclut les évaluations, que la v2 mesure à part.
 
 | Document | Contenu |
 |---|---|
 | [docs/rapport_scientifique.md](docs/rapport_scientifique.md) | Rapport complet : cadre, résultats, coûts, discussion (**fait foi**) |
 | [docs/modele1.pdf](docs/modele1.pdf), [docs/modele2.pdf](docs/modele2.pdf) | Démonstrations : modèle 1, convergence et bornes de regret |
 | [docs/etat_de_l_art.md](docs/etat_de_l_art.md) | Positionnement bibliographique |
-| [docs/protocole_v2.md](docs/protocole_v2.md) | Protocole, [addendum](docs/protocole_v2_addendum.md), [déviations](docs/protocole_v2_deviations.md), [compléments](docs/protocole_v2_complements.md) |
+| [docs/reproductibilite.md](docs/reproductibilite.md) | Environnement, commandes et durées |
 
 ## Auteurs et licence
 

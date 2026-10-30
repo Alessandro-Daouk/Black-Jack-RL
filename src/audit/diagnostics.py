@@ -11,7 +11,7 @@ from src.environment import make_env
 from src.hybrid_agent import load_agent
 from src.supervised.evaluate import write_csv
 from src.supervised.model import load_model
-from .core import categorical_risk, digest, dump, interval, new_output, smoothed
+from .core import categorical_risk, dump, interval, new_output, smoothed
 from .oracle import Oracle
 
 
@@ -91,8 +91,7 @@ def run(output):
     residual = probabilities-freq+model.coef_.T/(model.C*counts.sum(axis=1, keepdims=True))
     sklearn_check = {'C': model.C, 'max_probability_stationarity_residual': float(np.max(np.abs(residual))),
         'max_bias_gradient_normalized': float(np.max(np.abs(np.sum(counts.sum(axis=1, keepdims=True)*(probabilities-freq),axis=0)/counts.sum()))),
-        'objective': 'mean negative log likelihood + ||W||^2 / (2*C*n); intercept unpenalized',
-        'source_files': {Path(m.__file__).name: digest(m.__file__) for m in (_logistic, _linear_loss)}}
+        'objective': 'mean negative log likelihood + ||W||^2 / (2*C*n); intercept unpenalized'}
     dump(output/'sklearn_objective.json', sklearn_check)
     source = inspect.getsource(_logistic).splitlines()
     selected = [f'{i+1}: {line}' for i, line in enumerate(source) if 'l2_reg_strength = 1.0 /' in line or 'sw_sum =' in line]

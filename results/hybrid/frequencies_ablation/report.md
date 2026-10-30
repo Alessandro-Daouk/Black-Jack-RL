@@ -28,5 +28,5 @@ L'évaluation exacte J n'a pas de bruit de simulation pour une politique fixée.
 Les 100,000 épisodes par entraînement n'incluent ni les mains supervisées ni le coût du réglage initial.
 Graines : [400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418, 419]. Elles ne servent pas à changer le modèle livré.
 
-Reproduction : `python -m src.compare_frequencies`. Paramètres effectifs dans `protocol.json`.
+Reproduction : `python -m src.compare_frequencies`. Paramètres effectifs dans `parameters.json`.
 Mesures par entraînement dans `runs.csv`, trajectoires dans `learning_curves.csv`, agrégats dans `summary.json`.

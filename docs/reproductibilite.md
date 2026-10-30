@@ -13,14 +13,8 @@ peut différer lors d'une reproduction.
 | Python | 3.12.7, installé par uv à partir de `.python-version` |
 | Bibliothèques | NumPy 2.5.4, SciPy 1.18.1, scikit-learn 1.9.1, Gymnasium 1.4.0, pandas et joblib figés par `uv.lock` |
 | LaTeX | pdfTeX 3.141592653-2.6-1.40.28 (TeX Live 2025, Debian), babel français, lmodern |
-| Commit audité | `9c3d6318fe3d499e4f8e50b5680df1aabf459ff8` |
-| Commit de la campagne finale | `8f289433fe8a83fb3f140fb90c6212a186eeb259` (arbre propre) |
 
-L'inventaire complet de départ, avec les empreintes des fichiers, est dans
-[`results/v2/baseline/environment.json`](../results/v2/baseline/environment.json).
-Chaque campagne écrit un `provenance.json` qui contient sa configuration, le commit,
-l'état Git, les versions, les variables de fils de calcul et l'empreinte SHA-256 de
-chaque fichier source et du protocole au moment du lancement.
+Chaque campagne écrit un `config.json` qui contient ses paramètres.
 
 ## Installation
 
@@ -34,10 +28,7 @@ réseau n'est nécessaire.
 
 ## Modes de reproduction
 
-**Mode léger** (moins d'une minute, aucun entraînement) : les trois commandes de
-vérification de la section 2 du README. Elles contrôlent les modèles livrés,
-recalculent le gain exact des 418 agents v2 archivés, contrôlent les empreintes des
-tables et exécutent les tests.
+**Mode léger** (quelques secondes, aucun entraînement) : `uv run --locked pytest -q`.
 
 **Mode complet** : chaque commande refuse un dossier de sortie non vide. Les mesures de
 temps n'ont de sens que si aucune autre charge lourde ne tourne pendant la campagne
@@ -53,7 +44,7 @@ uv run --locked python -m src.audit.variant --design experiments/v2/final_frozen
 uv run --locked python -m src.audit.analyze --input results/reproduction/final --diagnostics results/reproduction/diagnostics --variant results/reproduction/variant --replication results/reproduction/replication --output results/reproduction/analysis
 ```
 
-Les compléments après relecture (E7, moins d'une minute) lisent la campagne finale
+Les compléments (E8, moins d'une minute) lisent la campagne finale
 archivée `results/v2/final/` :
 
 ```bash
@@ -64,7 +55,7 @@ Sous PowerShell, remplacer la ligne `export` par
 `$env:OMP_NUM_THREADS=1; $env:OPENBLAS_NUM_THREADS=1; $env:MKL_NUM_THREADS=1`.
 La réplication régénère toutes les sorties des campagnes historiques ; le dépôt n'en
 conserve que `comparison.json`, qui consigne les écarts aux résultats publiés, avec
-`provenance.json` et `completion.json`.
+`config.json` et `completion.json`.
 
 La configuration `experiments/v2/final_frozen.json` a été produite par
 `python -m src.audit.campaign --pilot results/v2/pilot --output <chemin>` à partir du
@@ -101,17 +92,15 @@ exécution réécrit les fichiers de `results/q_learning/` et `models/q_learning
 | Réplication historique (240 entraînements et modèle 1) | 9,7 min | 6 processus parallèles |
 | Variante à cartes uniformes (54 entraînements) | 3,6 min | un processus |
 | Analyse et figures | 6 s | |
-| Tests | 9 s | 112 tests |
+| Tests | quelques secondes | 113 tests |
 | Compilation des deux PDF | quelques secondes | deux passes chacun |
 
 ## Ce qui doit être identique, et ce qui peut différer
 
-- **Identique** à toute machine utilisant `uv.lock` : les mains simulées (empreintes dans
-  `fits/*.json`), les comptes de cartes, les trajectoires d'apprentissage, les Q-tables
-  et donc les gains exacts. `verify_audit` recalcule les gains depuis les tables archivées.
+- **Identique** à toute machine utilisant `uv.lock` : les mains simulées, les comptes de
+  cartes, les trajectoires d'apprentissage, les Q-tables et donc les gains exacts.
   Les entraînements sont déterministes ; la réplication historique le vérifie à 10⁻⁹ près.
-- **Différent** : toutes les durées, le pic de mémoire et, par conséquent, les
-  empreintes de `runs.csv` et `curves.csv` qui contiennent ces durées, ainsi que les
+- **Différent** : toutes les durées, le pic de mémoire, ainsi que les
   analyses de coût à budget de temps fixé, puisque le point de grille retenu dépend du
   temps mesuré. Le processeur est hybride (cœurs performance et efficacité) : sans
   épinglage, l'ordonnanceur peut changer de type de cœur ; la dispersion observée du

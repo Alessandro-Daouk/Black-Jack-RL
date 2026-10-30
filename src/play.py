@@ -38,7 +38,7 @@ def main() -> None:
     with make_env() as env:
         for game in range(args.games):
             state, _ = env.reset(seed=args.seed if game == 0 else None)
-            print(f"Partie {game + 1} — état initial : {state}")
+            print(f"Partie {game + 1}, état initial : {state}")
             terminated = truncated = False
             while not (terminated or truncated):
                 if args.trace:
