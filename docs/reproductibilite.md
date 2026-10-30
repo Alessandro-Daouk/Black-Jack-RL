@@ -53,6 +53,13 @@ uv run --locked python -m src.audit.variant --design experiments/v2/final_frozen
 uv run --locked python -m src.audit.analyze --input results/reproduction/final --diagnostics results/reproduction/diagnostics --variant results/reproduction/variant --replication results/reproduction/replication --output results/reproduction/analysis
 ```
 
+Les compléments après relecture (E7, moins d'une minute) lisent la campagne finale
+archivée `results/v2/final/` :
+
+```bash
+uv run --locked python -m src.audit.complements --output results/reproduction/complements
+```
+
 Sous PowerShell, remplacer la ligne `export` par
 `$env:OMP_NUM_THREADS=1; $env:OPENBLAS_NUM_THREADS=1; $env:MKL_NUM_THREADS=1`.
 La réplication régénère toutes les sorties des campagnes historiques ; le dépôt n'en

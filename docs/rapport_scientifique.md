@@ -41,7 +41,13 @@ cet avantage persiste-t-il lorsque l'on compte le coût d'obtention de l'estimat
    amplitude dépend de l'environnement **[observé]**.
 6. Les mécanismes théoriques de réduction de variance et de biais ne sont **pas
    démontrés** comme garanties générales ; seule la stabilité des décisions sous une
-   erreur bornée de STAND l'est (bornes 2η et locale).
+   erreur bornée de STAND l'est (bornes 2η et locale). Un Double Q-learning, qui retire
+   le biais du maximum, ne reproduit pas le gain : il fait moins bien que le standard
+   (§5.9) **[observé]**.
+7. **Référence de planification (E7, exploratoire).** Avec les mêmes 20 000 mains, estimer
+   la loi des cartes et calculer HIT par programmation dynamique, sans jouer, fait mieux
+   que l'hybride après 100 000 épisodes (+0,00069 [+0,00057 ; +0,00081]) **[observé]**.
+   L'hybride n'a d'intérêt que si l'on renonce à modéliser les transitions de HIT.
 
 ## 2. Cadre
 
@@ -65,7 +71,53 @@ indépendant de l'apprentissage :
 
 Les hyperparamètres « réglés » sont ceux de la campagne historique (`src/tune.py`,
 graines 100 à 102, réglage de l'hybride fait avec STAND exacte). Ils n'ont pas été
-modifiés. Le bras « standard commun » contrôle l'effet d'une exploration différente.
+modifiés ; refaire ce réglage avec un modèle 1 estimé choisit la même configuration
+(§5.9). Le bras « standard commun » contrôle l'effet d'une exploration différente.
+
+**Pourquoi séparer les deux actions.** Rester termine la partie : sa valeur est
+l'espérance d'un gain qui ne dépend que de la main finale du croupier, laquelle ne
+dépend que de sa carte visible dans un paquet infini. Elle se prête donc à un
+apprentissage supervisé sur des mains simulées, sans jouer de partie : dix lois à six
+issues. Tirer mène à un nouvel état où le joueur décidera encore ; sa valeur dépend de
+la politique future et relève du renforcement. Le prix est connu d'avance : l'erreur
+de l'estimation devient permanente, l'agent ne pouvant pas la corriger en jouant.
+
+```mermaid
+flowchart LR
+    D["Mains de croupier simulées<br/>(carte visible, résultat)"] --> M1["Modèle 1<br/>P(résultat | carte visible)"]
+    M1 --> V["V_STAND<br/>espérance du gain si l'on reste"]
+    E["Parties jouées dans Gymnasium"] --> M2["Modèle 2<br/>Q-learning de Q_HIT"]
+    V --> M2
+    S["État (total, carte visible, as)"] --> C{"Q_HIT > V_STAND ?"}
+    V --> C
+    M2 --> C
+    C -->|oui| H[HIT]
+    C -->|non| T[STAND]
+```
+
+**Incertitude irréductible.** Même avec la loi exacte, l'issue la plus probable du
+croupier ne se réalise que dans 34 à 42 % des cas selon la carte visible : un
+prédicteur parfait a une exactitude de 36,70 % et une log-loss de 1,6481 nat par main.
+Les scores utiles sont donc des scores de probabilités, pas l'exactitude.
+
+**Baselines de politiques**, évaluées exactement et contrôlées par 100 000 parties
+Monte-Carlo chacune ([baselines.csv](../results/v2/diagnostics/baselines.csv)) :
+
+| Politique | Gain exact par partie |
+|---|---:|
+| Toujours tirer | −1 |
+| Aléatoire, HIT avec probabilité ½ | −0,3959 |
+| Toujours rester | −0,1864 |
+| Tirer tant que le total est inférieur à 17 | −0,0793 |
+| Politique optimale π\* | −0,0466 |
+
+**Ordre de grandeur du seuil de 0,001.** Le protocole fixe ce seuil sans le justifier ;
+les repères suivants ont été calculés après coup (§5.9). Il vaut 2,1 % de l'avantage
+de la maison. Il correspond à peu près au coût d'**une seule** décision erronée de la
+stratégie optimale : sur les 280 états, une erreur isolée coûte 0,00082 en médiane, et
+132 erreurs isolées coûtent au moins 0,001. Le gain d'une partie ayant un écart-type
+de 0,95, il faudrait environ 3,5 millions de parties simulées pour estimer un gain à
+±0,001 : un tel écart est invisible sans l'oracle exact.
 
 ## 3. Rappel théorique et corrections
 
@@ -403,6 +455,71 @@ monotone au tout début (0,044 avant apprentissage, 0,081 à 500 épisodes) : le
 cibles de HIT modifient des décisions initialement correctes. Cette variante reste une
 robustesse locale dans la même famille de jeux, pas une validation de généralisation.
 
+### 5.9 Compléments après relecture (E7)
+
+Protocole : [protocole_v2_complements.md](protocole_v2_complements.md), écrit après la
+campagne finale et après un essai rapide de la planification ; ces analyses sont
+**exploratoires**. Mêmes 28 jeux supervisés et mêmes probabilités logistiques que la
+campagne finale (empreintes contrôlées), même oracle. Sorties :
+[results/v2/complements/](../results/v2/complements/), régénérées en moins d'une minute
+par `python -m src.audit.complements`.
+
+**Planification avec la loi des cartes estimée.** Les cartes d'une main de croupier
+suivent la même loi que celles du joueur. En estimant cette loi par les fréquences des
+cartes visibles du jeu supervisé, HIT se calcule par programmation dynamique au lieu
+d'être appris, sans jouer une seule partie. Deux variantes : STAND fournie par le même
+modèle logistique que l'hybride, ou STAND déduite de la règle d'arrêt du croupier,
+supposée connue.
+
+| Mains de croupier | 1 000 | 5 000 | 20 000 | 60 000 |
+|---|---:|---:|---:|---:|
+| Regret, planification avec STAND logistique | 0,00285 | 0,00074 | 0,00013 | 0,00002 |
+| Regret, planification complète | 0,00058 | 0,00011 | 0,00003 | 0,00000 |
+
+(9 premiers jeux ; à 20 000 mains sur les 28 jeux : 0,00014 et 0,00003.)
+
+**[observé]** À 20 000 mains, la planification avec la même STAND que l'hybride fait
+mieux que l'hybride après 100 000 épisodes de +0,00069 [+0,00057 ; +0,00081] ; la
+planification complète, de +0,00080 [+0,00068 ; +0,00091]. Le regret de la première est
+très proche du plancher de l'hybride (§5.4) : la planification atteint, sans jouer, à
+peu près la qualité vers laquelle l'hybride converge. L'hybride ne se justifie donc que si
+l'on s'interdit de modéliser les transitions de HIT ; dans ce Blackjack, où elles se
+déduisent de la loi des cartes et de l'arithmétique du total, c'est un choix d'étude,
+pas une contrainte du problème. La question traitée reste pertinente pour les cas où
+seule l'action terminale est modélisable.
+
+**Double Q-learning.** Réglé sur la même grille et les mêmes graines que le standard
+(choix : ε_min = 0,2, ω = 0,8), puis entraîné avec les graines RL finales.
+
+| Épisodes | 10 000 | 40 000 | 100 000 |
+|---|---:|---:|---:|
+| Double Q − standard | −0,0084 [−0,0104 ; −0,0063] | −0,0021 [−0,0028 ; −0,0014] | −0,0010 [−0,0014 ; −0,0005] |
+| Hybride − Double Q | +0,0219 [+0,0200 ; +0,0238] | +0,0073 [+0,0066 ; +0,0080] | +0,0031 [+0,0028 ; +0,0034] |
+
+**[observé]** Retirer le biais du maximum par Double Q-learning ne reproduit pas le gain
+de l'hybride et dégrade même le standard à ces budgets, ce qui est compatible avec la
+lenteur connue de Double Q, qui n'apprend chaque table qu'avec la moitié des mises à
+jour. Cela n'exclut pas que fixer STAND agisse en partie sur le biais du maximum ; cela
+montre que ce n'est pas le retrait du biais seul qui produit l'avantage
+**[non démontré]** pour le mécanisme.
+
+**Réglage de l'hybride sans STAND exacte.** Le réglage historique de l'hybride
+utilisait la loi exacte du croupier. Refait sur les mêmes graines (100 à 102) avec un
+modèle logistique estimé sur 20 000 nouvelles mains par graine, il choisit la même
+configuration (ε_min = 1, ω = 1 ; regret moyen 0,00055). Selon la règle fixée d'avance,
+rien n'a été relancé : ce privilège du réglage historique n'a pas biaisé le choix.
+
+### 5.10 L'agent livré
+
+L'agent livré ([agent_tuned.npz](../models/hybrid/agent_tuned.npz)) est l'hybride TUNED
+historique, entraîné 100 000 épisodes avec la graine 0 et le modèle 1 livré (60 000
+mains). Son gain exact vaut −0,047207, soit 0,000651 sous l'optimum. La meilleure
+politique compatible avec son modèle 1 ne diffère de π\* que dans l'état (12, 4, sans
+as), visité dans 0,9 % des parties, et ne perd que 0,000022 : l'écart de l'agent vient
+presque entièrement du nombre fini d'épisodes. Sur 10 000 parties simulées (graine
+2027), il obtient 4 225 victoires, 1 005 égalités et 4 770 défaites. La campagne v2
+ne l'a pas remplacé.
+
 ## 6. Discussion
 
 **Réponse à la question centrale.** Une estimation préalable de STAND améliore
@@ -422,7 +539,9 @@ n'apporte rien sur les fréquences dans ce problème à une variable. L'apport d
 est une étude de cas contrôlée : bornes de regret adaptées à une seule récompense
 terminale perturbée, oracle exact indépendant, plan imbriqué propageant la variabilité
 des données supervisées, coûts mesurés en unités explicites, régions de perte de
-l'hybride identifiées, et résultats négatifs conservés.
+l'hybride identifiées, et résultats négatifs conservés. La référence de planification
+(§5.9) situe l'hybride : il récupère une partie de l'avantage d'un modèle complet en
+ne modélisant que l'action terminale.
 
 ## 7. Menaces à la validité
 
@@ -432,8 +551,9 @@ l'hybride identifiées, et résultats négatifs conservés.
   Dans un paquet fini, la carte visible ne suffit plus et un modèle à plusieurs
   variables serait nécessaire.
 - **Hyperparamètres.** Les réglages historiques ont été obtenus sur trois graines,
-  avec STAND exacte pour l'hybride ; ils pourraient ne pas être optimaux aux autres
-  tailles. Aucun nouveau réglage n'a été fait pour éviter toute sélection sur le test.
+  avec STAND exacte pour l'hybride ; refait avec un modèle estimé, le réglage choisit
+  la même configuration (§5.9). Ils pourraient ne pas être optimaux aux autres tailles.
+  Aucun réglage n'a utilisé le test.
 - **Temps mesurés.** Ordinateur portable non isolé, une seule session, une seule
   implémentation ; les ratios temps main/partie dépendent du code (boucle Python contre
   enveloppes Gymnasium). Les cartes sont une unité plus stable mais ne mesurent pas le

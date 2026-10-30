@@ -70,9 +70,14 @@ def verify():
         raise ValueError(f"Gain recalculé différent de runs.csv : {largest:.3g}")
     report["campaigns"]["final"] = {"runs": len(runs), "max_recomputed_j_difference": largest}
 
-    for name in ("replication", "variant"):
+    for name in ("replication", "variant", "complements"):
         if (V2 / name).exists():
             report["campaigns"][name] = complete(V2 / name).get("status")
+    if (V2 / "complements").exists():
+        if digest(V2 / "complements/summary.json") != complete(V2 / "complements")["summary_sha256"]:
+            raise ValueError("Résumé des compléments modifié après la campagne.")
+        if load(V2 / "complements/provenance.json")["config"]["final_runs_sha256"] != status["run_table_sha256"]:
+            raise ValueError("Les compléments ne portent pas sur les mesures finales archivées.")
 
     analysis = V2 / "analysis"
     if analysis.exists():
