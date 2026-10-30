@@ -27,7 +27,11 @@ def metrics(probabilities: np.ndarray, X: np.ndarray, y: np.ndarray, reference: 
     losses = sample_losses(probabilities, X, y)
     predictions = probabilities[X[:, 0] - 1]
     one_hot = np.eye(6)[y - 17]
-    exact_cross_entropy = -(reference * np.log(np.clip(probabilities, np.finfo(float).eps, 1))).sum(axis=1)
+    # Le KL mathématique n'est pas une log-loss numériquement écrêtée : si une
+    # classe vraie positive reçoit zéro, son risque est réellement infini.
+    clipped_cross_entropy = -(reference * np.log(np.clip(probabilities, np.finfo(float).eps, 1))).sum(axis=1)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        exact_cross_entropy = -np.where(reference > 0, reference * np.log(probabilities), 0).sum(axis=1)
     exact_entropy = -(reference * np.log(reference)).sum(axis=1)
     stand_error = build_stand_table(probabilities)[4:, 1:, 0] - build_stand_table(reference)[4:, 1:, 0]
     return {
@@ -38,6 +42,7 @@ def metrics(probabilities: np.ndarray, X: np.ndarray, y: np.ndarray, reference: 
                                        labels=list(CLASSES), average="macro", zero_division=0)),
         "exact_expected_log_loss": float(CARD_PROBABILITIES @ exact_cross_entropy),
         "exact_excess_log_loss": float(CARD_PROBABILITIES @ (exact_cross_entropy - exact_entropy)),
+        "clipped_excess_log_loss_eps_machine": float(CARD_PROBABILITIES @ (clipped_cross_entropy - exact_entropy)),
         "max_total_variation": float(0.5 * np.abs(probabilities - reference).sum(axis=1).max()),
         "max_probability_error": float(np.abs(probabilities - reference).max()),
         "max_stand_error": float(np.abs(stand_error).max()),

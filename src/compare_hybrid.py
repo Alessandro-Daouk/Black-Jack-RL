@@ -149,6 +149,9 @@ def legacy_reproduced(results: dict, model_path: Path, episodes: int) -> bool | 
 
 def compare(model_path=DEFAULT_MODEL, episodes=100_000, output_dir=DEFAULT_OUTPUT,
             validation_seeds=VALIDATION_SEEDS, test_seeds=TEST_SEEDS, jobs=-1) -> dict:
+    output_dir = Path(output_dir)
+    if output_dir.exists() and any(output_dir.iterdir()):
+        raise ValueError("Choisir un dossier de résultats vide pour préserver les expériences.")
     episodes = require_integer(episodes, "episodes", 1)
     validation_seeds = [require_integer(seed, "seed", 0) for seed in validation_seeds]
     test_seeds = [require_integer(seed, "seed", 0) for seed in test_seeds]

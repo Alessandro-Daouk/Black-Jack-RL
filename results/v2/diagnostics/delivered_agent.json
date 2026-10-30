@@ -1,0 +1,16 @@
+{
+  "eta": 0.03870760008326907,
+  "max_hit_error_limit": 0.037048068263209326,
+  "max_tv": 0.022874603537590986,
+  "limit_j": -0.04657781112030359,
+  "j": -0.047206652727067915,
+  "regret": 0.000650675660370352,
+  "global_limit_regret_bound": 0.07741520016653813,
+  "local_limit_regret_bound": 0.0008272383619284292,
+  "occupancy_regret_identity": 0.0006506756603703509,
+  "occupation_action_difference": 0.036932450953818974,
+  "uniform_action_differences": 4,
+  "expected_decisions": 1.5588145293030693,
+  "ambiguous_states_global": 24,
+  "ambiguous_states_local": 5
+}

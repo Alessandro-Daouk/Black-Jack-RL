@@ -26,6 +26,9 @@ def run_experiment(train_size=60_000, validation_size=12_000, test_size=12_000,
                    model_dir=Path("models/supervised"), results_dir=Path("results/supervised")) -> dict:
     if len({train_seed, validation_seed, test_seed}) != 3:
         raise ValueError("Les trois graines doivent être distinctes.")
+    for output in (Path(model_dir), Path(results_dir)):
+        if output.exists() and any(output.iterdir()):
+            raise ValueError("Choisir des dossiers de sortie vides pour préserver les modèles et résultats.")
     start = time.perf_counter()
     print("Simulation des jeux d'entraînement et de validation…", flush=True)
     X_train, y_train = generate_dataset(train_size, train_seed)

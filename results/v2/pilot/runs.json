@@ -1,0 +1,370 @@
+[
+  {
+    "group": 0,
+    "rl_rep": 0,
+    "method": "standard",
+    "curve": [
+      {
+        "episodes": 10000,
+        "j": -0.06582671345189763,
+        "rl_seconds": 0.4522413800000322,
+        "evaluation_seconds": 0.000506430999848817,
+        "cards": 53497,
+        "decisions": 14068
+      },
+      {
+        "episodes": 100000,
+        "j": -0.04922185620446554,
+        "rl_seconds": 4.5929313620003995,
+        "evaluation_seconds": 0.0008360979995813977,
+        "cards": 542705,
+        "decisions": 146989
+      }
+    ]
+  },
+  {
+    "group": 0,
+    "rl_rep": 0,
+    "method": "logistic",
+    "curve": [
+      {
+        "episodes": 10000,
+        "j": -0.05049667074005028,
+        "rl_seconds": 0.4430836100000306,
+        "evaluation_seconds": 0.0003704539999489498,
+        "cards": 53040,
+        "decisions": 13703
+      },
+      {
+        "episodes": 100000,
+        "j": -0.04745363410663972,
+        "rl_seconds": 4.382634696000423,
+        "evaluation_seconds": 0.0007677970002077927,
+        "cards": 531133,
+        "decisions": 137740
+      }
+    ]
+  },
+  {
+    "group": 0,
+    "rl_rep": 1,
+    "method": "standard",
+    "curve": [
+      {
+        "episodes": 10000,
+        "j": -0.07233896763744649,
+        "rl_seconds": 0.44580015000019557,
+        "evaluation_seconds": 0.00033339500032525393,
+        "cards": 53302,
+        "decisions": 13841
+      },
+      {
+        "episodes": 100000,
+        "j": -0.05032498197526067,
+        "rl_seconds": 4.538083950999862,
+        "evaluation_seconds": 0.0006744980005350953,
+        "cards": 540340,
+        "decisions": 144901
+      }
+    ]
+  },
+  {
+    "group": 0,
+    "rl_rep": 1,
+    "method": "logistic",
+    "curve": [
+      {
+        "episodes": 10000,
+        "j": -0.05463987997761917,
+        "rl_seconds": 0.43422934199998053,
+        "evaluation_seconds": 0.0003274559999226767,
+        "cards": 53218,
+        "decisions": 13754
+      },
+      {
+        "episodes": 100000,
+        "j": -0.047181108838037236,
+        "rl_seconds": 4.349811814000077,
+        "evaluation_seconds": 0.0006489630000032776,
+        "cards": 530913,
+        "decisions": 137369
+      }
+    ]
+  },
+  {
+    "group": 1,
+    "rl_rep": 0,
+    "method": "standard",
+    "curve": [
+      {
+        "episodes": 10000,
+        "j": -0.07355476094789748,
+        "rl_seconds": 0.4569560380000439,
+        "evaluation_seconds": 0.0005841719998898043,
+        "cards": 53525,
+        "decisions": 14033
+      },
+      {
+        "episodes": 100000,
+        "j": -0.04843501402777632,
+        "rl_seconds": 4.882642722000128,
+        "evaluation_seconds": 0.0009615939998184331,
+        "cards": 542665,
+        "decisions": 146657
+      }
+    ]
+  },
+  {
+    "group": 1,
+    "rl_rep": 0,
+    "method": "logistic",
+    "curve": [
+      {
+        "episodes": 10000,
+        "j": -0.0544915171015294,
+        "rl_seconds": 0.4988364700002421,
+        "evaluation_seconds": 0.0003716869996424066,
+        "cards": 53188,
+        "decisions": 13770
+      },
+      {
+        "episodes": 100000,
+        "j": -0.04731513924388989,
+        "rl_seconds": 4.4454837950002,
+        "evaluation_seconds": 0.0007137779998629412,
+        "cards": 531218,
+        "decisions": 137831
+      }
+    ]
+  },
+  {
+    "group": 1,
+    "rl_rep": 1,
+    "method": "standard",
+    "curve": [
+      {
+        "episodes": 10000,
+        "j": -0.06012990820179215,
+        "rl_seconds": 0.4483841179999217,
+        "evaluation_seconds": 0.00033865800014609704,
+        "cards": 53399,
+        "decisions": 13986
+      },
+      {
+        "episodes": 100000,
+        "j": -0.048552239312306476,
+        "rl_seconds": 4.544429180999941,
+        "evaluation_seconds": 0.0006995280000410276,
+        "cards": 541458,
+        "decisions": 146448
+      }
+    ]
+  },
+  {
+    "group": 1,
+    "rl_rep": 1,
+    "method": "logistic",
+    "curve": [
+      {
+        "episodes": 10000,
+        "j": -0.04897803760843411,
+        "rl_seconds": 0.43411927199986167,
+        "evaluation_seconds": 0.0003264550000494637,
+        "cards": 53075,
+        "decisions": 13746
+      },
+      {
+        "episodes": 100000,
+        "j": -0.04747244877059244,
+        "rl_seconds": 4.743480902999636,
+        "evaluation_seconds": 0.0007023420002951752,
+        "cards": 530830,
+        "decisions": 137656
+      }
+    ]
+  },
+  {
+    "group": 2,
+    "rl_rep": 0,
+    "method": "standard",
+    "curve": [
+      {
+        "episodes": 10000,
+        "j": -0.063409851729573,
+        "rl_seconds": 0.5016861019998942,
+        "evaluation_seconds": 0.0005717469998671731,
+        "cards": 53424,
+        "decisions": 14063
+      },
+      {
+        "episodes": 100000,
+        "j": -0.04877239825172756,
+        "rl_seconds": 5.022831211999801,
+        "evaluation_seconds": 0.0009353539999210625,
+        "cards": 541722,
+        "decisions": 145855
+      }
+    ]
+  },
+  {
+    "group": 2,
+    "rl_rep": 0,
+    "method": "logistic",
+    "curve": [
+      {
+        "episodes": 10000,
+        "j": -0.05337755165153438,
+        "rl_seconds": 0.4820929900001829,
+        "evaluation_seconds": 0.0003550030000951665,
+        "cards": 53227,
+        "decisions": 13787
+      },
+      {
+        "episodes": 100000,
+        "j": -0.047063515601893674,
+        "rl_seconds": 4.791983410999819,
+        "evaluation_seconds": 0.0007368990004579246,
+        "cards": 531242,
+        "decisions": 137352
+      }
+    ]
+  },
+  {
+    "group": 2,
+    "rl_rep": 1,
+    "method": "standard",
+    "curve": [
+      {
+        "episodes": 10000,
+        "j": -0.07139580809647947,
+        "rl_seconds": 0.49816301299961196,
+        "evaluation_seconds": 0.00039950600012161885,
+        "cards": 53441,
+        "decisions": 14087
+      },
+      {
+        "episodes": 100000,
+        "j": -0.05182382306328638,
+        "rl_seconds": 5.068829794999601,
+        "evaluation_seconds": 0.0007509669999308244,
+        "cards": 542678,
+        "decisions": 147526
+      }
+    ]
+  },
+  {
+    "group": 2,
+    "rl_rep": 1,
+    "method": "logistic",
+    "curve": [
+      {
+        "episodes": 10000,
+        "j": -0.05036520447099987,
+        "rl_seconds": 0.47830861900001764,
+        "evaluation_seconds": 0.00035056899969276856,
+        "cards": 53133,
+        "decisions": 13720
+      },
+      {
+        "episodes": 100000,
+        "j": -0.0473343415757919,
+        "rl_seconds": 4.80786434599986,
+        "evaluation_seconds": 0.0007191330000750895,
+        "cards": 531272,
+        "decisions": 137491
+      }
+    ]
+  },
+  {
+    "group": 3,
+    "rl_rep": 0,
+    "method": "standard",
+    "curve": [
+      {
+        "episodes": 10000,
+        "j": -0.06297477252994316,
+        "rl_seconds": 0.5001632589996916,
+        "evaluation_seconds": 0.0005300070001794666,
+        "cards": 53357,
+        "decisions": 13943
+      },
+      {
+        "episodes": 100000,
+        "j": -0.04983535269830285,
+        "rl_seconds": 5.058812288999434,
+        "evaluation_seconds": 0.0009322920004706248,
+        "cards": 542855,
+        "decisions": 146960
+      }
+    ]
+  },
+  {
+    "group": 3,
+    "rl_rep": 0,
+    "method": "logistic",
+    "curve": [
+      {
+        "episodes": 10000,
+        "j": -0.05351231921996386,
+        "rl_seconds": 0.47745944899997994,
+        "evaluation_seconds": 0.0004075000001648732,
+        "cards": 53021,
+        "decisions": 13598
+      },
+      {
+        "episodes": 100000,
+        "j": -0.047188604753901374,
+        "rl_seconds": 4.816069522999896,
+        "evaluation_seconds": 0.0007730950001132442,
+        "cards": 531479,
+        "decisions": 137716
+      }
+    ]
+  },
+  {
+    "group": 3,
+    "rl_rep": 1,
+    "method": "standard",
+    "curve": [
+      {
+        "episodes": 10000,
+        "j": -0.06189851606516189,
+        "rl_seconds": 0.4953971850000016,
+        "evaluation_seconds": 0.00036694899972644635,
+        "cards": 53408,
+        "decisions": 13975
+      },
+      {
+        "episodes": 100000,
+        "j": -0.051198537597066524,
+        "rl_seconds": 5.036115386000347,
+        "evaluation_seconds": 0.0007708009998168563,
+        "cards": 542225,
+        "decisions": 146516
+      }
+    ]
+  },
+  {
+    "group": 3,
+    "rl_rep": 1,
+    "method": "logistic",
+    "curve": [
+      {
+        "episodes": 10000,
+        "j": -0.05362060807752435,
+        "rl_seconds": 0.479362024999773,
+        "evaluation_seconds": 0.00034143599987146445,
+        "cards": 53133,
+        "decisions": 13834
+      },
+      {
+        "episodes": 100000,
+        "j": -0.049932803764032654,
+        "rl_seconds": 4.8746341490000304,
+        "evaluation_seconds": 0.0006878549997964001,
+        "cards": 530708,
+        "decisions": 137373
+      }
+    ]
+  }
+]

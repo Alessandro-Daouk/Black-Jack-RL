@@ -1,0 +1,436 @@
+[
+  {
+    "n": 50,
+    "method": "raw",
+    "infinite_observations": 2000,
+    "finite_realizations_only": null,
+    "unconditional_expectation": "infinite",
+    "asymptotic_smoothed_reference": 0.5
+  },
+  {
+    "n": 50,
+    "method": "jeffreys",
+    "infinite_observations": 0,
+    "finite_realizations_only": {
+      "n": 2000,
+      "mean": 0.17900345876127557,
+      "sd": 0.04402599546678513,
+      "ci95": [
+        0.17707280091896235,
+        0.1809341166035888
+      ],
+      "median": 0.17580024751045337,
+      "min": 0.06657731607747043,
+      "max": 0.4414459761622571
+    },
+    "unconditional_expectation": "finite",
+    "asymptotic_smoothed_reference": 0.5
+  },
+  {
+    "n": 50,
+    "method": "laplace",
+    "infinite_observations": 0,
+    "finite_realizations_only": {
+      "n": 2000,
+      "mean": 0.12372586261601114,
+      "sd": 0.030489682380172564,
+      "ci95": [
+        0.12238880836493056,
+        0.1250629168670917
+      ],
+      "median": 0.12061518747594015,
+      "min": 0.04130148994860319,
+      "max": 0.3035625989902953
+    },
+    "unconditional_expectation": "finite",
+    "asymptotic_smoothed_reference": 0.5
+  },
+  {
+    "n": 100,
+    "method": "raw",
+    "infinite_observations": 2000,
+    "finite_realizations_only": null,
+    "unconditional_expectation": "infinite",
+    "asymptotic_smoothed_reference": 0.25
+  },
+  {
+    "n": 100,
+    "method": "jeffreys",
+    "infinite_observations": 0,
+    "finite_realizations_only": {
+      "n": 2000,
+      "mean": 0.14749580217157,
+      "sd": 0.03250545915999681,
+      "ci95": [
+        0.14607035070863633,
+        0.14892125363450365
+      ],
+      "median": 0.1443062835544597,
+      "min": 0.06101183028375128,
+      "max": 0.29977674029197754
+    },
+    "unconditional_expectation": "finite",
+    "asymptotic_smoothed_reference": 0.25
+  },
+  {
+    "n": 100,
+    "method": "laplace",
+    "infinite_observations": 0,
+    "finite_realizations_only": {
+      "n": 2000,
+      "mean": 0.10116036007865105,
+      "sd": 0.023471001046797037,
+      "ci95": [
+        0.10013109380636137,
+        0.10218962635094073
+      ],
+      "median": 0.09924481759547785,
+      "min": 0.0327043816598677,
+      "max": 0.20240169776783964
+    },
+    "unconditional_expectation": "finite",
+    "asymptotic_smoothed_reference": 0.25
+  },
+  {
+    "n": 500,
+    "method": "raw",
+    "infinite_observations": 1079,
+    "finite_realizations_only": {
+      "n": 921,
+      "mean": 0.05396921505405666,
+      "sd": 0.010997377281967088,
+      "ci95": [
+        0.05325803572126367,
+        0.05468039438684966
+      ],
+      "median": 0.05347035786309774,
+      "min": 0.027486985458685026,
+      "max": 0.08875931884180105
+    },
+    "unconditional_expectation": "infinite",
+    "asymptotic_smoothed_reference": 0.05
+  },
+  {
+    "n": 500,
+    "method": "jeffreys",
+    "infinite_observations": 0,
+    "finite_realizations_only": {
+      "n": 2000,
+      "mean": 0.04992483334008769,
+      "sd": 0.011300273579629554,
+      "ci95": [
+        0.04942928607135515,
+        0.05042038060882023
+      ],
+      "median": 0.04910779627843531,
+      "min": 0.021706074119650743,
+      "max": 0.09912374356311113
+    },
+    "unconditional_expectation": "finite",
+    "asymptotic_smoothed_reference": 0.05
+  },
+  {
+    "n": 500,
+    "method": "laplace",
+    "infinite_observations": 0,
+    "finite_realizations_only": {
+      "n": 2000,
+      "mean": 0.041768187730060406,
+      "sd": 0.008761406802648988,
+      "ci95": [
+        0.041383976570860334,
+        0.04215239888926048
+      ],
+      "median": 0.04135090466081916,
+      "min": 0.018482847094906035,
+      "max": 0.07714387657022533
+    },
+    "unconditional_expectation": "finite",
+    "asymptotic_smoothed_reference": 0.05
+  },
+  {
+    "n": 1000,
+    "method": "raw",
+    "infinite_observations": 49,
+    "finite_realizations_only": {
+      "n": 1951,
+      "mean": 0.027438582207900082,
+      "sd": 0.006044023282153089,
+      "ci95": [
+        0.027170223784166548,
+        0.027706940631633616
+      ],
+      "median": 0.026876882602673593,
+      "min": 0.010279118717734749,
+      "max": 0.06168830602360779
+    },
+    "unconditional_expectation": "infinite",
+    "asymptotic_smoothed_reference": 0.025
+  },
+  {
+    "n": 1000,
+    "method": "jeffreys",
+    "infinite_observations": 0,
+    "finite_realizations_only": {
+      "n": 2000,
+      "mean": 0.024853113157234305,
+      "sd": 0.0053710652622004,
+      "ci95": [
+        0.024617577556957725,
+        0.025088648757510885
+      ],
+      "median": 0.02438578517091043,
+      "min": 0.009217247622144802,
+      "max": 0.05131850868607935
+    },
+    "unconditional_expectation": "finite",
+    "asymptotic_smoothed_reference": 0.025
+  },
+  {
+    "n": 1000,
+    "method": "laplace",
+    "infinite_observations": 0,
+    "finite_realizations_only": {
+      "n": 2000,
+      "mean": 0.022821439877106116,
+      "sd": 0.0047678485923120205,
+      "ci95": [
+        0.022612356943759297,
+        0.023030522810452935
+      ],
+      "median": 0.02243604643592536,
+      "min": 0.008377255967077498,
+      "max": 0.04383556466194574
+    },
+    "unconditional_expectation": "finite",
+    "asymptotic_smoothed_reference": 0.025
+  },
+  {
+    "n": 5000,
+    "method": "raw",
+    "infinite_observations": 0,
+    "finite_realizations_only": {
+      "n": 2000,
+      "mean": 0.005033304691916094,
+      "sd": 0.0010469490722492538,
+      "ci95": [
+        0.004987393170429532,
+        0.005079216213402655
+      ],
+      "median": 0.004953865174773387,
+      "min": 0.0022681239969108177,
+      "max": 0.009971609464809596
+    },
+    "unconditional_expectation": "infinite",
+    "asymptotic_smoothed_reference": 0.005
+  },
+  {
+    "n": 5000,
+    "method": "jeffreys",
+    "infinite_observations": 0,
+    "finite_realizations_only": {
+      "n": 2000,
+      "mean": 0.004941029750796711,
+      "sd": 0.0010247676544866443,
+      "ci95": [
+        0.004896090943900767,
+        0.0049859685576926546
+      ],
+      "median": 0.004862925081581171,
+      "min": 0.002219547695550933,
+      "max": 0.00979795462693397
+    },
+    "unconditional_expectation": "finite",
+    "asymptotic_smoothed_reference": 0.005
+  },
+  {
+    "n": 5000,
+    "method": "laplace",
+    "infinite_observations": 0,
+    "finite_realizations_only": {
+      "n": 2000,
+      "mean": 0.004863925003026415,
+      "sd": 0.0010061083383128544,
+      "ci95": [
+        0.004819804457131072,
+        0.004908045548921758
+      ],
+      "median": 0.004785141490658319,
+      "min": 0.002184844445753967,
+      "max": 0.00964323913501588
+    },
+    "unconditional_expectation": "finite",
+    "asymptotic_smoothed_reference": 0.005
+  },
+  {
+    "n": 20000,
+    "method": "raw",
+    "infinite_observations": 0,
+    "finite_realizations_only": {
+      "n": 2000,
+      "mean": 0.0012578290101962746,
+      "sd": 0.00024933519364077827,
+      "ci95": [
+        0.001246894994011895,
+        0.0012687630263806542
+      ],
+      "median": 0.0012464740639578798,
+      "min": 0.0005362447038812295,
+      "max": 0.0021149940326146573
+    },
+    "unconditional_expectation": "infinite",
+    "asymptotic_smoothed_reference": 0.00125
+  },
+  {
+    "n": 20000,
+    "method": "jeffreys",
+    "infinite_observations": 0,
+    "finite_realizations_only": {
+      "n": 2000,
+      "mean": 0.0012517481084139538,
+      "sd": 0.00024776659545089184,
+      "ci95": [
+        0.0012408828794623133,
+        0.0012626133373655943
+      ],
+      "median": 0.001240390854271873,
+      "min": 0.0005324430783615195,
+      "max": 0.0021185882883238394
+    },
+    "unconditional_expectation": "finite",
+    "asymptotic_smoothed_reference": 0.00125
+  },
+  {
+    "n": 20000,
+    "method": "laplace",
+    "infinite_observations": 0,
+    "finite_realizations_only": {
+      "n": 2000,
+      "mean": 0.001246476101083863,
+      "sd": 0.0002463748026006825,
+      "ci95": [
+        0.0012356719059771733,
+        0.0012572802961905525
+      ],
+      "median": 0.0012361616259800872,
+      "min": 0.0005294241486732967,
+      "max": 0.0021229295449524854
+    },
+    "unconditional_expectation": "finite",
+    "asymptotic_smoothed_reference": 0.00125
+  },
+  {
+    "n": 60000,
+    "method": "raw",
+    "infinite_observations": 0,
+    "finite_realizations_only": {
+      "n": 2000,
+      "mean": 0.0004163669936247898,
+      "sd": 8.240254710521958e-05,
+      "ci95": [
+        0.00041275342118631306,
+        0.00041998056606326655
+      ],
+      "median": 0.0004111203569820683,
+      "min": 0.00020466312054337905,
+      "max": 0.0007444539055881976
+    },
+    "unconditional_expectation": "infinite",
+    "asymptotic_smoothed_reference": 0.0004166666666666667
+  },
+  {
+    "n": 60000,
+    "method": "jeffreys",
+    "infinite_observations": 0,
+    "finite_realizations_only": {
+      "n": 2000,
+      "mean": 0.00041576454915658907,
+      "sd": 8.228090543696308e-05,
+      "ci95": [
+        0.00041215631103113087,
+        0.0004193727872820473
+      ],
+      "median": 0.0004103922573608258,
+      "min": 0.00020482340985951596,
+      "max": 0.0007459262291997698
+    },
+    "unconditional_expectation": "finite",
+    "asymptotic_smoothed_reference": 0.0004166666666666667
+  },
+  {
+    "n": 60000,
+    "method": "laplace",
+    "infinite_observations": 0,
+    "finite_realizations_only": {
+      "n": 2000,
+      "mean": 0.00041524818034847997,
+      "sd": 8.217691524687008e-05,
+      "ci95": [
+        0.00041164450247143633,
+        0.0004188518582255236
+      ],
+      "median": 0.00040980879009910626,
+      "min": 0.000205067883991367,
+      "max": 0.0007474791201403573
+    },
+    "unconditional_expectation": "finite",
+    "asymptotic_smoothed_reference": 0.0004166666666666667
+  },
+  {
+    "n": 200000,
+    "method": "raw",
+    "infinite_observations": 0,
+    "finite_realizations_only": {
+      "n": 2000,
+      "mean": 0.00012601710708478144,
+      "sd": 2.5239454528495723e-05,
+      "ci95": [
+        0.00012491028938981506,
+        0.00012712392477974782
+      ],
+      "median": 0.00012464369889743368,
+      "min": 5.1878994682364605e-05,
+      "max": 0.00021173050833343143
+    },
+    "unconditional_expectation": "infinite",
+    "asymptotic_smoothed_reference": 0.000125
+  },
+  {
+    "n": 200000,
+    "method": "jeffreys",
+    "infinite_observations": 0,
+    "finite_realizations_only": {
+      "n": 2000,
+      "mean": 0.0001259569226713799,
+      "sd": 2.5227667469148177e-05,
+      "ci95": [
+        0.0001248506218705422,
+        0.0001270632234722176
+      ],
+      "median": 0.0001244541107699397,
+      "min": 5.189731654861631e-05,
+      "max": 0.0002120791319835673
+    },
+    "unconditional_expectation": "finite",
+    "asymptotic_smoothed_reference": 0.000125
+  },
+  {
+    "n": 200000,
+    "method": "laplace",
+    "infinite_observations": 0,
+    "finite_realizations_only": {
+      "n": 2000,
+      "mean": 0.00012590438725010384,
+      "sd": 2.5217479539154597e-05,
+      "ci95": [
+        0.00012479853321728878,
+        0.0001270102412829189
+      ],
+      "median": 0.00012428722897222085,
+      "min": 5.1923214943863066e-05,
+      "max": 0.00021243502916892714
+    },
+    "unconditional_expectation": "finite",
+    "asymptotic_smoothed_reference": 0.000125
+  }
+]
