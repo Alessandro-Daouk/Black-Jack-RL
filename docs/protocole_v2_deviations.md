@@ -32,13 +32,7 @@ réplication a été modifié avant son exécution pour consigner un éventuel �
 fichier `completion.json` comme les autres campagnes. Les tolérances (1e-9 sur les
 gains exacts, 1e-7 sur les probabilités du prédicteur) sont inchangées.
 
-## D3 — Vérification d'intégrité
-
-`scripts/verify_audit.py` recalcule le gain exact de chaque Q-table archivée de la
-campagne finale, contrôle les empreintes des agents et des tables, et vérifie que
-l'analyse publiée porte sur ces tables. Ce script ne produit aucune mesure nouvelle.
-
-## D4 — Description de la variante E6 à tous les budgets
+## D3 — Description de la variante E6 à tous les budgets
 
 Le protocole E6 ne fixait pas de budget d'analyse ; le script d'analyse, écrit avant
 les mesures, ne rapportait que le contraste à 100 000 épisodes. Après lecture de ce
@@ -47,7 +41,7 @@ description de tous les budgets de la grille, afin de ne pas réduire la variant
 seul point. Cette extension est postérieure aux résultats : ses intervalles sont
 descriptifs, non simultanés, et ne constituent pas un test préétabli.
 
-## D5 — Correction d'un défaut de l'analyse avant sa version publiée
+## D4 — Correction d'un défaut de l'analyse avant sa version publiée
 
 Une exécution d'essai de l'analyse, dans un dossier temporaire, a révélé que le
 nombre de grappes écrasait la taille supervisée dans les tableaux de surface et de

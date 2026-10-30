@@ -34,15 +34,10 @@ réseau n'est nécessaire.
 
 ## Modes de reproduction
 
-**Mode léger** (moins d'une minute, aucun entraînement) : vérifie les modèles livrés,
-recalcule le gain exact des 418 agents v2 archivés, contrôle les empreintes des tables
-et exécute les tests.
-
-```bash
-uv run --locked python -m scripts.verify_release
-uv run --locked python -m scripts.verify_audit
-uv run --locked pytest -q
-```
+**Mode léger** (moins d'une minute, aucun entraînement) : les trois commandes de
+vérification de la section 2 du README. Elles contrôlent les modèles livrés,
+recalculent le gain exact des 418 agents v2 archivés, contrôlent les empreintes des
+tables et exécutent les tests.
 
 **Mode complet** : chaque commande refuse un dossier de sortie non vide. Les mesures de
 temps n'ont de sens que si aucune autre charge lourde ne tourne pendant la campagne
@@ -58,10 +53,36 @@ uv run --locked python -m src.audit.variant --design experiments/v2/final_frozen
 uv run --locked python -m src.audit.analyze --input results/reproduction/final --diagnostics results/reproduction/diagnostics --variant results/reproduction/variant --replication results/reproduction/replication --output results/reproduction/analysis
 ```
 
+Sous PowerShell, remplacer la ligne `export` par
+`$env:OMP_NUM_THREADS=1; $env:OPENBLAS_NUM_THREADS=1; $env:MKL_NUM_THREADS=1`.
+La réplication régénère toutes les sorties des campagnes historiques ; le dépôt n'en
+conserve que `comparison.json`, qui consigne les écarts aux résultats publiés, avec
+`provenance.json` et `completion.json`.
+
 La configuration `experiments/v2/final_frozen.json` a été produite par
 `python -m src.audit.campaign --pilot results/v2/pilot --output <chemin>` à partir du
 pilote archivé ; la régénérer n'est pas nécessaire, et la commande refuse d'écraser un
 fichier existant.
+
+**Campagnes historiques.** Elles se relancent individuellement :
+
+```bash
+uv run --locked python -m src.supervised.train --model-dir models/reproduction/supervised --results-dir results/reproduction/supervised
+uv run --locked python -m src.train_hybrid --preset tuned --agent models/reproduction/agent_tuned.npz --results-dir results/reproduction/hybrid --episodes 100000 --seed 0
+uv run --locked python -m src.evaluate_hybrid --agent models/reproduction/agent_tuned.npz --output results/reproduction/hybrid/evaluation.json --games 10000 --seed 2027
+uv run --locked python -m src.compare_hybrid --output-dir results/reproduction/config_vs_tuned --jobs 2
+uv run --locked python -m src.supervised.learning_curve --output results/reproduction/learning_curve --jobs 2
+uv run --locked python -m src.compare_frequencies --output results/reproduction/frequencies_ablation --jobs 2
+```
+
+Les commandes `train_hybrid` et `evaluate_hybrid` utilisent le modèle 1 livré ; pour utiliser celui que la
+première vient de reproduire, ajouter `--model models/reproduction/supervised/dealer_model.joblib`.
+`uv run --locked python -m scripts.make_summary_figures` redessine, sans entraînement, la
+figure publiée de l'ablation (`results/hybrid/frequencies_ablation/learning_curve.png`) à
+partir de ses mesures. `uv run --locked python -m src.tune`
+relance les 108 entraînements du réglage et réécrit `results/q_learning/tuning.csv`. Le
+notebook `train_model2.ipynb` s'ouvre après `uv sync --locked --extra notebook` ; son
+exécution réécrit les fichiers de `results/q_learning/` et `models/q_learning/`.
 
 ## Durées mesurées
 

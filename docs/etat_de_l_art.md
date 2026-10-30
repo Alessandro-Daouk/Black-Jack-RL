@@ -1,9 +1,9 @@
-# État de l'art et contribution défendable
+# État de l'art
 
-Recherche effectuée le 30 octobre 2026, avant l'interprétation des résultats v2.
-Les sources ci-dessous sont les articles originaux, les ouvrages des auteurs ou
-leurs sites institutionnels. La date d'un dépôt arXiv ne remplace pas celle de la
-publication. Cette recherche ciblée n'est pas une revue systématique exhaustive.
+Recherche effectuée le 30 octobre 2026. Les sources ci-dessous sont les articles
+originaux, les ouvrages des auteurs ou leurs sites institutionnels. La date d'un dépôt
+arXiv ne remplace pas celle de la publication. Cette recherche ciblée n'est pas une
+revue systématique exhaustive.
 
 ## Comparaison critique
 
@@ -23,32 +23,15 @@ publication. Cette recherche ciblée n'est pas une revue systématique exhaustiv
 | Ng, Harada & Russell, 1999 [14] | Façonnage de récompense par potentiel, invariance de la politique optimale | Injection d'une connaissance préalable dans l'apprentissage | Un potentiel préserve la politique optimale ; une STAND erronée peut la changer | Ablation par perturbation contrôlée de STAND et regret limite exact |
 | Schuirmann, 1987 [16] | Double test unilatéral (TOST) d'équivalence | Conclure à l'absence de différence pratique | Discipline statistique, pas méthode RL | Marge fixée avant les mesures et TOST sur grappes indépendantes |
 
-## Ce qui est démontré dans le dépôt, et ce qui ne l'est pas
+## Portée de cette recherche
 
-La régression multinomiale one-hot est saturée : en l'absence de régularisation,
-elle retrouve les fréquences si toutes les cellules sont positives. La régularisation
-modifie ce résultat, sans établir de domination générale. Le développement local du
-KL est aléatoire ; son espérance brute est infinie à taille finie. La loi de risque
-`25/n` est démontrée pour un estimateur Dirichlet à paramètre positif fixé, avec
-dimension et probabilités vraies intérieures fixées. Ces démonstrations sont données
-dans [modele1.tex](modele1.tex), sans attribuer à un article une proposition différente.
-
-La borne `2η` du regret limite exploite le fait qu'une seule récompense terminale
-est perturbée. La borne locale propage les erreurs sur le DAG et les pondère par
-l'occupation. Ce sont des applications d'arguments usuels de perturbation et de
-différence de performance, pas une revendication de théorème fondateur inédit.
-
-L'état de l'art invalide l'idée que « combiner supervisé et RL » suffirait à faire
-une innovation algorithmique. L'apport de ce projet est **expérimental et
-méthodologique** : comparaison reproductible à budgets variés, diagnostic exact
-des erreurs, propagation des deux sources de variabilité, décompte des coûts et
-conservation des résultats négatifs. Même un résultat favorable ne démontrerait
-pas une amélioration universelle du coût total.
-
-La recherche sur les dynamiques partiellement connues identifie Shelton comme
-un antécédent conceptuel proche. Elle ne prouve ni qu'il est le travail le plus
-proche dans toute la littérature, ni qu'aucun algorithme antérieur ne fixe exactement
-une action terminale. Aucune priorité scientifique n'est revendiquée.
+Les bornes de regret du dépôt (2η et borne locale pondérée par l'occupation) appliquent
+des arguments usuels de perturbation et de différence de performance ; elles ne sont pas
+présentées comme des théorèmes nouveaux. Shelton (2002) est un antécédent conceptuel
+proche, sans que cette recherche ciblée prouve qu'il soit le plus proche de toute la
+littérature, ni qu'aucun travail antérieur ne fixe exactement la valeur d'une action
+terminale. Aucune priorité scientifique n'est revendiquée. La contribution du projet est
+discutée dans le [rapport](rapport_scientifique.md#6-discussion).
 
 ## Références vérifiées et notes de version
 
@@ -118,8 +101,3 @@ une action terminale. Aucune priorité scientifique n'est revendiquée.
 Le résultat de risque lissé en (K−1)/(2m) est démontré dans `modele1.tex` ; nous
 n'avons pas pu vérifier dans une source primaire l'énoncé exact attribué parfois à
 la littérature sur les estimateurs « add-β », et ne citons donc aucune source pour lui.
-
-Le rôle exact de `C` est vérifié dans le **source installé de scikit-learn 1.9.1**,
-plutôt que transposé depuis une documentation « stable » susceptible d'évoluer.
-Extrait, empreintes et résidu stationnaire :
-[`results/v2/diagnostics/sklearn_objective.json`](../results/v2/diagnostics/sklearn_objective.json).

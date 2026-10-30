@@ -1,7 +1,7 @@
 # Rapport scientifique — audit v2 du Blackjack hybride
 
 Alessandro Daouk et Wassim Ghnaya. Audit et campagnes v2 réalisés le 30 octobre 2026,
-avec l'assistance d'outils d'IA, sur la branche `audit/scientifique-v2`.
+avec l'assistance d'outils d'IA.
 Ce rapport décrit les nouvelles mesures et leur portée ; les fondements mathématiques
 sont démontrés dans [modele1.pdf](modele1.pdf) et [modele2.pdf](modele2.pdf).
 
@@ -387,7 +387,7 @@ pas incluse, les fréquences et Jeffreys suffisant à tester l'hypothèse.
 nettement meilleur que le standard : +0,00032 [−0,00012 ; +0,00076], et le TOST conclut
 même à l'équivalence à ±0,001 (p = 0,004). Les deux estimateurs donnent des gains
 identiques. La description par budget, ajoutée après lecture de ce résultat (déviation
-D4), montre le même profil qu'avec les cartes de Blackjack-v1 mais une convergence plus
+D3), montre le même profil qu'avec les cartes de Blackjack-v1 mais une convergence plus
 rapide du standard :
 
 | Épisodes | 1 000 | 5 000 | 20 000 | 60 000 | 100 000 | 200 000 |

@@ -448,54 +448,12 @@ fréquences lissées (Jeffreys, Laplace). Des simulations le confirment : à 1 0
 
 ## 11. Reproduire les résultats
 
-Toutes les commandes s'exécutent depuis la racine du dépôt après `uv sync --locked`.
-Les scripts refusent d'écrire dans un dossier non vide : ils écrivent ici dans
-`results/reproduction/` et `models/reproduction/`, ignorés par Git. Les durées sont
-celles mesurées sur un Intel i7-1255U. Le détail (environnement, versions, commandes,
-comparaison des sorties) est dans [docs/reproductibilite.md](docs/reproductibilite.md).
-
-**Reproduction rapide (moins d'une minute, sans entraînement).**
-
-```bash
-uv run --locked python -m scripts.verify_release
-uv run --locked python -m scripts.verify_audit
-uv run --locked pytest -q
-```
-
-**Reproduction complète de l'audit v2** (environ 1 h 30 au total, séquentiellement) :
-
-```bash
-export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
-uv run --locked python -m src.audit.diagnostics --output results/reproduction/diagnostics
-uv run --locked python -m src.audit.pilot --output results/reproduction/pilot
-uv run --locked python -m src.audit.campaign --config experiments/v2/final_frozen.json --output results/reproduction/final
-uv run --locked python -m src.audit.replicate --output results/reproduction/replication --jobs 6
-uv run --locked python -m src.audit.variant --design experiments/v2/final_frozen.json --output results/reproduction/variant
-uv run --locked python -m src.audit.analyze --input results/reproduction/final --diagnostics results/reproduction/diagnostics --variant results/reproduction/variant --replication results/reproduction/replication --output results/reproduction/analysis
-```
-
-Les gains exacts et les tables sont déterministes ; les temps mesurés et l'empreinte de
-`runs.csv`, qui contient ces temps, diffèrent d'une exécution à l'autre. Sous PowerShell,
-remplacer la ligne `export` par `$env:OMP_NUM_THREADS=1` (et de même pour les deux autres).
-
-**Version historique.** Les campagnes d'origine se relancent individuellement :
-
-```bash
-uv run --locked python -m src.supervised.train --model-dir models/reproduction/supervised --results-dir results/reproduction/supervised
-uv run --locked python -m src.train_hybrid --preset tuned --agent models/reproduction/agent_tuned.npz --results-dir results/reproduction/hybrid --episodes 100000 --seed 0
-uv run --locked python -m src.evaluate_hybrid --agent models/reproduction/agent_tuned.npz --output results/reproduction/hybrid/evaluation.json --games 10000 --seed 2027
-uv run --locked python -m src.compare_hybrid --output-dir results/reproduction/config_vs_tuned --jobs 2
-uv run --locked python -m src.supervised.learning_curve --output results/reproduction/learning_curve --jobs 2
-uv run --locked python -m src.compare_frequencies --output results/reproduction/frequencies_ablation --jobs 2
-```
-
-`uv run --locked python -m src.tune` relance les 108 entraînements du réglage et réécrit
-`results/q_learning/tuning.csv`. Le notebook `train_model2.ipynb` s'ouvre après
-`uv sync --locked --extra notebook`. Un modèle réentraîné sur un autre système peut ne
-pas être identique octet par octet, car la sérialisation dépend des versions : comparer
-alors les tables et les gains. Les deux PDF se recompilent avec
-`python scripts/build_docs.py` (pdflatex, babel français et lmodern requis).
-
+Les trois commandes de vérification de la [section 2](#2-installation-et-démonstration)
+constituent une reproduction rapide, sans entraînement, en moins d'une minute.
+La reproduction complète de l'audit (environ 1 h 30), celle des campagnes historiques,
+la recompilation des PDF, l'environnement de référence et les durées mesurées sont
+décrits dans [docs/reproductibilite.md](docs/reproductibilite.md). Les gains exacts sont
+déterministes ; seules les durées mesurées varient d'une exécution à l'autre.
 L'intégration continue exécute les tests, les deux vérifications et la démonstration
 sous Linux et Windows, et compile les documents mathématiques sous Linux.
 
@@ -512,26 +470,33 @@ src/
   audit/                  Audit v2 : oracle indépendant, campagnes, analyse
 models/                   Modèles livrés et manifeste d'empreintes
 results/
-  supervised/, q_learning/, hybrid/   Résultats historiques, inchangés
-  v2/                     Mesures de l'audit (diagnostics, pilote, finale, réplication,
-                          variante, analyse) ; voir results/README.md
+  supervised/, q_learning/, hybrid/   Résultats historiques
+  v2/                     Mesures de l'audit : environnement de départ, diagnostics,
+                          pilote, campagne finale, réplication, variante, analyse
 experiments/v2/           Configuration figée de la campagne finale
 docs/                     Documents listés ci-dessous
 scripts/                  Vérifications, figures, compilation des PDF
 tests/                    Tests unitaires et d'intégration
 ```
 
+Les dossiers de résultats historiques sont conservés tels qu'ils ont été produits, avec
+leurs rapports générés automatiquement. Certaines de leurs affirmations ont été corrigées
+depuis, notamment la loi en 25/n pour les fréquences brutes et le « budget total de
+simulations » qui additionnait mains de croupier et parties : en cas de désaccord, ce
+README, le rapport et les PDF font foi. Dans `results/v2/`, chaque campagne contient un
+`provenance.json` (configuration, commit, versions, empreintes des sources) et un
+`completion.json` qui atteste qu'elle s'est terminée ; `analysis/` est entièrement
+régénéré à partir des mesures brutes. Ces fichiers sont conservés octet par octet
+(règle de `.gitattributes`) pour que leurs empreintes restent valables sous Windows.
+
 | Document | Contenu |
 |---|---|
 | [docs/modele1.pdf](docs/modele1.pdf) | Fondements statistiques du modèle 1, KL, lissage, objectif exact |
 | [docs/modele2.pdf](docs/modele2.pdf) | MDP, convergence, bornes de regret, limites des garanties |
 | [docs/rapport_scientifique.md](docs/rapport_scientifique.md) | Rapport complet de l'audit v2 |
-| [docs/etat_de_l_art.md](docs/etat_de_l_art.md) | Positionnement bibliographique et contribution |
-| [docs/audit_initial.md](docs/audit_initial.md) | Constat de départ, avant toute correction |
-| [docs/protocole_v2.md](docs/protocole_v2.md) | Protocole écrit avant les mesures, addendum et déviations |
+| [docs/etat_de_l_art.md](docs/etat_de_l_art.md) | Positionnement bibliographique |
+| [docs/protocole_v2.md](docs/protocole_v2.md) | Protocole écrit avant les mesures, avec son [addendum](docs/protocole_v2_addendum.md) et ses [déviations](docs/protocole_v2_deviations.md) |
 | [docs/reproductibilite.md](docs/reproductibilite.md) | Environnement, commandes, durées, régénération |
-| [docs/peer_review_response.md](docs/peer_review_response.md) | Réponse point par point au cahier des charges de l'audit |
-| [CHANGELOG.md](CHANGELOG.md) | Modifications et décisions |
 
 ## 13. Auteurs, contributions et provenance
 
