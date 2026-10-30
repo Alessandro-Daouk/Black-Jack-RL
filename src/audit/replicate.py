@@ -27,15 +27,18 @@ def run(output, jobs=2):
             old = pd.read_csv(Path('results/hybrid')/name/file).set_index(keys+extra)
             new = pd.read_csv(output/name/file).set_index(keys+extra)
             diff = (old.exact_expected_reward-new.exact_expected_reward).abs()
+            matched = bool(old.index.sort_values().equals(new.index.sort_values()))
+            # Un écart est consigné, pas masqué par une assertion qui interromprait la campagne.
             checks[name+'/'+file] = {"rows": len(diff), "max_absolute_difference": float(diff.max()),
-                                     "matched_indices": bool(old.index.sort_values().equals(new.index.sort_values()))}
-            assert checks[name+'/'+file]['matched_indices'] and diff.max() < 1e-9
+                                     "matched_indices": matched, "tolerance_1e-9_passed": bool(matched and diff.max() < 1e-9)}
     p0 = load_model().probability_matrix()
     p1 = load_model(output/'supervised/model/dealer_model.joblib').probability_matrix()
     checks['supervised_max_probability_difference'] = float(np.max(np.abs(p0-p1)))
     checks['supervised_tolerance_1e-7_passed'] = bool(np.allclose(p0, p1, atol=1e-7, rtol=0))
-    dump(output/'comparison.json', {"checks": checks, "wall_seconds": time.perf_counter()-started,
+    passed = all(c['tolerance_1e-9_passed'] for c in checks.values() if isinstance(c, dict)) and checks['supervised_tolerance_1e-7_passed']
+    dump(output/'comparison.json', {"checks": checks, "all_checks_passed": passed, "wall_seconds": time.perf_counter()-started,
         "scope": "160 CONFIG/TUNED + 80 ablation + modele supervise ; tuning 108 runs et notebook non reexecutes"})
+    dump(output/'completion.json', {"status": "complete", "all_checks_passed": passed})
     print(json.dumps(checks, indent=2), flush=True)
 
 

@@ -11,6 +11,7 @@ from src.evaluate import J, J_STAR, PI_STAR, REACH, V_TRUE
 from src.q_learning import CONFIG, train as original_train
 from src.supervised.data import generate_dataset
 from src.supervised.evaluate import metrics
+from src.audit.variant import UniformBlackjack
 
 
 @pytest.fixture(scope='module')
@@ -119,3 +120,77 @@ def test_bounds_and_occupation_identity_for_valid_perturbations(oracle):
         random_policy = np.random.default_rng(seed).integers(0, 2, 280)
         r = oracle.diagnostics(p, random_policy)
         assert r['regret'] == pytest.approx(r['occupancy_regret_identity'], abs=1e-14)
+
+
+def test_physical_card_count_excludes_gym_cosmetic_random_draws(monkeypatch, oracle):
+    import gymnasium.envs.toy_text.blackjack as blackjack
+    original = blackjack.draw_card
+    count = 0
+    def draw(rng):
+        nonlocal count
+        count += 1
+        return original(rng)
+    monkeypatch.setattr(blackjack, 'draw_card', draw)
+    result = train(1234, V_TRUE, [200], oracle.evaluate)
+    assert result['curve'][-1]['cards'] == count
+
+
+def test_uniform_variant_transitions_and_stand_rewards(oracle):
+    with UniformBlackjack() as env:
+        env.reset(seed=99)
+        for state in oracle.states:
+            for card in range(1,11):
+                env.player = list(oracle.hands[state])
+                env.dealer = [state[1],10]
+                env.draw = lambda: card
+                nxt, reward, terminal, truncated, _ = env.step(1)
+                assert nxt == observation(oracle.hands[state]+(card,), state[1])
+                assert terminal == (nxt[0]>21) and not truncated
+                assert reward == (-1 if terminal else 0)
+        for player in range(4,22):
+            for dealer in range(17,23):
+                env.player = [player]  # somme dure, aucun as
+                env.dealer = [dealer]
+                assert env.step(0)[1] == (1 if dealer>21 else np.sign(player-dealer))
+
+
+def test_cluster_statistics_censoring_and_cost_selection():
+    import pandas as pd
+    from src.audit.analyze import paired, thresholds, matched_costs
+    frame = pd.DataFrame([{'group':g,'rl_rep':r,'method':m,'j':g if m=='candidate' else 0.}
+                          for g in range(3) for r in range(2) for m in ('candidate','reference')])
+    result = paired(frame,'candidate','reference')
+    assert result['n']==3 and result['rl_pairs']==6 and result['sd']==1.
+    records=[]
+    for i, (regret,cost) in enumerate([(.1,0),(.005,1),(.02,2)]):
+        records.append({'run':'test','group':0,'rl_rep':0,'n':1000,'method':'logistic','episodes':i*100,
+                        'regret':regret,'j':-regret,'total_seconds':cost,'total_cards':cost*10000,
+                        'reused_total_seconds':cost})
+    curves=pd.DataFrame(records)
+    first=thresholds(curves,[.01,.001])
+    assert first.iloc[0].episodes==100 and first.iloc[0].final_below_threshold==0
+    assert first.iloc[1].success==0 and pd.isna(first.iloc[1].episodes)
+    matched=matched_costs(curves)
+    chosen=matched[(matched.resource=='total_seconds') & (matched.budget==2)].iloc[0]
+    assert chosen.episodes==200 and chosen.regret==.02  # dernier, pas meilleur checkpoint
+
+
+def test_tost_matches_ninety_percent_interval_rule():
+    from scipy.stats import t
+    from src.audit.analyze import cluster_summary
+    values = np.array([.0001, -.0002, .0003, .0000, -.0001, .0002])
+    r = cluster_summary(values, margin=.001)
+    half = t.ppf(.95, len(values)-1)*values.std(ddof=1)/np.sqrt(len(values))
+    assert r['ci90'] == pytest.approx([values.mean()-half, values.mean()+half])
+    assert r['equivalent_within_margin_5pct'] and r['tost_p'] < .05
+    shifted = cluster_summary(values+.0009, margin=.001)
+    assert not shifted['equivalent_within_margin_5pct']
+    assert (shifted['ci90'][1] >= .001) == (shifted['tost_p'] >= .05)
+
+
+def test_published_audit_artifacts_are_consistent():
+    from pathlib import Path
+    if not Path('results/v2/final/completion.json').exists():
+        pytest.skip('Campagne finale absente de cette copie.')
+    from scripts.verify_audit import verify
+    assert verify()['status'] == 'passed'
