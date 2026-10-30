@@ -1,0 +1,40 @@
+{
+  "grid": {
+    "eps_min": [
+      0.05,
+      0.1,
+      0.2,
+      0.4,
+      0.6,
+      1.0
+    ],
+    "omega": [
+      1.0,
+      0.8,
+      0.6
+    ]
+  },
+  "tuning_seeds": [
+    100,
+    101,
+    102
+  ],
+  "kinds": [
+    "expected_sarsa",
+    "monte_carlo",
+    "dyna_q"
+  ],
+  "planning_steps": 10,
+  "checkpoints": [
+    1000,
+    5000,
+    10000,
+    20000,
+    40000,
+    100000,
+    200000
+  ],
+  "model_based": "comptage, comportement uniforme, aucun réglage",
+  "variance_reps": 10,
+  "variance_seed_base": 91000
+}

@@ -31,7 +31,7 @@ def test_missing_classes_and_non_normalized_probabilities_rejected():
         stand_value(18, {k: 0.1 for k in CLASSES})
 
 
-def test_wassim_table_shape_ace_invariance_and_low_totals():
+def test_stand_table_shape_ace_invariance_and_low_totals():
     probabilities = exact_probabilities()
     V = build_stand_table(probabilities)
     assert V.shape == (22, 11, 2)

@@ -148,7 +148,7 @@ def test_legacy_agent_is_preserved_and_still_loads():
     assert decision.stand_value == pytest.approx(-0.582872, abs=1e-6)
     assert decision.hit_value == pytest.approx(-0.546372, abs=1e-6)
     # Chaque agent a son propre dossier de résultats ; les sorties par défaut ne visent pas l'ancien agent.
-    assert results_dir_for(LEGACY_AGENT) == ROOT / "results/hybrid/agent_config"
+    assert results_dir_for(LEGACY_AGENT) == ROOT / "results/1_premiere_campagne/hybride/agent_config"
     assert DEFAULT_AGENT != LEGACY_AGENT and results_dir_for(DEFAULT_AGENT) != results_dir_for(LEGACY_AGENT)
 
 

@@ -4,9 +4,13 @@ Projet de Machine Learning 2 réalisé par Alessandro Daouk et Wassim Ghnaya.
 
 **En une phrase.** Donner à un Q-learning la valeur de l'action « rester », estimée à
 part à partir de mains de croupier simulées, lui fait atteindre en **10 000 parties** la
-qualité que le Q-learning standard atteint en 40 000. Cet avantage survit au coût de
-l'estimation, mais il s'inverse si l'estimation est trop imprécise et que
-l'apprentissage dure assez longtemps.
+qualité que le Q-learning standard atteint en 40 000, et le place devant six autres
+algorithmes qui apprennent en jouant. Cet avantage survit au coût de l'estimation, mais
+il s'inverse si l'estimation est trop imprécise et que l'apprentissage dure assez
+longtemps. En sabot fini, où la loi du croupier dépend des cartes déjà sorties, un modèle
+supervisé sur la composition du sabot donne à l'agent une information que son état ne
+contient pas, et l'hybride garde alors un avantage durable que les modèles plus pauvres
+perdent.
 
 ## Le problème
 
@@ -75,7 +79,7 @@ seule décision fausse de la stratégie optimale, et 2,1 % de l'avantage de la m
 
 ## Résultats
 
-![Regret en fonction des épisodes, du temps et des cartes](results/v2/analysis/learning_and_cost.png)
+![Regret en fonction des épisodes, du temps et des cartes](results/2_campagne_principale/analyse/learning_and_cost.png)
 
 1. **L'hybride apprend beaucoup plus vite.** Il atteint en 10 000 parties le regret que
    le standard atteint en 40 000, et en 40 000 un regret que le standard n'atteint
@@ -91,33 +95,50 @@ seule décision fausse de la stratégie optimale, et 2,1 % de l'avantage de la m
 4. **La régression logistique n'apporte rien.** Une table de fréquences donne le même
    agent (équivalence établie à ±0,001) pour trois fois moins de temps : avec une seule
    variable catégorielle, la régression ne fait que reproduire les fréquences.
-5. **Retirer le biais du maximum ne suffit pas à expliquer le gain.** Un Double
-   Q-learning, réglé comme le standard, fait *moins bien* que lui (−0,0010 à 100 000
-   parties) ; l'hybride le dépasse de +0,0031.
+5. **Aucun autre algorithme qui apprend en jouant ne fait mieux.** Double Q-learning,
+   Expected SARSA, contrôle Monte-Carlo et Dyna-Q, réglés comme le standard, font moins
+   bien que lui ; un RL qui estime tout le modèle à partir des parties jouées et le résout
+   exactement fait jeu égal. L'hybride les dépasse tous (de +0,0022 à +0,0103 à 100 000
+   parties). Son avantage vient donc de l'information sur STAND, pas d'une meilleure
+   exploitation des parties : STAND n'est observée que quand l'agent reste, avec un bruit
+   de ±1.
 6. **Une planification fait mieux, si l'on accepte de modéliser HIT.** Les mêmes mains
    de croupier permettent d'estimer la loi des cartes, et donc de calculer HIT sans
    jouer. Cette référence fait mieux que l'hybride après 100 000 parties
    (+0,00069 [+0,00057 ; +0,00081]). L'hybride n'est intéressant que lorsque seule
-   l'action terminale peut être modélisée ; ici, c'est un choix d'étude.
+   l'action terminale peut être modélisée, ou quand son modèle exploite une information
+   que l'état ne contient pas : c'est le cas du sabot fini (point 7).
+7. **En sabot fini, le modèle supervisé compte enfin.** Avec un seul jeu de 52 cartes,
+   la loi du croupier dépend des cartes déjà sorties. Une régression logistique sur la
+   composition du sabot estime cette loi bien mieux qu'une table par classe de compte ou
+   que le gradient boosting (KL vers la loi vraie : 0,0046 contre 0,019 et 0,010 à
+   100 000 mains). Après 3 millions de parties, l'hybride qui l'utilise bat le Q-learning
+   standard et les hybrides à table de +0,0009 par manche [+0,0004 ; +0,0014], dans les
+   18 paires, alors que les hybrides à table ont rejoint le standard. En temps, ce gain
+   n'est pas établi : l'ajustement de la logistique coûte plus que tout l'apprentissage
+   du standard.
 
-![Différence de gain selon la taille des données et le budget RL](results/v2/analysis/budget_surface.png)
+![Sabot fini : qualité du modèle 1 et gain des agents](results/5_sabot_fini/shoe.png)
+
+![Différence de gain selon la taille des données et le budget RL](results/2_campagne_principale/analyse/budget_surface.png)
 
 *Différence hybride − standard selon le nombre de mains du croupier et le budget de
 parties (9 jeux) ; l'étoile signale un intervalle à 95 % qui exclut zéro.*
 
-Les points 5 et 6 viennent d'analyses complémentaires exploratoires, faites après la
-campagne principale. Le détail de tous
+Les points 5 à 7 viennent d'analyses exploratoires, faites après la campagne principale. Le détail de tous
 les résultats, les coûts mesurés et les ablations sont dans le
 [rapport scientifique](docs/rapport_scientifique.md).
 
 ## Limites
 
-- **Un seul environnement.** Avec des cartes équiprobables, l'avantage subsiste aux
-  petits budgets mais n'est plus établi à 100 000 parties : le chiffre de 0,00214
-  n'est pas une constante de la méthode. Rien n'est démontré pour un paquet fini.
+- **Un seul jeu.** Trois variantes du Blackjack, sans double ni partage. Avec des cartes
+  équiprobables, l'avantage n'est plus établi à 100 000 parties : le chiffre de 0,00214
+  n'est pas une constante de la méthode. En sabot fini, il n'y a plus d'oracle exact :
+  les gains sont estimés par Monte-Carlo apparié, et la mise ne varie pas.
 - **Mécanisme non démontré.** On sait que fixer STAND cause l'écart (à exploration
   identique, les deux agents jouent les mêmes parties), pas pourquoi.
-- **Temps mesurés** sur un seul ordinateur portable et une implémentation.
+- **Temps mesurés** sur un ordinateur portable par campagne et une implémentation ; ceux
+  du sabot fini, mesurés sous charge parallèle, sont indicatifs.
 - **Analyses secondaires** sur 9 jeux, sans correction de multiplicité.
 
 ## Reproduire
@@ -130,23 +151,34 @@ démonstration sous Linux et Windows.
 
 ## Organisation
 
+Quatre dossiers à la racine, chacun avec son rôle :
+
+| Dossier | Contenu | Guide |
+|---|---|---|
+| `docs/` | Rapport (**fait foi**), démonstrations PDF, état de l'art, reproductibilité | tableau ci-dessous |
+| `src/` | Tout le code : jeu, modèle 1, modèle 2, agent, campagnes | [src/README.md](src/README.md) |
+| `models/` | Modèles livrés, chargés par la démonstration | ci-dessous |
+| `results/` | Mesures, numérotées dans l'ordre du rapport | [results/README.md](results/README.md) |
+
 ```text
-src/                Modèle 2 (Wassim Ghnaya) : environment, stand_value, q_learning, evaluate, tune
-src/supervised/     Modèle 1 : simulation, entraînement, évaluation
-src/hybrid_agent.py Assemblage et décision ; play.py : démonstration
-src/audit/          Campagne v2 : oracle indépendant, campagnes, analyse, compléments
-models/             Modèles livrés
-results/v2/         Mesures v2 (configuration et résultats par campagne)
-results/            Résultats historiques
-docs/               Rapport, PDF mathématiques, reproductibilité
+results/
+├── 1_premiere_campagne/      premiers modèles et comparaisons (q_learning, modele1, hybride)
+├── 2_campagne_principale/    plan figé, entraînements, analyse, diagnostics, réplication
+├── 3_cartes_uniformes/       robustesse à une autre loi des cartes
+├── 4_autres_methodes/        planification, Double Q, Expected SARSA, Monte-Carlo, Dyna-Q
+└── 5_sabot_fini/             extension où le modèle 1 utilise la composition du sabot
+
+models/
+├── supervised/               modèle 1 livré (régression logistique) et ses probabilités
+├── hybrid/                   agent hybride livré (agent_tuned.npz) et l'ancien (agent_config.npz)
+└── q_learning/               table Q_HIT produite par le notebook train_model2.ipynb
 ```
 
 Le code est volontairement dupliqué à deux endroits : `src/audit/` réimplémente la
 simulation et l'entraînement pour mesurer les coûts **sans changer les tirages
-aléatoires** du code historique, et son oracle est écrit indépendamment pour contrôler
-le premier. Les sources de Wassim Ghnaya sont intégrées sans modification, pour que
-la réplication historique porte sur le code d'origine ; leur temps d'entraînement
-inclut les évaluations, que la v2 mesure à part.
+aléatoires** du code de la première campagne, et son oracle est écrit indépendamment
+pour contrôler le premier. Les sources de Wassim Ghnaya sont intégrées sans
+modification, pour que la réplication porte sur le code d'origine.
 
 | Document | Contenu |
 |---|---|

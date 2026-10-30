@@ -1,6 +1,6 @@
 # Ablation : remplacer la régression par les fréquences
 
-> Rapport généré par la version historique du projet ; ses mesures sont inchangées. Certaines interprétations ont été corrigées depuis : en cas de désaccord, le [README](../../../README.md) et le [rapport scientifique](../../../docs/rapport_scientifique.md) font foi.
+> Rapport généré par la version historique du projet ; ses mesures sont inchangées. Certaines interprétations ont été corrigées depuis : en cas de désaccord, le [README](../../../../README.md) et le [rapport scientifique](../../../../docs/rapport_scientifique.md) font foi.
 
 Les deux estimateurs utilisent exactement les mêmes 60,000 mains d'entraînement du prédicteur figé.
 Le budget RL et les réglages sont identiques entre hybrides ; le standard utilise TUNED[standard].

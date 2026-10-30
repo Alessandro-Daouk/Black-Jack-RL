@@ -21,7 +21,7 @@ def fingerprint(X, y) -> str:
 
 def run_experiment(train_size=60_000, validation_size=12_000, test_size=12_000,
                    train_seed=42, validation_seed=43, test_seed=123,
-                   model_dir=Path("models/supervised"), results_dir=Path("results/supervised")) -> dict:
+                   model_dir=Path("models/supervised"), results_dir=Path("results/1_premiere_campagne/modele1")) -> dict:
     if len({train_seed, validation_seed, test_seed}) != 3:
         raise ValueError("Les trois graines doivent être distinctes.")
     for output in (Path(model_dir), Path(results_dir)):
@@ -152,7 +152,7 @@ def main() -> None:
     parser.add_argument("--validation-seed", type=int, default=43)
     parser.add_argument("--test-seed", type=int, default=123)
     parser.add_argument("--model-dir", type=Path, default=Path("models/supervised"))
-    parser.add_argument("--results-dir", type=Path, default=Path("results/supervised"))
+    parser.add_argument("--results-dir", type=Path, default=Path("results/1_premiere_campagne/modele1"))
     args = parser.parse_args()
     try:
         run_experiment(**vars(args))

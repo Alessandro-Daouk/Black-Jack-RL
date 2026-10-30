@@ -37,18 +37,31 @@ finale ; les campagnes ont été exécutées l'une après l'autre.
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
 uv run --locked python -m src.audit.diagnostics --output results/reproduction/diagnostics
 uv run --locked python -m src.audit.pilot --output results/reproduction/pilot
-uv run --locked python -m src.audit.campaign --config experiments/v2/final_frozen.json --output results/reproduction/final
+uv run --locked python -m src.audit.campaign --config results/2_campagne_principale/plan_fige.json --output results/reproduction/final
 uv run --locked python -m src.audit.replicate --output results/reproduction/replication --jobs 6
-uv run --locked python -m src.audit.variant --design experiments/v2/final_frozen.json --output results/reproduction/variant
+uv run --locked python -m src.audit.variant --design results/2_campagne_principale/plan_fige.json --output results/reproduction/variant
 uv run --locked python -m src.audit.analyze --input results/reproduction/final --diagnostics results/reproduction/diagnostics --variant results/reproduction/variant --replication results/reproduction/replication --output results/reproduction/analysis
 ```
 
 Les compléments (E8, moins d'une minute) lisent la campagne finale
-archivée `results/v2/final/` :
+archivée `results/2_campagne_principale/entrainements/` :
 
 ```bash
 uv run --locked python -m src.audit.complements --output results/reproduction/complements
 ```
+
+Les références RL supplémentaires et la décomposition de variance (E9, environ 4 min avec
+tous les cœurs) lisent aussi la campagne finale archivée ; l'extension en sabot fini (E10)
+est autonome :
+
+```bash
+uv run --locked python -m src.audit.baselines --output results/reproduction/baselines
+uv run --locked python -m src.shoe.campaign --output results/reproduction/shoe
+uv run --locked python -m src.shoe.figures --input results/reproduction/shoe
+```
+
+Ces deux campagnes utilisent tous les cœurs disponibles ; leurs gains sont déterministes,
+leurs temps dépendent de la machine et de la charge.
 
 Sous PowerShell, remplacer la ligne `export` par
 `$env:OMP_NUM_THREADS=1; $env:OPENBLAS_NUM_THREADS=1; $env:MKL_NUM_THREADS=1`.
@@ -56,8 +69,8 @@ La réplication régénère toutes les sorties des campagnes historiques ; le d�
 conserve que `comparison.json`, qui consigne les écarts aux résultats publiés, avec
 `config.json` et `completion.json`.
 
-La configuration `experiments/v2/final_frozen.json` a été produite par
-`python -m src.audit.campaign --pilot results/v2/pilot --output <chemin>` à partir du
+La configuration `results/2_campagne_principale/plan_fige.json` a été produite par
+`python -m src.audit.campaign --pilot results/2_campagne_principale/pilote --output <chemin>` à partir du
 pilote archivé ; la régénérer n'est pas nécessaire, et la commande refuse d'écraser un
 fichier existant.
 
@@ -75,11 +88,11 @@ uv run --locked python -m src.compare_frequencies --output results/reproduction/
 Les commandes `train_hybrid` et `evaluate_hybrid` utilisent le modèle 1 livré ; pour utiliser celui que la
 première vient de reproduire, ajouter `--model models/reproduction/supervised/dealer_model.joblib`.
 `uv run --locked python -m scripts.make_summary_figures` redessine, sans entraînement, la
-figure publiée de l'ablation (`results/hybrid/frequencies_ablation/learning_curve.png`) à
+figure publiée de l'ablation (`results/1_premiere_campagne/hybride/frequencies_ablation/learning_curve.png`) à
 partir de ses mesures. `uv run --locked python -m src.tune`
-relance les 108 entraînements du réglage et réécrit `results/q_learning/tuning.csv`. Le
+relance les 108 entraînements du réglage et réécrit `results/1_premiere_campagne/q_learning/tuning.csv`. Le
 notebook `train_model2.ipynb` s'ouvre après `uv sync --locked --extra notebook` ; son
-exécution réécrit les fichiers de `results/q_learning/` et `models/q_learning/`.
+exécution réécrit les fichiers de `results/1_premiere_campagne/q_learning/` et `models/q_learning/`.
 
 ## Durées mesurées
 
@@ -91,7 +104,14 @@ exécution réécrit les fichiers de `results/q_learning/` et `models/q_learning
 | Réplication historique (240 entraînements et modèle 1) | 9,7 min | 6 processus parallèles |
 | Variante à cartes uniformes (54 entraînements) | 3,6 min | un processus |
 | Analyse et figures | 6 s | |
-| Tests | quelques secondes | 113 tests |
+| Références RL et variance (E9, 566 entraînements) | 4,3 min | tous les cœurs, machine B |
+| Sabot fini (E10 : 144 modèles 1, 72 réglages, 72 agents de 3 M parties) | 19,3 min | tous les cœurs, machine B |
+| Tests | environ 10 s | 126 tests |
+
+Machine B : Apple M5 Pro (15 cœurs), 24 Gio, macOS 26.6, mêmes versions de bibliothèques
+(`uv.lock`). Les campagnes précédentes ont été exécutées sur la machine de référence
+ci-dessus. Le notebook `train_model2.ipynb` a été réexécuté sur la machine B : ses gains
+et sa Q-table coïncident avec les fichiers archivés à 2·10⁻¹⁶ près.
 
 ## Ce qui doit être identique, et ce qui peut différer
 
@@ -110,5 +130,5 @@ exécution réécrit les fichiers de `results/q_learning/` et `models/q_learning
 
 `src.audit.analyze` relit uniquement les fichiers bruts et régénère `summary.json`,
 `surface.json`, `cost_contrasts.json`, les CSV dérivés, les figures et `report.md` de
-`results/v2/analysis/`. Les chiffres du README et du rapport scientifique proviennent de
+`results/2_campagne_principale/analyse/`. Les chiffres du README et du rapport scientifique proviennent de
 ces fichiers.

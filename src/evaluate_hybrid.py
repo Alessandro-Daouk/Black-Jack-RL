@@ -100,7 +100,7 @@ Même la politique optimale a une espérance négative dans ces règles.
 `learning_curve.csv` contient les évaluations exactes pendant l'entraînement.
 Ce rapport décrit un seul entraînement RL : il ne suffit pas à comparer des méthodes.
 La comparaison sur plusieurs graines des réglages CONFIG et TUNED, avec le Q-learning
-standard et l'hybride exact comme références, est dans `results/hybrid/config_vs_tuned/`.
+standard et l'hybride exact comme références, est dans `results/1_premiere_campagne/hybride/config_vs_tuned/`.
 """
     output.write_text(text, encoding="utf-8")
 
@@ -112,7 +112,7 @@ def main() -> None:
     parser.add_argument("--games", type=int, default=10_000)
     parser.add_argument("--seed", type=int, default=2026)
     parser.add_argument("--output", type=Path, default=None,
-                        help="Par défaut : results/hybrid/<nom du fichier de l'agent>/evaluation.json.")
+                        help="Par défaut : results/1_premiere_campagne/hybride/<nom du fichier de l'agent>/evaluation.json.")
     args = parser.parse_args()
     try:
         agent = load_agent(args.agent, args.model)

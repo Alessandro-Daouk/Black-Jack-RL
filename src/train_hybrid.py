@@ -1,4 +1,4 @@
-"""Entraîner le Q-learning de Wassim avec le prédicteur supervisé figé."""
+"""Entraîner le Q-learning hybride avec le prédicteur supervisé figé."""
 
 import argparse
 import csv
@@ -14,7 +14,7 @@ from src.q_learning import CONFIG, TUNED, train
 from src.supervised.data import require_integer
 from src.supervised.model import DEFAULT_MODEL, load_model
 
-# Paramètres RL de Wassim : configuration précédente, ou réglage du commit 58f5ce3.
+# Paramètres RL de src/q_learning.py : configuration précédente, ou réglage du commit 58f5ce3.
 PRESETS = {"config": CONFIG, "tuned": TUNED["hybrid"]}
 RULES = {"environment": "Blackjack-v1", "natural": False, "sab": False,
          "infinite_deck": True, "stand_on_soft_17": True}
@@ -85,7 +85,7 @@ def main() -> None:
     parser.add_argument("--episodes", type=int, default=100_000)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--results-dir", type=Path, default=None,
-                        help="Par défaut : results/hybrid/<nom du fichier de l'agent>/.")
+                        help="Par défaut : results/1_premiere_campagne/hybride/<nom du fichier de l'agent>/.")
     args = parser.parse_args()
     try:
         train_hybrid(args.model, args.agent, args.episodes, args.seed, args.results_dir,

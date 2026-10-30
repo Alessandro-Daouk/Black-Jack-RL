@@ -1,7 +1,7 @@
 """Compléments après relecture (E8) : planification, Double Q-learning, réglage sans privilège.
 
 Lit la campagne finale sans la modifier.
-uv run --locked python -m src.audit.complements --output results/v2/complements
+uv run --locked python -m src.audit.complements --output results/4_autres_methodes/planification_double_q
 """
 import argparse
 import csv
@@ -21,7 +21,7 @@ from src.supervised.values import build_stand_table
 from .core import dataset, dump, fit_estimators, interval, new_output, train
 from .oracle import Oracle
 
-FINAL = Path("results/v2/final")
+FINAL = Path("results/2_campagne_principale/entrainements")
 GRID = dict(eps_min=[0.05, 0.1, 0.2, 0.4, 0.6, 1.0], omega=[1.0, 0.8, 0.6])  # = src/tune.py
 TUNING_SEEDS = [100, 101, 102]  # = src/tune.py
 TUNING_DATA_SEEDS = [61000, 61010, 61020]

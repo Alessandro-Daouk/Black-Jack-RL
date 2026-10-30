@@ -1,4 +1,4 @@
-"""Valeur de STAND et conversion vers les tableaux du Q-learning de Wassim."""
+"""Valeur de STAND et conversion vers les tableaux du Q-learning (src/q_learning.py)."""
 
 from collections.abc import Mapping
 
@@ -37,7 +37,7 @@ def build_stand_table(probabilities: np.ndarray) -> np.ndarray:
     """Table V[p, d, a], compatible avec src.q_learning.train(..., V=V).
 
     Les indices p<4 et d=0, inaccessibles dans le jeu, restent à zéro comme
-    chez Wassim. Pour p=4..21 et d=1..10, les deux valeurs de a sont identiques.
+    dans src/q_learning.py. Pour p=4..21 et d=1..10, les deux valeurs de a sont identiques.
     """
     probabilities = validate_probabilities(probabilities, (10, 6))
     table = np.zeros(STAND_SHAPE)

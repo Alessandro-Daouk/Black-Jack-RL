@@ -98,7 +98,7 @@ def main() -> None:
     parser.add_argument("--model", type=Path, default=DEFAULT_MODEL)
     parser.add_argument("--samples", type=int, default=12_000)
     parser.add_argument("--seed", type=int, default=123)
-    parser.add_argument("--output", type=Path, default=Path("results/supervised/reevaluation"))
+    parser.add_argument("--output", type=Path, default=Path("results/1_premiere_campagne/modele1/reevaluation"))
     args = parser.parse_args()
     predictor = load_model(args.model)
     splits = predictor.metadata["splits"]

@@ -1,0 +1,56 @@
+{
+  "groups": 9,
+  "sizes": [
+    1000,
+    5000,
+    20000,
+    100000
+  ],
+  "rl_size": 100000,
+  "validation_size": 10000,
+  "test_size": 3000,
+  "seeds": {
+    "data": 120000,
+    "validation": 125000,
+    "test": 128000,
+    "rl": 130000,
+    "tuning": [
+      100,
+      101,
+      102
+    ],
+    "tuning_data": 140000
+  },
+  "checkpoints": [
+    10000,
+    50000,
+    200000,
+    1000000,
+    3000000
+  ],
+  "eval_shoes": [
+    1000000,
+    1300000
+  ],
+  "tuning_shoes": [
+    2000000,
+    2020000
+  ],
+  "grid": {
+    "eps_min": [
+      0.1,
+      0.4,
+      1.0
+    ],
+    "omega": [
+      1.0,
+      0.8
+    ]
+  },
+  "agents": {
+    "standard": null,
+    "hybride_carte": "carte",
+    "hybride_table": "table",
+    "hybride_logistique": "logistique"
+  }
+}

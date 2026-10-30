@@ -11,7 +11,7 @@ revue systématique exhaustive.
 |---|---|---|---|---|
 | Watkins & Dayan, 1992 [1] | Q-learning tabulaire et convergence sous hypothèses | Bootstrap par maximum, apprentissage hors politique | Une action est figée dans l'hybride ; DAG absorbant à γ=1 | Spécialisation explicite des hypothèses et contrôle de leur implémentation |
 | Sutton & Barto, 2018 [2] | Bellman, évaluation/contrôle, apprentissage et planification | MDP fini, oracle DP, epsilon-greedy, Expected SARSA comme comparaison | Intégrer l'issue d'une action terminale n'est pas moyenner sur l'action suivante de la politique | Séparation claire des objets estimés et des budgets |
-| Sutton, 1990, Dyna [3] | Alterner expérience réelle et planification avec un modèle appris | Combiner connaissance d'une dynamique et apprentissage de valeurs | Ici pas de transitions synthétiques supplémentaires ni de boucle Dyna ; seule STAND est calculée | Cas minimal isolant une composante de valeur modélisée |
+| Sutton, 1990, Dyna [3] | Alterner expérience réelle et planification avec un modèle appris | Combiner connaissance d'une dynamique et apprentissage de valeurs | L'hybride ne crée pas de transitions synthétiques ; seule STAND est calculée | Dyna-Q et un RL à modèle appris par l'expérience sont mesurés comme références (rapport §5.3) |
 | Shelton, UAI 2002 [4] | Dynamiques partiellement connues, intégration de connaissance du domaine | Utiliser ce qui est connu plutôt que le réestimer aveuglément | PKMDP, importance sampling et optimisation de politique, pas notre Q-learning à action terminale figée | Étude contrôlée d'une architecture plus simple, sans revendication d'invention du principe |
 | Blackwell, 1947 [5] | Conditionnement et réduction de variance | Remplacer un gain terminal aléatoire par son espérance exacte | Une espérance **estimée**, passée dans un maximum adaptatif, n'est pas automatiquement une Rao–Blackwellisation de toute la cible RL | Exposer les conditions de l'analogie et mesurer les erreurs de modèle |
 | van Hasselt, 2010 [6] | Biais du maximum et Double Q-learning | Le maximum de valeurs bruitées peut introduire un biais | Double Q sépare sélection/évaluation ; figer STAND est un autre mécanisme | Ablations de l'information et de l'exploration, sans prétendre éliminer tout biais |
@@ -21,6 +21,7 @@ revue systématique exhaustive.
 | Singh & Yee, 1994 [11] ; Kakade & Langford, 2002 [12] | Perte d'une politique gloutonne approchée ; lemme de différence de performance | Bornes de regret 2η et identité d'occupation | Bornes classiques en 1/(1−γ), inapplicables telles quelles à γ=1 | Borne 2η exploitant une seule récompense terminale perturbée ; borne locale pondérée par occupation |
 | van Seijen et al., 2009 [13] ; Sutton & Barto §6.8 [2] | Expected Sarsa ; valeurs d'après-états | Remplacer un échantillon par une espérance dans la cible | Expected Sarsa moyenne sur la politique ; ici l'espérance porte sur le croupier, estimée hors ligne | Mesure de ce que l'espérance estimée apporte et coûte |
 | Ng, Harada & Russell, 1999 [14] | Façonnage de récompense par potentiel, invariance de la politique optimale | Injection d'une connaissance préalable dans l'apprentissage | Un potentiel préserve la politique optimale ; une STAND erronée peut la changer | Ablation par perturbation contrôlée de STAND et regret limite exact |
+| Thorp, 1961 [17] | Une stratégie qui dépend des cartes déjà sorties peut renverser l'avantage du casino | La composition du sabot change la loi du croupier | Thorp calcule des stratégies ; ici un classifieur apprend la loi du croupier sachant la composition, et seule l'action terminale en profite | Extension en sabot fini où le modèle 1 dispose d'une information absente de l'état RL (rapport §6) |
 | Schuirmann, 1987 [16] | Double test unilatéral (TOST) d'équivalence | Conclure à l'absence de différence pratique | Discipline statistique, pas méthode RL | Marge fixée avant les mesures et TOST sur grappes indépendantes |
 
 ## Portée de cette recherche
@@ -31,7 +32,7 @@ présentées comme des théorèmes nouveaux. Shelton (2002) est un antécédent 
 proche, sans que cette recherche ciblée prouve qu'il soit le plus proche de toute la
 littérature, ni qu'aucun travail antérieur ne fixe exactement la valeur d'une action
 terminale. Aucune priorité scientifique n'est revendiquée. La contribution du projet est
-discutée dans le [rapport](rapport_scientifique.md#6-discussion).
+discutée dans le [rapport](rapport_scientifique.md#7-discussion).
 
 ## Références vérifiées et notes de version
 
@@ -97,6 +98,10 @@ discutée dans le [rapport](rapport_scientifique.md#6-discussion).
     Procedure and the Power Approach for Assessing the Equivalence of Average
     Bioavailability*, Journal of Pharmacokinetics and Biopharmaceutics 15(6),
     657–680. [DOI](https://doi.org/10.1007/BF01068419).
+17. **E. O. Thorp (1961).** *A Favorable Strategy for Twenty-One*, Proceedings of the
+    National Academy of Sciences 47(1), 110–112.
+    [DOI](https://doi.org/10.1073/pnas.47.1.110). Origine du comptage des cartes ; le
+    livre *Beat the Dealer* (Blaisdell, 1962) en est la version développée.
 
 Le résultat de risque lissé en (K−1)/(2m) est démontré dans `modele1.pdf` ; nous
 n'avons pas pu vérifier dans une source primaire l'énoncé exact attribué parfois à

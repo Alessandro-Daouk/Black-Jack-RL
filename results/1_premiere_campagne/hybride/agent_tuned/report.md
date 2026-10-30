@@ -1,6 +1,6 @@
 # Évaluation de l'agent hybride
 
-> Rapport généré par la version historique du projet ; ses mesures sont inchangées. Certaines interprétations ont été corrigées depuis : en cas de désaccord, le [README](../../../README.md) et le [rapport scientifique](../../../docs/rapport_scientifique.md) font foi.
+> Rapport généré par la version historique du projet ; ses mesures sont inchangées. Certaines interprétations ont été corrigées depuis : en cas de désaccord, le [README](../../../../README.md) et le [rapport scientifique](../../../../docs/rapport_scientifique.md) font foi.
 
 Le prédicteur supervisé reste figé pendant le Q-learning.
 
@@ -46,4 +46,4 @@ Même la politique optimale a une espérance négative dans ces règles.
 `learning_curve.csv` contient les évaluations exactes pendant l'entraînement.
 Ce rapport décrit un seul entraînement RL : il ne suffit pas à comparer des méthodes.
 La comparaison sur plusieurs graines des réglages CONFIG et TUNED, avec le Q-learning
-standard et l'hybride exact comme références, est dans `results/hybrid/config_vs_tuned/`.
+standard et l'hybride exact comme références, est dans `results/1_premiere_campagne/hybride/config_vs_tuned/`.

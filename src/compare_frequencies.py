@@ -35,7 +35,7 @@ def run_one(method, seed, episodes, tables):
     return row, curve
 
 
-def run(output=Path("results/hybrid/frequencies_ablation"), model_path=DEFAULT_MODEL,
+def run(output=Path("results/1_premiere_campagne/hybride/frequencies_ablation"), model_path=DEFAULT_MODEL,
         episodes=100_000, seeds=tuple(range(400, 420)), jobs=2):
     if episodes < 1 or len(seeds) < 2 or len(set(seeds)) != len(seeds) or min(seeds) < 0:
         raise ValueError("Épisodes positifs et au moins deux graines distinctes positives ou nulles.")
@@ -112,7 +112,7 @@ def report(summary, output):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, default=Path("results/hybrid/frequencies_ablation"))
+    parser.add_argument("--output", type=Path, default=Path("results/1_premiere_campagne/hybride/frequencies_ablation"))
     parser.add_argument("--model-path", type=Path, default=DEFAULT_MODEL)
     parser.add_argument("--episodes", type=int, default=100_000)
     parser.add_argument("--jobs", type=int, default=2)

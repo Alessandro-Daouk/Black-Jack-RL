@@ -22,8 +22,8 @@ def file_sha256(path: Path) -> str:
 
 
 def results_dir_for(agent_path: Path) -> Path:
-    """Dossier de résultats par défaut d'un agent : results/hybrid/<nom du fichier>/."""
-    return ROOT / "results/hybrid" / Path(agent_path).stem
+    """Dossier de résultats par défaut d'un agent : results/1_premiere_campagne/hybride/<nom du fichier>/."""
+    return ROOT / "results/1_premiere_campagne/hybride" / Path(agent_path).stem
 
 
 def validate_state(state) -> tuple[int, int, int]:
@@ -56,7 +56,7 @@ class HybridAgent:
 
     Seules dix cartes peuvent être visibles : les probabilités et V_STAND sont
     précalculées au chargement. À chaque état, l'agent compare V_STAND et Q_HIT.
-    Une égalité conduit à STAND, conformément au code de Wassim.
+    Une égalité conduit à STAND, comme dans src/q_learning.py.
     """
 
     def __init__(self, predictor: DealerPredictor, q_hit: np.ndarray,

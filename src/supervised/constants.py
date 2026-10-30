@@ -1,4 +1,4 @@
-"""Conventions du modèle supervisé et de l'adaptateur pour Wassim."""
+"""Conventions du modèle supervisé et de sa conversion vers le Q-learning."""
 
 import numpy as np
 

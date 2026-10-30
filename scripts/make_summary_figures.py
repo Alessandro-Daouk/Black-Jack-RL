@@ -12,7 +12,7 @@ from src.evaluate import J_STAR
 
 
 def main():
-    folder = Path("results/hybrid/frequencies_ablation")
+    folder = Path("results/1_premiere_campagne/hybride/frequencies_ablation")
     rows = list(csv.DictReader((folder / "learning_curves.csv").open(encoding="utf-8")))
     fig, ax = plt.subplots(figsize=(8, 4.6), layout="constrained")
     labels = {"logistic": "Hybride : régression", "frequencies": "Hybride : fréquences",

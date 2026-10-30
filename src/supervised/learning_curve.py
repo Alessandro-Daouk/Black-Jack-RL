@@ -55,7 +55,7 @@ def replicate(index, sizes, validation_size, test_size):
                   "test_sha256": fingerprint(Xt, yt), "fits": metadata}
 
 
-def run(output=Path("results/supervised/learning_curve"), sizes=SIZES, repeats=5,
+def run(output=Path("results/1_premiere_campagne/modele1/learning_curve"), sizes=SIZES, repeats=5,
         validation_size=12_000, test_size=24_000, jobs=2):
     sizes = tuple(sorted(set(sizes)))
     if repeats < 2 or not sizes or min(sizes) < 1 or min(validation_size, test_size) < 1:
@@ -148,7 +148,7 @@ def report(summary, output):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, default=Path("results/supervised/learning_curve"))
+    parser.add_argument("--output", type=Path, default=Path("results/1_premiere_campagne/modele1/learning_curve"))
     parser.add_argument("--sizes", nargs="+", type=int, default=SIZES)
     parser.add_argument("--repeats", type=int, default=5)
     parser.add_argument("--jobs", type=int, default=2)

@@ -27,7 +27,7 @@ def test_all_cards_and_serialization(trained, tmp_path):
         assert tuple(probabilities) == CLASSES
         assert all(0 <= p <= 1 for p in probabilities.values())
         assert abs(sum(probabilities.values()) - 1) < 1e-12
-        np.testing.assert_allclose(loaded.probabilities_for_wassim()[card], list(probabilities.values()))
+        np.testing.assert_allclose(loaded.probability_vectors()[card], list(probabilities.values()))
 
 
 @pytest.mark.parametrize("card", [0, 11, -1, 1.5, 10.0, True, "10", float("nan")])

@@ -1,6 +1,6 @@
 # Évaluation de l'agent hybride
 
-> Rapport généré par la version historique du projet ; ses mesures sont inchangées. Certaines interprétations ont été corrigées depuis : en cas de désaccord, le [README](../../../README.md) et le [rapport scientifique](../../../docs/rapport_scientifique.md) font foi.
+> Rapport généré par la version historique du projet ; ses mesures sont inchangées. Certaines interprétations ont été corrigées depuis : en cas de désaccord, le [README](../../../../README.md) et le [rapport scientifique](../../../../docs/rapport_scientifique.md) font foi.
 
 Le prédicteur supervisé reste figé pendant le Q-learning.
 

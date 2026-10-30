@@ -24,7 +24,7 @@ def run(output, jobs=2):
     for name, keys in [('config_vs_tuned', ['phase', 'method', 'preset', 'seed']),
                        ('frequencies_ablation', ['method', 'seed'])]:
         for file, extra in [('runs.csv', []), ('learning_curves.csv', ['episodes'])]:
-            old = pd.read_csv(Path('results/hybrid')/name/file).set_index(keys+extra)
+            old = pd.read_csv(Path('results/1_premiere_campagne/hybride')/name/file).set_index(keys+extra)
             new = pd.read_csv(output/name/file).set_index(keys+extra)
             diff = (old.exact_expected_reward-new.exact_expected_reward).abs()
             matched = bool(old.index.sort_values().equals(new.index.sort_values()))

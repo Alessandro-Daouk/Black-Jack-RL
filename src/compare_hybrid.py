@@ -9,7 +9,7 @@ Plan de la comparaison :
 2. Test, graines 0 à 19, qui ne servent à aucun choix : les deux réglages, plus le
    Q-learning standard et l'hybride avec V_STAND exacte comme références.
 
-Le gain exact J utilise la récurrence de Wassim et la vraie loi du croupier. C'est un
+Le gain exact J utilise la récurrence de src/evaluate.py et la vraie loi du croupier. C'est un
 outil d'évaluation : l'agent supervisé ne l'utilise jamais pendant l'apprentissage.
 """
 
@@ -38,7 +38,7 @@ METHOD_NAMES = {"hybrid_supervised": "Hybride, V_STAND supervisée", "hybrid_exa
 HANDS_COUNTED = {"train_hands": "entraînement", "all_hands": "toutes", "none": "aucune"}
 CHECKPOINTS = (10_000, 20_000, 50_000, 100_000)
 LEGACY_AGENT = ROOT / "models/hybrid/agent_config.npz"  # CONFIG, graine 0, sources du commit 0780a4f
-DEFAULT_OUTPUT = ROOT / "results/hybrid/config_vs_tuned"
+DEFAULT_OUTPUT = ROOT / "results/1_premiere_campagne/hybride/config_vs_tuned"
 
 
 def preset_config(method: str, preset: str, episodes: int) -> dict:

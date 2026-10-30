@@ -53,7 +53,7 @@ class DealerPredictor:
         validate_probabilities(probabilities, (6,))
         return dict(zip(CLASSES, map(float, probabilities), strict=True))
 
-    def probabilities_for_wassim(self) -> dict[int, np.ndarray]:
+    def probability_vectors(self) -> dict[int, np.ndarray]:
         """Vecteurs ordonnés [17,18,19,20,21,BUST] attendus par stand_table()."""
         return {d: row.copy() for d, row in enumerate(self.probability_matrix(), start=1)}
 
