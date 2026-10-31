@@ -13,9 +13,10 @@
 *.png binary
 *.pdf binary
 
-# Les artefacts des campagnes 2 à 5 sont conservés octet par octet, fins de ligne comprises.
+# Les artefacts des campagnes 2 à 6 sont conservés octet par octet, fins de ligne comprises.
 # Ne pas normaliser les CSV entre Windows, Linux et l'objet stocké dans Git.
 results/2_campagne_principale/** -text
 results/3_cartes_uniformes/** -text
 results/4_autres_methodes/** -text
 results/5_sabot_fini/** -text
+results/6_confirmation_sabot/** -text
