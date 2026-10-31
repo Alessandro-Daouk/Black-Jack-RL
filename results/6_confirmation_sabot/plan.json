@@ -1,0 +1,27 @@
+{
+  "objet": "Confirmation des conclusions du sabot fini (rapport §6) sur des données, graines et sabots d'évaluation neufs. Plan figé et commité avant tout lancement ; aucun réglage, aucune modification après lancement.",
+  "agents": {
+    "standard_lineaire": {"modele1": null, "lineaire": true, "eps_min": 1.0, "omega": 1.0},
+    "hybride_logistique": {"modele1": "logistique", "lineaire": false, "eps_min": 0.4, "omega": 1.0},
+    "hybride_logistique_lineaire": {"modele1": "logistique", "lineaire": true, "eps_min": 0.1, "omega": 1.0}
+  },
+  "hyperparametres": "ceux retenus par le réglage de results/5_sabot_fini (summary.json, clé tuning), sans nouveau réglage",
+  "groupes": 9,
+  "graines_rl_par_groupe": 2,
+  "mains_modele1": 100000,
+  "validation": 10000,
+  "test_modele1": 3000,
+  "graines": {"donnees": 220000, "validation": 225000, "test": 228000, "rl": 230000},
+  "regle_des_graines": "jeu i : donnees + 10i, validation + 10i, test + 10i ; graine RL : rl + 10i + r",
+  "sabots_evaluation": [3000000, 3300000],
+  "budgets": [10000, 200000, 3000000],
+  "niveau": 0.9875,
+  "multiplicite": "Bonferroni sur 4 hypothèses : chaque IC bilatéral est à 98,75 %, erreur du jeu d'évaluation incluse pour les agents",
+  "hypotheses": [
+    {"id": "H1", "enonce": "À information égale, fixer STAND accélère l'apprentissage", "contraste": "hybride_logistique_lineaire - standard_lineaire", "parties": 200000, "confirmee_si": "borne inférieure de l'IC > 0"},
+    {"id": "H2", "enonce": "À information égale, l'hybride est rejoint à long terme", "contraste": "hybride_logistique_lineaire - standard_lineaire", "parties": 3000000, "confirmee_si": "IC inclus dans [-0.001 ; +0.001]"},
+    {"id": "H3", "enonce": "Un Q-learning qui voit la composition partout dépasse l'hybride à Q_HIT tabulaire", "contraste": "standard_lineaire - hybride_logistique", "parties": 3000000, "confirmee_si": "borne inférieure de l'IC > 0"},
+    {"id": "H4", "enonce": "La logistique estime mieux la loi du croupier que la table par classe de compte", "contraste": "KL(table) - KL(logistique), 100 000 mains", "confirmee_si": "borne inférieure de l'IC > 0"}
+  ],
+  "decision": "Chaque hypothèse est déclarée confirmée ou non confirmée selon son critère, et rapportée telle quelle."
+}

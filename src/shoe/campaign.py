@@ -116,10 +116,10 @@ def paired_se(pairs):
     return float(d.std(ddof=1) / np.sqrt(len(d)))
 
 
-def with_evaluation(values, mc_se):
+def with_evaluation(values, mc_se, level=.95):
     """IC entre jeux, puis IC qui ajoute l'erreur du jeu d'évaluation commun (indépendante des jeux)."""
     out = interval(values)
-    half = float(t.ppf(.975, out["n"] - 1) * np.sqrt(out["sd"] ** 2 / out["n"] + mc_se ** 2))
+    half = float(t.ppf(1 - (1 - level) / 2, out["n"] - 1) * np.sqrt(out["sd"] ** 2 / out["n"] + mc_se ** 2))
     return {**out, "evaluation_mc_se": mc_se, "ci95_with_evaluation": [out["mean"] - half, out["mean"] + half]}
 
 
