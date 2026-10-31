@@ -8,9 +8,9 @@ redonne les mêmes chiffres, seules les durées changent. Les commandes complèt
 | Dossier | Question | Rapport | Produit par |
 |---|---|---|---|
 | [1_premiere_campagne/](1_premiere_campagne/) | Premiers modèles : le modèle 1 est-il calibré, l'hybride apprend-il plus vite ? | §5.1 (répliquée) | `src.tune`, notebook, `src.supervised.*`, `src.compare_*` |
-| [2_campagne_principale/](2_campagne_principale/) | Critère principal, budgets, coûts, ablations, sur 28 jeux indépendants | §4, §5.1–5.7 | `src.audit.*` |
-| [3_cartes_uniformes/](3_cartes_uniformes/) | L'avantage tient-il avec une autre loi des cartes ? | §5.8 | `src.audit.variant` |
-| [4_autres_methodes/](4_autres_methodes/) | L'hybride bat-il les autres algorithmes et la planification ? | §5.2, §5.3, §5.9 | `src.audit.complements`, `src.audit.baselines` |
+| [2_campagne_principale/](2_campagne_principale/) | Critère principal, budgets, coûts, ablations, sur 28 jeux indépendants | §4, §5.1–5.6 | `src.audit.*` |
+| [3_cartes_uniformes/](3_cartes_uniformes/) | L'avantage tient-il avec une autre loi des cartes ? | §5.7, annexe F | `src.audit.variant` |
+| [4_autres_methodes/](4_autres_methodes/) | L'hybride bat-il les autres algorithmes et la planification ? | §5.2, §5.3, §5.7 | `src.audit.complements`, `src.audit.baselines` |
 | [5_sabot_fini/](5_sabot_fini/) | Le modèle 1 compte-t-il quand il voit ce que l'état RL ne voit pas, et à information égale ? | §6 | `src.shoe.campaign` |
 
 ## 1_premiere_campagne — les premiers modèles

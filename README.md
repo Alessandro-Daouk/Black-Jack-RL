@@ -158,7 +158,7 @@ Quatre dossiers à la racine, chacun avec son rôle :
 
 | Dossier | Contenu | Guide |
 |---|---|---|
-| `docs/` | Rapport (**fait foi**), démonstrations PDF, état de l'art, reproductibilité | tableau ci-dessous |
+| `docs/` | Rapport (**fait foi**) et annexes, démonstrations PDF, état de l'art, reproductibilité | tableau ci-dessous |
 | `src/` | Tout le code : jeu, modèle 1, modèle 2, agent, campagnes | [src/README.md](src/README.md) |
 | `models/` | Modèles livrés, chargés par la démonstration | ci-dessous |
 | `results/` | Mesures, numérotées dans l'ordre du rapport | [results/README.md](results/README.md) |
@@ -186,6 +186,7 @@ modification, pour que la réplication porte sur le code d'origine.
 | Document | Contenu |
 |---|---|
 | [docs/rapport_scientifique.md](docs/rapport_scientifique.md) | Rapport complet : cadre, résultats, coûts, discussion (**fait foi**) |
+| [docs/annexes.md](docs/annexes.md) | Détail des mesures : contrôles, coûts, ablations, statistiques, contrastes |
 | [docs/modele1.pdf](docs/modele1.pdf), [docs/modele2.pdf](docs/modele2.pdf) | Démonstrations : modèle 1, convergence et bornes de regret |
 | [docs/etat_de_l_art.md](docs/etat_de_l_art.md) | Positionnement bibliographique |
 | [docs/reproductibilite.md](docs/reproductibilite.md) | Environnement, commandes et durées |
