@@ -11,7 +11,7 @@ redonne les mêmes chiffres, seules les durées changent. Les commandes complèt
 | [2_campagne_principale/](2_campagne_principale/) | Critère principal, budgets, coûts, ablations, sur 28 jeux indépendants | §4, §5.1–5.7 | `src.audit.*` |
 | [3_cartes_uniformes/](3_cartes_uniformes/) | L'avantage tient-il avec une autre loi des cartes ? | §5.8 | `src.audit.variant` |
 | [4_autres_methodes/](4_autres_methodes/) | L'hybride bat-il les autres algorithmes et la planification ? | §5.2, §5.3, §5.9 | `src.audit.complements`, `src.audit.baselines` |
-| [5_sabot_fini/](5_sabot_fini/) | Le modèle 1 compte-t-il quand il voit ce que l'état RL ne voit pas ? | §6 | `src.shoe.campaign` |
+| [5_sabot_fini/](5_sabot_fini/) | Le modèle 1 compte-t-il quand il voit ce que l'état RL ne voit pas, et à information égale ? | §6 | `src.shoe.campaign` |
 
 ## 1_premiere_campagne — les premiers modèles
 
@@ -47,7 +47,7 @@ rapport), les CSV bruts et `completion.json` (statut et durée).
 | `3_cartes_uniformes/` | `runs.csv`, `curves.csv`, `oracle_mc.json` (contrôle du nouvel oracle) |
 | `4_autres_methodes/planification_double_q/` | `planning.csv`, `double_q.csv`, `tuning.csv` |
 | `4_autres_methodes/autres_algorithmes/` | `curves.csv` (Expected SARSA, Monte-Carlo, Dyna-Q, RL à modèle appris), `variance_runs.csv` |
-| `5_sabot_fini/` | `supervised.csv` (4 modèles 1), `runs.csv` (agents), `shoe.png` (figure du §6) |
+| `5_sabot_fini/` | `supervised.csv` (4 modèles 1), `runs.csv` (6 agents, dont 2 linéaires à information égale), `shoe.png` (figure du §6) |
 
 Les `config.json` écrits avant cette organisation des dossiers peuvent contenir des noms
 de modules ou d'options de l'époque ; les chemins de dossiers ont été mis à jour.

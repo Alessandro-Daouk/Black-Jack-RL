@@ -4,7 +4,7 @@ import pytest
 from src.audit.oracle import Oracle
 from src.shoe.campaign import gain, paired_se, train
 from src.shoe.game import DECK, Shoe, dealer_dataset, evaluate, exact_dealer, play_round, true_count_bucket
-from src.shoe.models import MODELS, Boosting, Logistic, fit, scores
+from src.shoe.models import MODELS, Boosting, Logistic, fit, scores, state_features
 
 
 @pytest.fixture(scope="module")
@@ -76,3 +76,19 @@ def test_train_smoke_and_paired_se(data):
     basic = evaluate(lambda obs, unseen: int(obs[0] < 17), shoes)
     assert -1 <= gain(*basic) <= 1
     assert paired_se([(basic, basic)]) == 0
+
+
+def test_state_features_are_standardized():
+    X, _ = dealer_dataset(2000, 9)
+    F = np.array([state_features(x[1:]) for x in X])
+    assert F.shape == (2000, 12) and np.all(F[:, 0] == 1)
+    assert np.all(np.abs(F[:, 1:].mean(axis=0)) < .1) and np.all(np.abs(F[:, 1:].std(axis=0) - 1) < .1)
+
+
+@pytest.mark.parametrize("model_name", [None, "logistique"])
+def test_linear_agents_train(data, model_name):
+    (X, y), (Xv, yv) = data
+    model = None if model_name is None else fit(model_name, X, y, Xv, yv)[0]
+    curve = train(model, 4, [500, 1500], range(200), eps_min=.4, linear=True)
+    assert [p["episodes"] for p in curve] == [500, 1500]
+    assert -1 <= gain(curve[-1]["gains"], curve[-1]["rounds"]) <= 1

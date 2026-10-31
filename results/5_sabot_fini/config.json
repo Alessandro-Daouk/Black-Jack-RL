@@ -48,9 +48,29 @@
     ]
   },
   "agents": {
-    "standard": null,
-    "hybride_carte": "carte",
-    "hybride_table": "table",
-    "hybride_logistique": "logistique"
+    "standard": [
+      null,
+      false
+    ],
+    "standard_lineaire": [
+      null,
+      true
+    ],
+    "hybride_carte": [
+      "carte",
+      false
+    ],
+    "hybride_table": [
+      "table",
+      false
+    ],
+    "hybride_logistique": [
+      "logistique",
+      false
+    ],
+    "hybride_logistique_lineaire": [
+      "logistique",
+      true
+    ]
   }
 }

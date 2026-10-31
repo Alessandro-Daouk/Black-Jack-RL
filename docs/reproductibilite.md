@@ -105,8 +105,8 @@ exécution réécrit les fichiers de `results/1_premiere_campagne/q_learning/` e
 | Variante à cartes uniformes (54 entraînements) | 3,6 min | un processus |
 | Analyse et figures | 6 s | |
 | Références RL et variance (E9, 566 entraînements) | 4,3 min | tous les cœurs, machine B |
-| Sabot fini (E10 : 144 modèles 1, 72 réglages, 72 agents de 3 M parties) | 19,3 min | tous les cœurs, machine B |
-| Tests | environ 10 s | 126 tests |
+| Sabot fini (E10 : 144 modèles 1, 90 réglages, 108 agents de 3 M parties) | environ 45 min de calcul | tous les cœurs, machine B ; l'exécution archivée a été interrompue par des mises en veille |
+| Tests | environ 12 s | 129 tests |
 
 Machine B : Apple M5 Pro (15 cœurs), 24 Gio, macOS 26.6, mêmes versions de bibliothèques
 (`uv.lock`). Les campagnes précédentes ont été exécutées sur la machine de référence

@@ -53,6 +53,6 @@ pour que la réplication de la première campagne porte sur le code d'origine.
 | Module | Rôle |
 |---|---|
 | `game.py` | Sabot de 52 cartes, manche, loi exacte du croupier sachant les cartes non vues |
-| `models.py` | Quatre modèles 1 : carte, table, logistique, boosting |
-| `campaign.py` | Modèles 1, réglage, agents → `results/5_sabot_fini/` |
+| `models.py` | Quatre modèles 1 (carte, table, logistique, boosting) et variables des agents linéaires |
+| `campaign.py` | Modèles 1, réglage, agents tabulaires et linéaires → `results/5_sabot_fini/` |
 | `figures.py` | Figure du §6 |

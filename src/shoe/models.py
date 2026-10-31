@@ -7,6 +7,7 @@ Quatre estimateurs, du plus pauvre au plus riche en information :
 - boosting : arbres de gradient sur la carte et la composition, sans forme imposée.
 Les deux tables sont lissées (Jeffreys, α = 1/2) pour garder une log-loss finie.
 """
+from functools import lru_cache
 import time
 import warnings
 
@@ -15,15 +16,29 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.linear_model import LogisticRegression
 
-from .game import DECK, true_count_bucket
+from .game import DECK, dealer_dataset, true_count_bucket
 
 C_GRID = (.01, .1, 1., 10., 100.)
+FEATURE_SEED = 150000
 
 
 def composition(X):
     """[1, proportions des dix cartes non vues, cartes non vues / 52]."""
     u = X[:, 1:]
     return np.column_stack([np.ones(len(X)), u / u.sum(axis=1, keepdims=True), u.sum(axis=1) / 52])
+
+
+@lru_cache(maxsize=1)
+def standardizer():
+    """Moyenne et écart-type de la composition sur des sabots entamés au hasard (même loi que le modèle 1)."""
+    z = composition(dealer_dataset(20000, FEATURE_SEED)[0])[:, 1:]
+    return z.mean(axis=0), z.std(axis=0)
+
+
+def state_features(unseen):
+    """Variables des agents RL linéaires : [1, composition standardisée des cartes non vues]."""
+    mu, sd = standardizer()
+    return np.concatenate(([1.], (np.append(unseen / unseen.sum(), unseen.sum() / 52) - mu) / sd))
 
 
 def features(X):

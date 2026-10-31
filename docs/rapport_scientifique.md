@@ -21,8 +21,10 @@ oracle exact qui calcule le gain espéré de chaque politique sans bruit de simu
   planification qui modélise aussi HIT fait mieux que l'hybride.
 - En sabot fini, la loi du croupier dépend des cartes déjà sorties et le problème supervisé
   devient réel. La régression logistique sur la composition du sabot y bat nettement les
-  tables et le gradient boosting, et l'hybride qui l'utilise garde après 3 millions de parties
-  un avantage (+0,0009 par manche, 18 paires sur 18) que les hybrides à table perdent.
+  tables et le gradient boosting. Un Q-learning linéaire qui reçoit la même information fait
+  mieux à long terme que l'hybride à Q_HIT tabulaire ; à information égale, l'hybride
+  linéaire apprend beaucoup plus vite que lui (+0,040 par manche à 10 000 parties), puis le
+  rejoint. La séparation de STAND accélère ; l'information fixe le niveau final.
 
 Chaque conclusion porte l'une des quatre étiquettes suivantes : **[démontré]** sous les
 hypothèses énoncées, **[observé]** sur les graines et budgets indiqués, **[plausible]** mais
@@ -52,8 +54,9 @@ persiste-t-il quand on compte le coût d'obtention de l'estimation ?
    qu'une planification à partir des mêmes mains de croupier (§5.3, §5.9).
 4. Des coûts mesurés en secondes et en cartes distribuées, acquisition comprise, et les
    régions où l'hybride perd (§5.4–5.5).
-5. Une extension en sabot fini où le modèle 1 dispose d'une information que l'état RL n'a
-   pas, et où le choix de l'estimateur supervisé compte (§6).
+5. Une extension en sabot fini où le choix de l'estimateur supervisé compte, avec une
+   référence à information égale (Q-learning linéaire dans la composition) qui sépare l'effet
+   de l'information de celui de la séparation entre STAND et HIT (§6).
 
 L'idée de combiner un modèle partiel et un apprentissage de valeurs n'est pas nouvelle
 (Dyna, connaissances partielles du modèle, après-états) : aucune priorité n'est revendiquée.
@@ -645,7 +648,7 @@ biaisée : quintupler les données de 20 000 à 100 000 mains ne divise son KL q
 C retenu croît avec la taille (0,1 à 1 000 mains, 10 dans 6 jeux sur 9 à 100 000), comme
 attendu d'une régularisation qui doit s'effacer quand les données abondent.
 
-### 6.3 Agents : un avantage que les hybrides tabulaires n'ont pas
+### 6.3 Agents tabulaires : la logistique donne un avantage aux hybrides
 
 Quatre agents, tous en Q-learning tabulaire sur les 1 400 états : le **standard** apprend
 STAND et HIT ; trois **hybrides** apprennent HIT et reçoivent STAND d'un modèle 1 estimé sur
@@ -686,14 +689,68 @@ Contrastes, IC à 95 % incluant l'erreur d'évaluation, paires gagnantes sur 18 
    [−0,0002 ; +0,0014] une fois l'erreur d'évaluation incluse ; établi à partir de 1 million :
    +0,0022 [+0,0015 ; +0,0030]). Il bat les trois autres agents dans les 18 paires à
    3 millions de parties, d'environ 0,0009 par manche. Sa politique dépend de la composition exacte du
-   sabot à travers STAND, ce qu'aucun agent tabulaire ne peut représenter. L'écart avec le
-   standard se réduit encore (0,0016 à 1 M, 0,0009 à 3 M) : qu'il subsiste à budget infini
-   est **[plausible]** (la classe de politiques de l'hybride logistique est plus riche) mais
-   **[non démontré]**, son plancher dépendant aussi de l'erreur du modèle.
+   sabot à travers STAND, ce qu'aucun agent tabulaire ne peut représenter. Cet avantage vient
+   donc de l'information sur la composition, pas forcément de la séparation entre STAND et
+   HIT : le §6.4 le teste en donnant la même information au Q-learning.
 4. **La qualité du modèle 1 se traduit en gain.** L'ordre des agents à 3 millions de
    parties suit l'excès de KL de leur modèle (logistique, puis table et carte, indistinctes), et
    l'écart logistique − table est le même que l'écart logistique − carte. C'est ce qui
    manquait au paquet infini, où tous les estimateurs donnaient la même politique.
+
+### 6.4 À information égale : la séparation accélère, l'information fixe le niveau
+
+La comparaison du §6.3 n'est pas équitable : l'hybride logistique voit la composition exacte
+du sabot, le standard seulement sa classe de compte. Deux agents **linéaires** reçoivent la
+même information que la logistique. Chaque (total, carte visible, as) a une valeur linéaire
+dans la composition standardisée des cartes non vues (proportions des dix valeurs et taille
+du sabot, 12 coefficients par case) :
+
+- le **standard linéaire** apprend ainsi STAND et HIT ;
+- l'**hybride logistique linéaire** apprend ainsi HIT et reçoit STAND de la logistique.
+
+Les coefficients sont mis à jour par moindres carrés récursifs par case, avec une
+régularisation ridge de poids 1. C'est l'analogue en régression du pas 1/N tabulaire, qui
+moyenne les cibles ; ω ne s'y applique pas, seul ε_min est réglé (1 pour le standard
+linéaire, 0,1 pour l'hybride). Une première version par gradient normalisé apprenait
+beaucoup trop lentement sur un essai préliminaire hors plan (une graine, d'autres sabots
+d'évaluation) ; elle a été remplacée avant la campagne. Mêmes jeux, graines, sabots et
+budgets qu'au §6.3 ; les quatre agents tabulaires ont été reproduits à l'identique.
+
+| Parties | 10 000 | 50 000 | 200 000 | 1 M | 3 M |
+|---|---:|---:|---:|---:|---:|
+| Standard (tabulaire, rappel) | −0,0518 | −0,0167 | −0,0046 | +0,0006 | +0,0014 |
+| Hybride logistique (rappel) | −0,0171 | −0,0042 | +0,0006 | +0,0022 | +0,0023 |
+| Standard linéaire | −0,0759 | −0,0261 | −0,0056 | +0,0033 | +0,0051 |
+| **Hybride logistique linéaire** | −0,0357 | −0,0080 | **+0,0016** | **+0,0049** | **+0,0053** |
+
+*Gain par manche moins celui de la stratégie de base.*
+
+| Contraste | 10 000 | 200 000 | 1 M | 3 M |
+|---|---:|---:|---:|---:|
+| Standard linéaire − standard | −0,0241 [−0,0270 ; −0,0213], 0 | −0,0010 [−0,0017 ; −0,0003], 3 | +0,0027 [+0,0020 ; +0,0034], 18 | **+0,0037 [+0,0030 ; +0,0044], 18** |
+| Hybride logistique − standard linéaire | +0,0588 [+0,0564 ; +0,0612], 18 | +0,0062 [+0,0054 ; +0,0069], 18 | −0,0011 [−0,0017 ; −0,0005], 1 | **−0,0028 [−0,0034 ; −0,0022], 0** |
+| Hybride logistique linéaire − standard linéaire | +0,0403 [+0,0373 ; +0,0432], 18 | +0,0072 [+0,0064 ; +0,0080], 18 | +0,0016 [+0,0012 ; +0,0020], 18 | +0,0002 [−0,0000 ; +0,0005], 16 |
+| Hybride logistique linéaire − hybride logistique | −0,0185 [−0,0205 ; −0,0165], 0 | +0,0010 [+0,0004 ; +0,0017], 16 | +0,0027 [+0,0021 ; +0,0033], 18 | +0,0030 [+0,0024 ; +0,0036], 18 |
+
+*IC à 95 % incluant l'erreur d'évaluation, puis paires gagnantes sur 18.*
+
+**[observé]**
+
+1. **L'avantage durable du §6.3 était un effet d'information.** Le standard linéaire, qui voit
+   la même composition que la logistique, démarre plus lentement que tous les agents
+   tabulaires (12 coefficients par case au lieu d'une valeur par classe de compte), puis les
+   dépasse tous à partir de 1 million de parties. À 3 millions, il bat l'hybride logistique de
+   0,0028 par manche dans les 18 paires. L'hybride logistique est limité par son Q_HIT
+   tabulaire, qui ne voit que la classe de compte.
+2. **À information égale, on retrouve exactement le profil du paquet infini.** L'hybride
+   logistique linéaire apprend beaucoup plus vite que le standard linéaire (+0,040 à
+   10 000 parties, +0,0072 à 200 000, +0,0016 à 1 million), puis le rejoint : à 3 millions,
+   l'écart vaut +0,0002, intervalle inclus dans ±0,001. Fixer STAND accélère
+   l'apprentissage ; le niveau final dépend de l'information que l'agent peut représenter.
+3. **Combiner les deux donne le meilleur agent sur tout le parcours.** L'hybride logistique
+   linéaire est en tête de 200 000 à 1 million de parties et fait jeu égal avec le standard
+   linéaire à 3 millions. Il gagne alors +0,0053 par manche sur la stratégie de base, soit
+   12 % de l'avantage de la maison, sans changer la mise.
 
 ![Sabot fini : modèle 1 et agents](../results/5_sabot_fini/shoe.png)
 
@@ -701,8 +758,11 @@ Contrastes, IC à 95 % incluant l'erreur d'évaluation, paires gagnantes sur 18 
 standard, 33 s pour les hybrides tabulaires et 52 s pour l'hybride logistique, qui évalue
 son modèle à chaque décision. Simuler 100 000 mains de croupier prend 0,29 s ; ajuster la
 logistique avec la sélection de C, 69 s, contre 0,17 s pour la table et 12 s pour le
-boosting. Ces temps ont été mesurés sur une autre machine que ceux du §5.5 (macOS, 15 cœurs),
-avec 9 à 15 processus en parallèle : ils sont indicatifs. **En temps, l'avantage n'est donc
+boosting. Les agents linéaires coûtent environ 1,5 fois leurs équivalents tabulaires
+(94 s contre 65 s pour le standard, 106 s contre 63 s pour l'hybride logistique, dans la
+seconde exécution). Ces temps ont été mesurés sur une autre machine que ceux du §5.5 (macOS,
+15 cœurs), avec 9 à 15 processus en parallèle, et la seconde exécution a été interrompue par
+des mises en veille : seuls les rapports entre agents d'une même exécution sont indicatifs. **En temps, l'avantage n'est donc
 pas établi** : l'acquisition logistique coûte plus que l'apprentissage complet du standard,
 dont le gain au-delà de 3 millions de parties n'a pas été mesuré. Une sélection de C moins
 coûteuse (une seule valeur, ou une grille plus courte) réduirait ce coût ; elle n'a pas été
@@ -732,6 +792,14 @@ observations par une source extérieure moins chère et moins bruitée. C'est un
 d'information, pas un gain d'algorithme. Le Double Q-learning montre que retirer le biais
 du maximum ne le reproduit pas.
 
+**Séparation et information (§6.4).** Le sabot fini sépare les deux effets que le paquet
+infini confondait. Fixer STAND à partir d'un modèle supervisé accélère l'apprentissage, dans
+les deux jeux et à information égale. Le niveau atteint à long terme dépend, lui, de ce que
+l'agent peut représenter : un hybride qui voit moins que le Q-learning standard finit par
+perdre (1 000 mains en paquet infini, Q_HIT tabulaire en sabot fini), un hybride qui voit
+autant le rejoint. Ce résultat est cohérent avec la théorie du §3.4 : l'hybride converge vers
+l'optimum de son modèle et de sa représentation, pas vers l'optimum vrai.
+
 **Ce qui est une contribution et ce qui ne l'est pas.** Combiner un estimateur
 supervisé et un Q-learning n'est pas une innovation algorithmique : l'idée relève de
 l'utilisation de connaissances partielles du modèle, des après-états et de la
@@ -740,8 +808,8 @@ la logistique n'apporte rien sur les fréquences et la planification fait mieux 
 l'hybride. L'apport défendable est une étude de cas contrôlée : oracle exact indépendant,
 plan imbriqué propageant la variabilité des données supervisées, six références RL,
 coûts mesurés en unités explicites, régions de perte identifiées, résultats négatifs
-conservés, et une extension (§6) où le modèle supervisé dispose d'une information que la
-modélisation tabulaire n'a pas.
+conservés, et une extension (§6) qui distingue, à information égale, l'accélération due à
+la séparation et le niveau fixé par l'information.
 
 ## 8. Menaces à la validité
 
@@ -756,6 +824,10 @@ modélisation tabulaire n'a pas.
   enveloppes Gymnasium). Les cartes sont une unité plus stable mais ne mesurent pas le
   coût de calcul de l'apprentissage. Les temps du sabot fini ont été mesurés sur une autre
   machine, avec des processus parallèles : ils ne sont pas comparables à ceux du §5.5.
+- **Agents linéaires.** La forme linéaire par case et la mise à jour par moindres carrés
+  récursifs ont été choisies avant la campagne, après un essai préliminaire hors plan ; une
+  autre approximation (réseau de neurones, interactions plus riches) pourrait changer le
+  niveau final. Le standard linéaire n'a pas convergé à 3 millions de parties.
 - **Grille de budgets.** Les temps d'atteinte sont limités par la résolution de la grille
   (100 000 puis 200 000 épisodes) et censurés à 200 000.
 - **Précision secondaire et analyses exploratoires.** Les analyses secondaires reposent sur
@@ -773,10 +845,13 @@ qualité du modèle : avec trop peu de données supervisées, il converge vers u
 sous-optimale que le Q-learning standard finit par dépasser. En paquet infini, une table de
 fréquences suffit et une planification complète fait mieux. En sabot fini, le choix du
 modèle supervisé compte : la régression logistique sur la composition du sabot bat les
-tables et le gradient boosting, et c'est le seul modèle qui donne à l'hybride un avantage
-durable sur le Q-learning standard, parce qu'il lui apporte une information que l'état ne
-contient pas. Ce qui rend l'hybride utile n'est pas l'algorithme, c'est l'information que
-le modèle 1 ajoute et la précision avec laquelle il l'estime.
+tables et le gradient boosting. Avec une référence à information égale, le message se
+précise : fixer STAND accélère l'apprentissage, d'un facteur important aux petits budgets,
+mais le niveau final dépend de l'information que l'agent représente. Un Q-learning linéaire
+qui voit la composition dépasse à long terme l'hybride à Q_HIT tabulaire, et l'hybride
+linéaire le rejoint après l'avoir largement devancé. L'hybride est utile quand les parties
+coûtent cher par rapport aux données supervisées ; il ne remplace pas une représentation
+suffisante de l'état.
 
 ## Annexe A. Correspondance des expériences
 

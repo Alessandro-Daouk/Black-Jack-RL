@@ -4,8 +4,10 @@ que l'état RL n'a pas ?
 1. Modèle 1 : quatre estimateurs, quatre tailles, 9 jeux indépendants ; KL exact vers la loi vraie.
 2. Réglage (ε_min x ω) de chaque agent sur des graines, données et sabots d'évaluation distincts.
 3. Agents : Q-learning standard sur (total, carte, as, classe de compte), et trois hybrides dont
-   STAND vient du modèle « carte », « table » ou « logistique ». La stratégie de base du paquet
-   infini, sans apprentissage, sert de référence.
+   STAND vient du modèle « carte », « table » ou « logistique ». Deux agents linéaires reçoivent la
+   même information que la logistique (composition des cartes non vues) : un standard, et un hybride
+   logistique dont Q_HIT est aussi linéaire. La stratégie de base du paquet infini, sans
+   apprentissage, sert de référence.
 Évaluation : Monte-Carlo apparié, mêmes sabots pour toutes les politiques.
 
 uv run --locked python -m src.shoe.campaign --output results/5_sabot_fini
@@ -24,7 +26,7 @@ from src.audit.core import dump, interval, new_output
 from src.audit.oracle import Oracle
 from src.supervised.evaluate import write_csv
 from .game import REWARD, SHAPE, Shoe, dealer_dataset, evaluate, exact_dealer, play_round
-from .models import MODELS, fit, scores
+from .models import MODELS, fit, scores, state_features
 
 GROUPS = 9
 SIZES = [1000, 5000, 20000, 100000]
@@ -36,23 +38,37 @@ CHECKPOINTS = [10000, 50000, 200000, 1000000, 3000000]
 EVAL_SHOES = range(1_000_000, 1_300_000)
 TUNING_SHOES = range(2_000_000, 2_020_000)
 GRID = dict(eps_min=[.1, .4, 1.], omega=[1., .8])
-AGENTS = {"standard": None, "hybride_carte": "carte", "hybride_table": "table",
-          "hybride_logistique": "logistique"}
+# agent -> (modèle 1 pour STAND ou None, Q linéaire dans la composition)
+AGENTS = {"standard": (None, False), "standard_lineaire": (None, True), "hybride_carte": ("carte", False),
+          "hybride_table": ("table", False), "hybride_logistique": ("logistique", False),
+          "hybride_logistique_lineaire": ("logistique", True)}
 
 
-def train(model, seed, checkpoints, shoes, eps_min=1., omega=1.):
-    """model=None : Q-learning standard. Sinon hybride : Q_HIT appris, STAND = modèle 1 sur les cartes non vues."""
+def train(model, seed, checkpoints, shoes, eps_min=1., omega=1., linear=False):
+    """model=None : Q-learning standard. Sinon hybride : Q_HIT appris, STAND = modèle 1 sur les cartes non vues.
+
+    linear=True : au lieu d'une case par (total, carte, as, classe de compte), chaque (total, carte, as)
+    a une valeur linéaire dans la composition standardisée des cartes non vues, la même information
+    que la logistique. Moindres carrés récursifs par case (régularisation ridge de poids 1) : c'est
+    l'analogue en régression du pas 1/N tabulaire, qui moyenne les cibles ; ω ne s'applique pas.
+    """
     rng = np.random.default_rng(seed)
     shoe = Shoe(np.random.default_rng(seed + 1))  # cartes et exploration sur deux flux distincts
-    Q = np.zeros((2, *SHAPE))
-    N = np.zeros((2, *SHAPE), dtype=np.int64)
+    cells = SHAPE[:3] if linear else SHAPE
+    k = len(state_features(np.ones(10)))
+    Q = np.zeros((2, *cells, k)) if linear else np.zeros((2, *SHAPE))
+    P = np.broadcast_to(np.eye(k), (2, *cells, k, k)).copy() if linear else None  # inverses des matrices de Gram
+    N = np.zeros((2, *cells), dtype=np.int64)
     eps, curve, rl_seconds = 1., [], 0.
 
+    def q(a, obs, unseen):
+        return Q[a][obs[:3]] @ state_features(unseen) if linear else Q[a][obs]
+
     def stand(obs, unseen):
-        return Q[0][obs] if model is None else model.one(obs[1], unseen, obs[3]) @ REWARD[obs[0]]
+        return q(0, obs, unseen) if model is None else model.one(obs[1], unseen, obs[3]) @ REWARD[obs[0]]
 
     def greedy(obs, unseen):
-        return int(Q[1][obs] > stand(obs, unseen))
+        return int(q(1, obs, unseen) > stand(obs, unseen))
 
     def behave(obs, unseen):
         return int(rng.integers(2)) if rng.random() < eps else greedy(obs, unseen)
@@ -61,12 +77,21 @@ def train(model, seed, checkpoints, shoes, eps_min=1., omega=1.):
     for k in range(max(checkpoints)):
         eps = max(eps_min, .99995 ** k)
         r, path = play_round(shoe, behave)
-        for t, (obs, unseen, a) in enumerate(path):
+        for step, (obs, unseen, a) in enumerate(path):
             if model is not None and a == 0:
                 continue
-            y = r if t == len(path) - 1 else max(Q[1][path[t + 1][0]], stand(*path[t + 1][:2]))
-            N[a][obs] += 1
-            Q[a][obs] += (y - Q[a][obs]) / N[a][obs] ** omega
+            nxt = path[step + 1][:2] if step < len(path) - 1 else None
+            y = r if nxt is None else max(q(1, *nxt), stand(*nxt))
+            if linear:
+                x, cell = state_features(unseen), obs[:3]
+                px = P[a][cell] @ x
+                g = px / (1 + x @ px)  # Sherman-Morrison
+                Q[a][cell] += g * (y - Q[a][cell] @ x)
+                P[a][cell] -= np.outer(g, px)
+                N[a][cell] += 1
+            else:
+                N[a][obs] += 1
+                Q[a][obs] += (y - Q[a][obs]) / N[a][obs] ** omega
         if k + 1 in checkpoints:
             rl_seconds += time.perf_counter() - start
             gains, rounds = evaluate(greedy, shoes)
@@ -122,8 +147,8 @@ def tuning_models(seed):
     return {name: fit(name, *data)[0] for name in ("carte", "table", "logistique")}
 
 
-def tuning_run(name, model, params, seed):
-    curve = train(model, seed, [CHECKPOINTS[-1]], TUNING_SHOES, **params)
+def tuning_run(name, model, params, seed, linear):
+    curve = train(model, seed, [CHECKPOINTS[-1]], TUNING_SHOES, **params, linear=linear)
     return {"agent": name, **params, "seed": seed, "j": gain(curve[-1]["gains"], curve[-1]["rounds"])}
 
 
@@ -158,14 +183,17 @@ def run(output):
     tuned = dict(zip(TUNING_SEEDS, Parallel(n_jobs=len(TUNING_SEEDS))(delayed(tuning_models)(s) for s in TUNING_SEEDS),
                      strict=True))
     combos = [dict(zip(GRID, v)) for v in itertools.product(*GRID.values())]
-    tuning = Parallel(n_jobs=-1)(delayed(tuning_run)(agent, None if m is None else tuned[s][m], p, s)
-                                 for agent, m in AGENTS.items() for p in combos for s in TUNING_SEEDS)
+    def grid(linear):  # ω n'agit pas sur les moindres carrés récursifs
+        return [p for p in combos if not linear or p["omega"] == 1.]
+
+    tuning = Parallel(n_jobs=-1)(delayed(tuning_run)(agent, None if m is None else tuned[s][m], p, s, linear)
+                                 for agent, (m, linear) in AGENTS.items() for p in grid(linear) for s in TUNING_SEEDS)
     write_csv(output / "tuning.csv", tuning)
     choice = {}
-    for agent in AGENTS:
+    for agent, (_, linear) in AGENTS.items():
         means = {(p["eps_min"], p["omega"]): np.mean([t["j"] for t in tuning if t["agent"] == agent
                                                      and (t["eps_min"], t["omega"]) == (p["eps_min"], p["omega"])])
-                 for p in combos}
+                 for p in grid(linear)}
         best = max(means, key=means.get)
         choice[agent] = {"eps_min": best[0], "omega": best[1], "tuning_j": float(means[best])}
     summary["tuning"] = choice
@@ -176,8 +204,9 @@ def run(output):
     basic = evaluate(lambda obs, _: int(basic_table[obs[:3]]), EVAL_SHOES)
     jobs = [(agent, i, r) for agent in AGENTS for i in range(GROUPS) for r in (0, 1)]
     curves = Parallel(n_jobs=-1)(delayed(train)(None if m is None else models[i][m], RL_SEED + 10 * i + r,
-                                                CHECKPOINTS, EVAL_SHOES, **{k: choice[agent][k] for k in GRID})
-                                 for agent, i, r in jobs for m in [AGENTS[agent]])
+                                                CHECKPOINTS, EVAL_SHOES, **{k: choice[agent][k] for k in GRID},
+                                                linear=linear)
+                                 for agent, i, r in jobs for m, linear in [AGENTS[agent]])
     runs = {job: curve for job, curve in zip(jobs, curves, strict=True)}
     point = {(a, i, r, b): (p["gains"], p["rounds"]) for (a, i, r), c in runs.items()
              for b, p in zip(CHECKPOINTS, c, strict=True)}
@@ -203,7 +232,10 @@ def run(output):
     summary["contrasts"] = {f"{a}-{b}": {str(e): contrast(a, b, e) for e in CHECKPOINTS}
                             for a, b in (("hybride_logistique", "standard"), ("hybride_logistique", "hybride_table"),
                                          ("hybride_logistique", "hybride_carte"), ("hybride_table", "standard"),
-                                         ("hybride_carte", "standard"))}
+                                         ("hybride_carte", "standard"), ("standard_lineaire", "standard"),
+                                         ("hybride_logistique", "standard_lineaire"),
+                                         ("hybride_logistique_lineaire", "hybride_logistique"),
+                                         ("hybride_logistique_lineaire", "standard_lineaire"))}
     summary["rl_seconds_final"] = {a: interval([runs[a, i, r][-1]["rl_seconds"] for i in range(GROUPS)
                                                  for r in (0, 1)]) for a in AGENTS}
     dump(output / "summary.json", summary)
@@ -211,6 +243,8 @@ def run(output):
 
 
 if __name__ == "__main__":
+    # Passer par le module importé : joblib transmet alors aux processus des fonctions importables.
+    from src.shoe.campaign import run as run_campaign
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
-    run(parser.parse_args().output)
+    run_campaign(parser.parse_args().output)

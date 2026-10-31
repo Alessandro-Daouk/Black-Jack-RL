@@ -7,10 +7,9 @@ part à partir de mains de croupier simulées, lui fait atteindre en **10 000 pa
 qualité que le Q-learning standard atteint en 40 000, et le place devant six autres
 algorithmes qui apprennent en jouant. Cet avantage survit au coût de l'estimation, mais
 il s'inverse si l'estimation est trop imprécise et que l'apprentissage dure assez
-longtemps. En sabot fini, où la loi du croupier dépend des cartes déjà sorties, un modèle
-supervisé sur la composition du sabot donne à l'agent une information que son état ne
-contient pas, et l'hybride garde alors un avantage durable que les modèles plus pauvres
-perdent.
+longtemps. En sabot fini, où la loi du croupier dépend des cartes déjà sorties, une
+référence à information égale tranche : fixer « rester » **accélère** l'apprentissage,
+mais le **niveau final** dépend de l'information que l'agent représente.
 
 ## Le problème
 
@@ -106,17 +105,21 @@ seule décision fausse de la stratégie optimale, et 2,1 % de l'avantage de la m
    de croupier permettent d'estimer la loi des cartes, et donc de calculer HIT sans
    jouer. Cette référence fait mieux que l'hybride après 100 000 parties
    (+0,00069 [+0,00057 ; +0,00081]). L'hybride n'est intéressant que lorsque seule
-   l'action terminale peut être modélisée, ou quand son modèle exploite une information
-   que l'état ne contient pas : c'est le cas du sabot fini (point 7).
+   l'action terminale peut être modélisée, ou quand les parties coûtent cher.
 7. **En sabot fini, le modèle supervisé compte enfin.** Avec un seul jeu de 52 cartes,
    la loi du croupier dépend des cartes déjà sorties. Une régression logistique sur la
    composition du sabot estime cette loi bien mieux qu'une table par classe de compte ou
    que le gradient boosting (KL vers la loi vraie : 0,0046 contre 0,019 et 0,010 à
-   100 000 mains). Après 3 millions de parties, l'hybride qui l'utilise bat le Q-learning
-   standard et les hybrides à table de +0,0009 par manche [+0,0004 ; +0,0014], dans les
-   18 paires, alors que les hybrides à table ont rejoint le standard. En temps, ce gain
-   n'est pas établi : l'ajustement de la logistique coûte plus que tout l'apprentissage
-   du standard.
+   100 000 mains).
+8. **À information égale, la séparation accélère et l'information fixe le niveau.** Un
+   Q-learning linéaire dans la composition du sabot voit la même information que la
+   logistique. Il démarre lentement, puis dépasse l'hybride à Q_HIT tabulaire
+   (+0,0028 par manche à 3 millions de parties, 18 paires sur 18) : l'avantage de cet
+   hybride venait de l'information, pas de la séparation. L'hybride dont Q_HIT est aussi
+   linéaire devance largement le standard linéaire (+0,040 à 10 000 parties, +0,0072 à
+   200 000), puis le rejoint à 3 millions (+0,0002, intervalle inclus dans ±0,001) :
+   exactement le profil du paquet infini. Le meilleur agent gagne +0,0053 par manche sur
+   la stratégie de base, sans changer la mise.
 
 ![Sabot fini : qualité du modèle 1 et gain des agents](results/5_sabot_fini/shoe.png)
 
@@ -125,7 +128,7 @@ seule décision fausse de la stratégie optimale, et 2,1 % de l'avantage de la m
 *Différence hybride − standard selon le nombre de mains du croupier et le budget de
 parties (9 jeux) ; l'étoile signale un intervalle à 95 % qui exclut zéro.*
 
-Les points 5 à 7 viennent d'analyses exploratoires, faites après la campagne principale. Le détail de tous
+Les points 5 à 8 viennent d'analyses exploratoires, faites après la campagne principale. Le détail de tous
 les résultats, les coûts mesurés et les ablations sont dans le
 [rapport scientifique](docs/rapport_scientifique.md).
 
