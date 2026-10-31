@@ -30,3 +30,6 @@ data/generated/
 # Copies locales des expériences publiées
 models/reproduction/
 results/reproduction/
+
+# Captures des tests de navigateur
+.playwright-mcp/

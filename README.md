@@ -46,6 +46,13 @@ uv run --locked python -m src.play --state 15 10 0                 # une décisi
 
 Avec 15 points face à un 10, rester perd en moyenne 0,583 et tirer 0,542 : l'agent tire.
 
+**Jouer contre les modèles.** Ouvrez `web/index.html` dans un navigateur (double-clic, sans
+installation ni serveur). Vous jouez une main ; l'agent hybride livré, un Q-learning standard et
+la stratégie optimale jouent ensuite la même donne avec les mêmes cartes. Le bouton Conseil
+montre ce que chaque modèle ferait et pourquoi. Raccourcis : H tirer, S rester, C conseil,
+Espace nouvelle donne. Après un réentraînement, `uv run --locked python -m src.export_web`
+régénère `web/models.js`.
+
 ```python
 from src.hybrid_agent import load_agent
 agent = load_agent()

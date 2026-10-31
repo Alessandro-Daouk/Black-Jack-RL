@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Blackjack · Jouez contre les modèles</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="toolbar">
+    <span class="brand">Blackjack</span>
+    <span class="subtitle">contre les modèles entraînés</span>
+    <span class="spacer"></span>
+    <span class="pill" id="round-count">Aucune donne</span>
+    <button class="tool" id="open-rules" type="button">Règles</button>
+  </header>
+
+  <div class="workspace">
+    <main class="table" aria-label="Table de jeu">
+      <section class="zone">
+        <div class="zone-head"><span class="label">Croupier</span><span class="total" id="dealer-total"></span></div>
+        <div class="cards" id="dealer-cards"></div>
+      </section>
+
+      <p class="status" id="status" aria-live="polite">Appuyez sur Espace ou « Nouvelle donne » pour commencer.</p>
+
+      <section class="zone">
+        <div class="cards" id="player-cards"></div>
+        <div class="zone-head"><span class="label">Vous</span><span class="total" id="player-total"></span></div>
+      </section>
+
+      <div class="controls">
+        <div class="actions">
+          <button class="btn primary" id="hit" type="button" disabled>Tirer <kbd>H</kbd></button>
+          <button class="btn secondary" id="stand" type="button" disabled>Rester <kbd>S</kbd></button>
+          <button class="btn ghost" id="hint" type="button" disabled aria-expanded="false" aria-controls="hint-panel">Conseil <kbd>C</kbd></button>
+          <button class="btn primary" id="deal" type="button">Nouvelle donne <kbd>Espace</kbd></button>
+        </div>
+        <div class="hint" id="hint-panel" hidden></div>
+      </div>
+    </main>
+
+    <aside class="sidebar">
+      <h2 class="side-title">Adversaires <span>même donne, mêmes cartes</span></h2>
+      <div class="seats" id="seats"></div>
+
+      <section class="scores" aria-label="Scores">
+        <div class="scores-head">
+          <h2 class="side-title">Scores</h2>
+          <button class="tool" id="reset" type="button">Remettre à zéro</button>
+        </div>
+        <table>
+          <thead><tr><th scope="col">Joueur</th><th scope="col">Cumul</th><th scope="col">Moyenne</th><th scope="col" title="Gain exact attendu par partie, calculé sans hasard">Exact</th></tr></thead>
+          <tbody id="score-rows"></tbody>
+        </table>
+        <p class="note" id="score-note"></p>
+      </section>
+    </aside>
+  </div>
+
+  <dialog id="rules" aria-labelledby="rules-title">
+    <h2 id="rules-title">Règles</h2>
+    <ul>
+      <li>Approchez 21 sans le dépasser. As = 1 ou 11, figures = 10.</li>
+      <li>Le croupier tire jusqu'à 17 et reste sur 17, même avec un as.</li>
+      <li>Paquet infini : chaque carte est tirée au hasard, indépendamment des précédentes.</li>
+      <li>Gain +1, égalité 0, perte −1. Un blackjack est payé comme une victoire simple.</li>
+      <li>Ni double, ni partage, ni assurance.</li>
+      <li>Les modèles jouent la même donne que vous : mêmes deux cartes, mêmes cartes tirées, même croupier.</li>
+      <li>Même la stratégie optimale perd en moyenne 4,66 centimes par euro misé.</li>
+      <li>Raccourcis : H tirer, S rester, C conseil, Espace nouvelle donne.</li>
+    </ul>
+    <form method="dialog"><button class="btn primary" type="submit">Compris</button></form>
+  </dialog>
+
+  <script src="models.js"></script>
+  <script src="game.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
