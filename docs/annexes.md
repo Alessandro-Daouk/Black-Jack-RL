@@ -438,4 +438,5 @@ composition. Un seul jeu de cartes, sans double ni partage.
 | §5.7, annexe F | Cartes uniformes (E6) | `src.audit.variant` | `results/3_cartes_uniformes/` |
 | §5.3, §5.7, annexe G | Planification, Double Q, réglage sans privilège (E8) | `src.audit.complements` | `results/4_autres_methodes/planification_double_q/` |
 | §5.2–5.3, annexe B | Expected SARSA, Monte-Carlo, Dyna-Q, RL à modèle appris, variance (E9) | `src.audit.baselines` | `results/4_autres_methodes/autres_algorithmes/` |
+| §6.5 | Confirmation préenregistrée du sabot fini | `src.shoe.confirm` | `results/6_confirmation_sabot/` |
 | §6, annexe I | Sabot fini (E10) | `src.shoe.campaign` | `results/5_sabot_fini/` |

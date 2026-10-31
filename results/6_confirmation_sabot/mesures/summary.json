@@ -1,0 +1,73 @@
+{
+  "verdicts": {
+    "H1": {
+      "enonce": "À information égale, fixer STAND accélère l'apprentissage",
+      "contraste": "hybride_logistique_lineaire - standard_lineaire",
+      "mean": 0.007343709014948265,
+      "ci": [
+        0.006514697263511664,
+        0.008172720766384867
+      ],
+      "niveau": 0.9875,
+      "evaluation_mc_se": 0.00017934450907935838,
+      "critere": "borne inférieure de l'IC > 0",
+      "confirmee": true
+    },
+    "H2": {
+      "enonce": "À information égale, l'hybride est rejoint à long terme",
+      "contraste": "hybride_logistique_lineaire - standard_lineaire",
+      "mean": 0.0004002480110839367,
+      "ci": [
+        5.065363594046392e-05,
+        0.0007498423862274095
+      ],
+      "niveau": 0.9875,
+      "evaluation_mc_se": 9.093694193320643e-05,
+      "critere": "IC inclus dans [-0.001 ; +0.001]",
+      "confirmee": true
+    },
+    "H3": {
+      "enonce": "Un Q-learning qui voit la composition partout dépasse l'hybride à Q_HIT tabulaire",
+      "contraste": "standard_lineaire - hybride_logistique",
+      "mean": 0.0020347016351832258,
+      "ci": [
+        0.0011521264869477359,
+        0.0029172767834187156
+      ],
+      "niveau": 0.9875,
+      "evaluation_mc_se": 0.0002565890261626015,
+      "critere": "borne inférieure de l'IC > 0",
+      "confirmee": true
+    },
+    "H4": {
+      "enonce": "La logistique estime mieux la loi du croupier que la table par classe de compte",
+      "contraste": "KL(table) - KL(logistique), 100 000 mains",
+      "mean": 0.014432327366610194,
+      "ci": [
+        0.01389086605967739,
+        0.014973788673542997
+      ],
+      "niveau": 0.9875,
+      "evaluation_mc_se": 0.0,
+      "critere": "borne inférieure de l'IC > 0",
+      "confirmee": true
+    }
+  },
+  "agents": {
+    "standard_lineaire": {
+      "10000": -0.1191318905184735,
+      "200000": -0.04932742266166198,
+      "3000000": -0.03843495933924326
+    },
+    "hybride_logistique": {
+      "10000": -0.062352167786539375,
+      "200000": -0.0425165058351342,
+      "3000000": -0.04046966097442648
+    },
+    "hybride_logistique_lineaire": {
+      "10000": -0.07908384586291754,
+      "200000": -0.04198371364671371,
+      "3000000": -0.03803471132815932
+    }
+  }
+}

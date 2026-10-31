@@ -58,6 +58,7 @@ est autonome :
 uv run --locked python -m src.audit.baselines --output results/reproduction/baselines
 uv run --locked python -m src.shoe.campaign --output results/reproduction/shoe
 uv run --locked python -m src.shoe.figures --input results/reproduction/shoe
+uv run --locked python -m src.shoe.confirm --plan results/6_confirmation_sabot/plan.json --output results/reproduction/confirmation
 ```
 
 Ces deux campagnes utilisent tous les cœurs disponibles ; leurs gains sont déterministes,
@@ -106,7 +107,8 @@ exécution réécrit les fichiers de `results/1_premiere_campagne/q_learning/` e
 | Analyse et figures | 6 s | |
 | Références RL et variance (E9, 566 entraînements) | 4,3 min | tous les cœurs, machine B |
 | Sabot fini (E10 : 144 modèles 1, 90 réglages, 108 agents de 3 M parties) | environ 45 min de calcul | tous les cœurs, machine B ; l'exécution archivée a été interrompue par des mises en veille |
-| Tests | environ 12 s | 129 tests |
+| Confirmation du sabot fini (18 modèles 1, 54 agents de 3 M parties) | 15,6 min | tous les cœurs, machine B |
+| Tests | environ 18 s | 130 tests |
 
 Machine B : Apple M5 Pro (15 cœurs), 24 Gio, macOS 26.6, mêmes versions de bibliothèques
 (`uv.lock`). Les campagnes précédentes ont été exécutées sur la machine de référence

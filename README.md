@@ -119,7 +119,8 @@ seule décision fausse de la stratégie optimale, et 2,1 % de l'avantage de la m
    linéaire devance largement le standard linéaire (+0,040 à 10 000 parties, +0,0072 à
    200 000), puis le rejoint à 3 millions (+0,0002, intervalle inclus dans ±0,001) :
    exactement le profil du paquet infini. Le meilleur agent gagne +0,0053 par manche sur
-   la stratégie de base, sans changer la mise.
+   la stratégie de base, sans changer la mise. Ces conclusions ont été **confirmées** sur
+   des données et des graines neuves, selon un plan figé et commité avant le lancement.
 
 ![Sabot fini : qualité du modèle 1 et gain des agents](results/5_sabot_fini/shoe.png)
 
@@ -128,7 +129,7 @@ seule décision fausse de la stratégie optimale, et 2,1 % de l'avantage de la m
 *Différence hybride − standard selon le nombre de mains du croupier et le budget de
 parties (9 jeux) ; l'étoile signale un intervalle à 95 % qui exclut zéro.*
 
-Les points 5 à 8 viennent d'analyses exploratoires, faites après la campagne principale. Le détail de tous
+Les points 5 à 7 viennent d'analyses exploratoires ; le point 8 a été confirmé, faites après la campagne principale. Le détail de tous
 les résultats, les coûts mesurés et les ablations sont dans le
 [rapport scientifique](docs/rapport_scientifique.md).
 
@@ -169,7 +170,8 @@ results/
 ├── 2_campagne_principale/    plan figé, entraînements, analyse, diagnostics, réplication
 ├── 3_cartes_uniformes/       robustesse à une autre loi des cartes
 ├── 4_autres_methodes/        planification, Double Q, Expected SARSA, Monte-Carlo, Dyna-Q
-└── 5_sabot_fini/             extension où le modèle 1 utilise la composition du sabot
+├── 5_sabot_fini/             extension où le modèle 1 utilise la composition du sabot
+└── 6_confirmation_sabot/     plan figé, puis mesures de confirmation du sabot fini
 
 models/
 ├── supervised/               modèle 1 livré (régression logistique) et ses probabilités

@@ -12,6 +12,7 @@ redonne les mêmes chiffres, seules les durées changent. Les commandes complèt
 | [3_cartes_uniformes/](3_cartes_uniformes/) | L'avantage tient-il avec une autre loi des cartes ? | §5.7, annexe F | `src.audit.variant` |
 | [4_autres_methodes/](4_autres_methodes/) | L'hybride bat-il les autres algorithmes et la planification ? | §5.2, §5.3, §5.7 | `src.audit.complements`, `src.audit.baselines` |
 | [5_sabot_fini/](5_sabot_fini/) | Le modèle 1 compte-t-il quand il voit ce que l'état RL ne voit pas, et à information égale ? | §6 | `src.shoe.campaign` |
+| [6_confirmation_sabot/](6_confirmation_sabot/) | Les conclusions du sabot fini tiennent-elles sur des graines neuves, selon un plan figé ? | §6.5 | `src.shoe.confirm` |
 
 ## 1_premiere_campagne — les premiers modèles
 

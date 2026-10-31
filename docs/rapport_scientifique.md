@@ -20,7 +20,8 @@ oracle exact qui calcule le gain espéré de chaque politique sans bruit de simu
 - En sabot fini, la loi du croupier dépend des cartes déjà sorties : la régression
   logistique sur la composition du sabot bat alors les tables et le gradient boosting. Face
   à un Q-learning linéaire qui reçoit la même information, l'hybride apprend beaucoup plus
-  vite (+0,040 par manche à 10 000 parties) puis est rejoint.
+  vite (+0,040 par manche à 10 000 parties) puis est rejoint. Ces conclusions ont été
+  confirmées sur des données et des graines neuves, selon un plan figé avant le lancement.
 
 **Fixer STAND accélère l'apprentissage ; le niveau final dépend de l'information que l'agent
 représente.** Chaque conclusion porte une étiquette : **[démontré]** sous les hypothèses
@@ -51,7 +52,8 @@ persiste-t-il quand on compte le coût d'obtention de l'estimation ?
    l'hybride perd (§5.4–5.5).
 5. Une extension en sabot fini où le choix de l'estimateur supervisé compte, avec une
    référence à information égale qui sépare l'effet de l'information de celui de la
-   séparation entre STAND et HIT (§6).
+   séparation entre STAND et HIT, une borne théorique qui explique l'ordre des agents, et une
+   confirmation préenregistrée (§6).
 
 Combiner un modèle partiel et un apprentissage de valeurs n'est pas nouveau (Dyna,
 connaissances partielles du modèle, après-états) : aucune priorité n'est revendiquée.
@@ -176,7 +178,8 @@ après un pilote sur des graines de validation qui a fixé le nombre de jeux à 
   réellement distribuées.
 - **Analyses exploratoires**, ajoutées après la campagne principale et signalées comme
   telles : planification, Double Q et autres références (§5.3, §5.7), décomposition de
-  variance (§5.2), cartes uniformes (§5.7) et sabot fini (§6).
+  variance (§5.2), cartes uniformes (§5.7) et sabot fini (§6). Les conclusions du sabot fini
+  ont ensuite été confirmées selon un plan figé (§6.5).
 
 Les données de test ne servent qu'à documenter la qualité des estimateurs ; aucun résultat de
 test n'a servi à choisir un modèle ou un hyperparamètre.
@@ -401,6 +404,65 @@ Les agents linéaires coûtent environ 1,5 fois leurs équivalents tabulaires. *
 l'avantage de l'hybride n'est donc pas établi en sabot fini.** Ces temps, mesurés sous charge
 sur une autre machine que ceux du §5.5, sont indicatifs.
 
+### 6.4 Lecture théorique
+
+**Hypothèses.** Dans une manche, l'état d'information x = (main du joueur, carte visible,
+effectifs des cartes non vues) est markovien : la carte cachée et les tirages suivants sont
+une permutation aléatoire des cartes non vues. On néglige l'effet des décisions sur la
+composition des manches suivantes, la loi des sabots en début de manche étant fixée. Notons
+Q*_H(x) et V(x) les valeurs de HIT et de STAND sous la politique optimale à information
+complète, et m(x) = |Q*_H(x) − V(x)| la marge de décision.
+
+**Proposition [démontré].** Toute politique π qui tire si et seulement si Ĥ(x) > Ŝ(x), quelle
+que soit l'origine des estimations (table, régression linéaire, modèle supervisé), vérifie
+
+J* − J(π) = E_{d_π}[ m(x) 1{π(x) ≠ π*(x)} ] ≤ E_{d_π}[ m(x) 1{m(x) ≤ e_H(x) + e_S(x)} ] ≤ E_{d_π}[ e_H(x) + e_S(x) ],
+
+où e_H = |Ĥ − Q*_H|, e_S = |Ŝ − V| et d_π est l'occupation des états pendant une manche.
+
+*Démonstration.* L'égalité est l'identité de différence de performance (modele2.pdf,
+proposition 5), valable dans tout MDP épisodique fini, ce qu'est une manche sur les états
+d'information ; à deux actions, le désavantage vaut m(x) si π s'écarte de π*, 0 sinon. Si
+π(x) ≠ π*(x), les écarts Ĥ − Ŝ et Q*_H − V sont de signes opposés, donc
+m(x) ≤ |(Ĥ − Ŝ) − (Q*_H − V)| ≤ e_H(x) + e_S(x). □
+
+**Conséquences.**
+
+- Le regret d'un agent est gouverné par les erreurs de ses deux estimations, pondérées par
+  l'occupation. Une estimation qui ne dépend que d'une compression φ(x) de l'état ne peut pas
+  suivre V ou Q*_H à l'intérieur d'une classe : si V varie d'une amplitude r sur une classe,
+  l'erreur atteint au moins r/2 en un de ses états, quel que soit le budget.
+- Pour l'hybride, e_S = |V̂ − V| ≤ 2 TV(P̂, P) en chaque état, comme au §3.4 : son erreur sur
+  STAND est celle du modèle 1, mesurée au §6.2 (0,022 en moyenne pour la logistique, 0,041 pour
+  la table, 0,045 pour la carte seule). Son erreur sur HIT reste celle de Q_HIT : la
+  compression en classes de compte pour l'hybride tabulaire, l'approximation linéaire pour
+  l'hybride linéaire. C'est l'ordre observé au §6.3 : remplacer l'estimation de STAND accélère,
+  mais le plancher de l'agent dépend de l'estimation la moins précise.
+- **[non démontré]** Aucune convergence n'est garantie ici : le Q-learning hors politique avec
+  un état comprimé ou une approximation linéaire peut ne pas converger, voire diverger en
+  général (Baird, 1995). La borne n'est pas non plus calculable : Q*_H à information complète
+  n'a pas été résolu. Elle explique l'ordre des agents, pas leur niveau.
+
+### 6.5 Confirmation préenregistrée
+
+Les conclusions des §6.2 et §6.3 ont été testées une seconde fois selon un plan figé et commité
+avant tout lancement ([plan.json](../results/6_confirmation_sabot/plan.json)) : 9 nouveaux jeux
+de données, nouvelles graines RL, 300 000 nouveaux sabots d'évaluation, hyperparamètres déjà
+retenus sans nouveau réglage, quatre hypothèses et leurs critères fixés d'avance. Chaque
+intervalle est à 98,75 % (Bonferroni sur 4 hypothèses), erreur d'évaluation incluse.
+
+| Hypothèse | Mesure | Critère | Verdict |
+|---|---:|---|---|
+| H1. À information égale, fixer STAND accélère (hybride logistique linéaire − standard linéaire, 200 000 parties) | +0,0073 [+0,0065 ; +0,0082] | borne inférieure > 0 | confirmée |
+| H2. À information égale, l'hybride est rejoint (même contraste, 3 millions) | +0,0004 [+0,0001 ; +0,0008] | IC dans ±0,001 | confirmée |
+| H3. Voir la composition partout dépasse l'hybride à Q_HIT tabulaire (standard linéaire − hybride logistique, 3 millions) | +0,0020 [+0,0012 ; +0,0029] | borne inférieure > 0 | confirmée |
+| H4. La logistique estime mieux la loi du croupier (KL table − KL logistique, 100 000 mains) | +0,0144 [+0,0139 ; +0,0150] | borne inférieure > 0 | confirmée |
+
+**[observé, confirmé]** Les quatre hypothèses sont confirmées, avec des effets proches de ceux
+de l'analyse exploratoire (+0,0072, +0,0002, +0,0028 et +0,0143). Pour H2, l'équivalence à
+±0,001 est établie, mais l'intervalle exclut zéro de justesse : il reste à 3 millions de
+parties un petit avantage de l'hybride, sous le seuil pratique.
+
 ## 7. Discussion
 
 **Réponse à la question centrale.** Une estimation préalable de STAND améliore nettement
@@ -432,15 +494,15 @@ fixé par l'information.
 
 - **Validité externe.** Trois variantes d'un même jeu à deux actions, sans double ni partage,
   à mise fixe ; aucune généralisation à d'autres MDP n'est revendiquée.
-- **Analyses exploratoires.** Les §5.3, §5.7 et §6 ont été ajoutés après la campagne
-  principale, sur 9 jeux, sans correction de multiplicité : ce sont des pistes à confirmer.
-  En sabot fini, la forme des agents linéaires a été choisie après un essai préliminaire, et
-  le standard linéaire n'a pas convergé à 3 millions de parties.
+- **Analyses exploratoires.** Les §5.3 et §5.7 ont été ajoutés après la campagne principale,
+  sur 9 jeux, sans correction de multiplicité : ce sont des pistes. Les conclusions du sabot
+  fini sont confirmées (§6.5), mais la forme des agents linéaires a été choisie après un essai
+  préliminaire, et le standard linéaire n'a pas convergé à 3 millions de parties.
 - **Hyperparamètres.** Réglages sur trois graines ; la décroissance de ε n'a pas été réglée.
 - **Temps.** Une machine et une implémentation par campagne ; les ratios temps main/partie
   dépendent du code. Les cartes sont une unité plus stable.
-- **Théorie.** Les garanties du §3.4 ne couvrent ni l'état non markovien du sabot fini ni
-  l'approximation linéaire.
+- **Théorie.** En sabot fini, seule la borne du §6.4 est démontrée ; la convergence des agents
+  tabulaires sur un état comprimé et des agents linéaires ne l'est pas.
 
 ## 9. Conclusion
 

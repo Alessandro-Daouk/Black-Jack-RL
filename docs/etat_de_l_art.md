@@ -102,6 +102,10 @@ discutée dans le [rapport](rapport_scientifique.md#7-discussion).
     National Academy of Sciences 47(1), 110–112.
     [DOI](https://doi.org/10.1073/pnas.47.1.110). Origine du comptage des cartes ; le
     livre *Beat the Dealer* (Blaisdell, 1962) en est la version développée.
+18. **L. Baird (1995).** *Residual Algorithms: Reinforcement Learning with Function
+    Approximation*, ICML, 30–37. [Notice](https://mlanthology.org/icml/1995/iii1995icml-residual).
+    Exemple de divergence du Q-learning hors politique avec approximation linéaire ; cité
+    pour l'absence de garantie de convergence en sabot fini (rapport §6.4).
 
 Le résultat de risque lissé en (K−1)/(2m) est démontré dans `modele1.pdf` ; nous
 n'avons pas pu vérifier dans une source primaire l'énoncé exact attribué parfois à

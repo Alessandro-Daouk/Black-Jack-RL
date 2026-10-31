@@ -56,3 +56,4 @@ pour que la réplication de la première campagne porte sur le code d'origine.
 | `models.py` | Quatre modèles 1 (carte, table, logistique, boosting) et variables des agents linéaires |
 | `campaign.py` | Modèles 1, réglage, agents tabulaires et linéaires → `results/5_sabot_fini/` |
 | `figures.py` | Figure du §6 |
+| `confirm.py` | Confirmation selon le plan figé → `results/6_confirmation_sabot/mesures/` |
