@@ -48,10 +48,13 @@ Avec 15 points face à un 10, rester perd en moyenne 0,583 et tirer 0,542 : l'ag
 
 **Jouer contre les modèles.** Ouvrez `web/index.html` dans un navigateur (double-clic, sans
 installation ni serveur). Vous jouez une main ; l'agent hybride livré, un Q-learning standard et
-la stratégie optimale jouent ensuite la même donne avec les mêmes cartes. Le bouton Conseil
-montre ce que chaque modèle ferait et pourquoi. Raccourcis : H tirer, S rester, C conseil,
-Espace nouvelle donne. Après un réentraînement, `uv run --locked python -m src.export_web`
-régénère `web/models.js`.
+la stratégie optimale jouent ensuite la même donne avec les mêmes cartes. En mode **sabot
+fini**, un jeu de 52 cartes continue d'une donne à l'autre ; l'hybride linéaire et le
+Q-learning linéaire de la campagne lisent sa composition, face à la stratégie de base. Le
+bouton Conseil montre ce que chaque modèle ferait et pourquoi. Raccourcis : H tirer, S rester,
+C conseil, Espace nouvelle donne. Après un réentraînement, `uv run --locked python -m
+src.export_web` régénère `web/models.js`, et l'option `--sabot` régénère aussi
+`web/models_shoe.js` (quelques minutes).
 
 ```python
 from src.hybrid_agent import load_agent

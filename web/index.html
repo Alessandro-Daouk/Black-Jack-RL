@@ -12,6 +12,11 @@
     <span class="brand">Blackjack</span>
     <span class="subtitle">contre les modèles entraînés</span>
     <span class="spacer"></span>
+    <div class="segmented" role="group" aria-label="Mode de jeu">
+      <button type="button" data-mode="infini" aria-pressed="true">Paquet infini</button>
+      <button type="button" data-mode="sabot" aria-pressed="false">Sabot fini</button>
+    </div>
+    <span class="spacer"></span>
     <span class="pill" id="round-count">Aucune donne</span>
     <button class="tool" id="open-rules" type="button">Règles</button>
   </header>
@@ -23,7 +28,10 @@
         <div class="cards" id="dealer-cards"></div>
       </section>
 
-      <p class="status" id="status" aria-live="polite">Appuyez sur Espace ou « Nouvelle donne » pour commencer.</p>
+      <div class="middle">
+        <p class="status" id="status" aria-live="polite">Appuyez sur Espace ou « Nouvelle donne » pour commencer.</p>
+        <p class="shoe-info" id="shoe-info"></p>
+      </div>
 
       <section class="zone">
         <div class="cards" id="player-cards"></div>
@@ -51,7 +59,7 @@
           <button class="tool" id="reset" type="button">Remettre à zéro</button>
         </div>
         <table>
-          <thead><tr><th scope="col">Joueur</th><th scope="col">Cumul</th><th scope="col">Moyenne</th><th scope="col" title="Gain exact attendu par partie, calculé sans hasard">Exact</th></tr></thead>
+          <thead><tr><th scope="col">Joueur</th><th scope="col">Cumul</th><th scope="col">Moyenne</th><th scope="col" id="gain-head" title="Gain attendu par partie">Exact</th></tr></thead>
           <tbody id="score-rows"></tbody>
         </table>
         <p class="note" id="score-note"></p>
@@ -69,13 +77,17 @@
       <li>Ni double, ni partage, ni assurance.</li>
       <li>Les modèles jouent la même donne que vous : mêmes deux cartes, mêmes cartes tirées, même croupier.</li>
       <li>Même la stratégie optimale perd en moyenne 4,66 centimes par euro misé.</li>
+      <li><strong>Sabot fini</strong> : un jeu de 52 cartes, rebattu quand il en reste moins de 20. Les cartes sorties
+        changent les chances ; le compte vrai Hi-Lo les résume. Chaque modèle rejoue votre donne avec le même sabot.</li>
       <li>Raccourcis : H tirer, S rester, C conseil, Espace nouvelle donne.</li>
     </ul>
     <form method="dialog"><button class="btn primary" type="submit">Compris</button></form>
   </dialog>
 
   <script src="models.js"></script>
+  <script src="models_shoe.js"></script>
   <script src="game.js"></script>
+  <script src="shoe.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

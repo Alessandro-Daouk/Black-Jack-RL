@@ -31,7 +31,7 @@ pour que la réplication de la première campagne porte sur le code d'origine.
 |---|---|
 | `hybrid_agent.py` | Agent hybride : charge le modèle 1 et Q_HIT, décide |
 | `play.py` | Démonstration en ligne de commande |
-| `export_web.py` | Exporte les modèles vers l'application web `web/` (jouer contre les modèles) |
+| `export_web.py` | Exporte les modèles vers l'application web `web/` ; `--sabot` réentraîne et exporte aussi les agents du sabot fini |
 | `train_hybrid.py`, `evaluate_hybrid.py` | Entraîner et évaluer un agent hybride |
 | `compare_hybrid.py`, `compare_frequencies.py`, `experiment_utils.py` | Comparaisons de la première campagne |
 

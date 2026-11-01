@@ -16,6 +16,7 @@ def test_exported_models_are_up_to_date():
 @pytest.mark.skipif(shutil.which("node") is None, reason="Node.js absent")
 def test_game_rules_in_javascript():
     # dont : le gain simulé de chaque modèle en JavaScript retrouve son gain exact calculé en Python
-    result = subprocess.run(["node", "--test", "web/game.test.js"], cwd=ROOT, capture_output=True, text=True,
+    # et, en sabot fini, les agents donnent en JavaScript les valeurs calculées en Python
+    result = subprocess.run(["node", "--test", "web/game.test.js", "web/shoe.test.js"], cwd=ROOT, capture_output=True, text=True,
                             encoding="utf-8")
     assert result.returncode == 0, result.stdout + result.stderr

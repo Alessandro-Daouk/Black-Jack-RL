@@ -44,7 +44,7 @@ AGENTS = {"standard": (None, False), "standard_lineaire": (None, True), "hybride
           "hybride_logistique_lineaire": ("logistique", True)}
 
 
-def train(model, seed, checkpoints, shoes, eps_min=1., omega=1., linear=False):
+def train(model, seed, checkpoints, shoes, eps_min=1., omega=1., linear=False, return_q=False):
     """model=None : Q-learning standard. Sinon hybride : Q_HIT appris, STAND = modèle 1 sur les cartes non vues.
 
     linear=True : au lieu d'une case par (total, carte, as, classe de compte), chaque (total, carte, as)
@@ -97,7 +97,7 @@ def train(model, seed, checkpoints, shoes, eps_min=1., omega=1., linear=False):
             gains, rounds = evaluate(greedy, shoes)
             curve.append({"episodes": k + 1, "rl_seconds": rl_seconds, "gains": gains, "rounds": rounds})
             start = time.perf_counter()
-    return curve
+    return (curve, Q) if return_q else curve  # Q : table apprise, exportée pour l'application web
 
 
 def gain(g, n):

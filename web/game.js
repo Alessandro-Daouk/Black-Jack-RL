@@ -1,5 +1,7 @@
 // Logique du jeu, sans interface : règles de Blackjack-v1 (Gymnasium), celles de l'entraînement.
 // Paquet infini, croupier qui reste sur 17 (même souple), blackjack payé 1:1, ni double ni partage.
+// Portée propre : dans le navigateur, seul l'objet `game` devient global.
+(function () {
 "use strict";
 
 const SUITS = ["♠", "♥", "♦", "♣"];
@@ -70,6 +72,7 @@ function outcome(seat, round) {
   return player === dealer ? 0 : -1;
 }
 
-const game = { drawCard, handValue, newRound, newSeat, deal, hit, stand, observation, advice,
+const game = { RANKS, SUITS, drawCard, handValue, newRound, newSeat, deal, hit, stand, observation, advice,
                playModel, playDealer, outcome };
-if (typeof module !== "undefined") module.exports = game;
+if (typeof module !== "undefined") module.exports = game; else window.game = game;
+})();
