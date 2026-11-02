@@ -20,7 +20,15 @@ notebook = ["ipykernel>=7.4,<8"]
 [dependency-groups]
 dev = [
     "pytest>=8,<10",
+    "ruff>=0.15,<0.16",
 ]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+# erreurs réelles seulement (noms indéfinis, imports inutiles, syntaxe), pas le style
+select = ["E9", "F"]
 
 [tool.uv]
 package = false

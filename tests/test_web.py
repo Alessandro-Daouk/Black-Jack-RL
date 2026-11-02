@@ -20,3 +20,6 @@ def test_game_rules_in_javascript():
     result = subprocess.run(["node", "--test", "web/game.test.js", "web/shoe.test.js"], cwd=ROOT, capture_output=True, text=True,
                             encoding="utf-8")
     assert result.returncode == 0, result.stdout + result.stderr
+    # l'interface n'a pas de test unitaire : au moins vérifier qu'elle se lit
+    syntax = subprocess.run(["node", "--check", "web/app.js"], cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
+    assert syntax.returncode == 0, syntax.stderr

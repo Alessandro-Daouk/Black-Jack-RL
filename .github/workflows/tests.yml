@@ -23,6 +23,7 @@ jobs:
           version: "0.13.6"
           python-version: "3.12.7"
       - run: uv sync --locked
+      - run: uv run --locked ruff check src tests scripts
       - run: uv run --locked pytest -q
       - run: uv run --locked python -m src.play --state 15 10 0
       - run: uv run --locked python -m src.play --games 5 --seed 2030 --trace
