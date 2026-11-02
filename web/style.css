@@ -90,6 +90,13 @@ body { display: flex; flex-direction: column; overflow: hidden; user-select: non
 .shoe-info { margin: 0; font-size: 13px; color: var(--faint); font-variant-numeric: tabular-nums; min-height: 18px; }
 .status strong { color: var(--text); font-weight: 600; }
 
+.composition { display: flex; gap: 6px; align-items: flex-end; height: 64px; }
+.composition .col { display: grid; justify-items: center; gap: 4px; }
+.composition .track { position: relative; width: 14px; height: 44px; background: rgba(255, 255, 255, 0.06); border-radius: 4px; overflow: hidden; }
+.composition .fill { position: absolute; left: 0; right: 0; bottom: 0; background: var(--faint); border-radius: 4px; transition: height 0.3s ease; }
+.composition .fill.rich { background: var(--blue); }
+.composition .mark { position: absolute; left: -2px; right: -2px; height: 2px; background: var(--muted); }
+.composition span { font-size: 10px; color: var(--faint); }
 .controls { display: grid; gap: 14px; justify-items: center; width: 100%; max-width: 760px; }
 .actions { display: flex; gap: 10px; }
 .btn {
@@ -144,6 +151,8 @@ th:not(:first-child), td:not(:first-child) { text-align: right; }
 tr.leader td:first-child::after { content: " ●"; color: var(--green); font-size: 10px; vertical-align: middle; }
 .positive { color: var(--green); }
 .negative { color: var(--red); }
+.rate { color: var(--text); font-size: 13px; margin: 12px 0 0; }
+.rate:empty { display: none; }
 .note { color: var(--faint); font-size: 12px; margin: 10px 0 0; line-height: 1.45; }
 
 dialog {

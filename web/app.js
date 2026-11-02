@@ -69,7 +69,18 @@ const finite = window.SHOE && {
 
 const modes = { infini: infinite, ...(finite ? { sabot: finite } : {}) };
 let mode = infinite, phase = "idle", conform = [], results = {};
-for (const m of Object.values(modes)) m.scores = newScores(m.models);
+const STORAGE = "blackjack-scores-v1";
+const saved = (() => { try { return JSON.parse(localStorage.getItem(STORAGE)) || {}; } catch { return {}; } })();
+for (const [key, m] of Object.entries(modes)) {
+  m.scores = { ...newScores(m.models), ...saved[key]?.scores };
+  m.decisions = saved[key]?.decisions || { good: 0, total: 0 };  // décisions conformes à la référence, sur la session
+}
+function save() {
+  try {
+    localStorage.setItem(STORAGE, JSON.stringify(Object.fromEntries(
+      Object.entries(modes).map(([key, m]) => [key, { scores: m.scores, decisions: m.decisions }]))));
+  } catch { /* stockage indisponible (navigation privée) : les scores restent en mémoire */ }
+}
 
 function cardElement(card, { small = false, hidden = false, flip = false } = {}) {
   const el = document.createElement("div");
@@ -83,7 +94,11 @@ function cardElement(card, { small = false, hidden = false, flip = false } = {})
 
 // N'ajoute que les nouvelles cartes, pour que seules elles soient animées.
 function showCards(container, cards, options = {}) {
-  cards.slice(container.children.length).forEach((c) => container.append(cardElement(c, options)));
+  cards.slice(container.children.length).forEach((c, i) => {
+    const el = cardElement(c, options);
+    if (options.stagger) el.style.animationDelay = `${(i + 1) * options.stagger}s`;  // une carte après l'autre
+    container.append(el);
+  });
 }
 
 function showTotal(el, cards) {
@@ -99,13 +114,33 @@ function renderTable() {
     $("dealer-total").textContent = `${up.rank === "A" ? "As" : up.value} visible`;
   } else if (phase === "done") {
     if (dealer.children[1].classList.contains("back")) dealer.children[1].replaceWith(cardElement(mode.dealer()[1], { flip: true }));
-    showCards(dealer, mode.dealer());
+    showCards(dealer, mode.dealer(), { stagger: 0.35 });
     showTotal($("dealer-total"), mode.dealer());
   }
   if (phase !== "idle") { showCards($("player-cards"), mode.player()); showTotal($("player-total"), mode.player()); }
   $("hit").disabled = $("stand").disabled = $("hint").disabled = phase !== "playing";
   $("deal").disabled = phase === "playing";
   $("shoe-info").textContent = mode.info();
+  renderComposition();
+}
+
+// Cartes non vues par valeur, comparées à la proportion d'un jeu complet (trait).
+function renderComposition() {
+  const box = $("composition");
+  const s = mode === finite && (finite.round ? finite.round.s : finite.sabot);
+  box.hidden = !s;
+  if (!s) return;
+  const total = shoe.remaining(s);
+  const share = s.unseen.map((k) => k / total), full = shoe.DECK.map((k) => k / 52);
+  const top = Math.max(...share, ...full);
+  box.replaceChildren(...["A", "2", "3", "4", "5", "6", "7", "8", "9", "10"].map((rank, i) => {
+    const col = document.createElement("div");
+    col.className = "col";
+    col.title = `${rank} : ${s.unseen[i]} non vue${s.unseen[i] > 1 ? "s" : ""} (${Math.round(share[i] * 100)} %, jeu complet ${Math.round(full[i] * 100)} %)`;
+    col.innerHTML = `<div class="track"><div class="fill ${share[i] > full[i] ? "rich" : ""}" style="height:${share[i] / top * 100}%"></div>`
+      + `<div class="mark" style="bottom:${full[i] / top * 100}%"></div></div><span>${rank}</span>`;
+    return col;
+  }));
 }
 
 function renderSeats() {
@@ -147,6 +182,10 @@ function renderScores() {
       <td>${n ? fmt(sum / n) : "—"}</td><td>${r.ref === null ? "—" : fmt(r.ref, 4)}</td>`;
     return tr;
   }));
+  const { good, total } = mode.decisions;
+  $("decision-rate").textContent = total
+    ? `Vos décisions : ${Math.round(good / total * 100)} % conformes à ${mode.referenceName} (${good} sur ${total}).`
+    : "";
   $("score-note").textContent = scores.you.n
     ? `${scores.you.n} partie${scores.you.n > 1 ? "s" : ""} : sur si peu, la chance domine (écart-type 0,95 par partie). ${mode.gainNote}`
     : mode.gainNote;
@@ -194,7 +233,9 @@ function startRound() {
 function act(action) {
   if (phase !== "playing") return;
   const reference = mode.models.find((m) => m.id === mode.reference);
-  conform.push(mode.advice(reference, mode.observe()).action === action);
+  const good = mode.advice(reference, mode.observe()).action === action;
+  conform.push(good);
+  mode.decisions.good += good; mode.decisions.total += 1;
   if (action === "HIT") mode.hit(); else mode.stand();
   if (!mode.done() && game.handValue(mode.player()).total === 21) mode.stand();  // à 21, tirer ne peut que perdre
   if (mode.done()) return finish();
@@ -209,6 +250,7 @@ function finish() {
   const { scores } = mode;
   scores.you.sum += gain; scores.you.n += 1;
   for (const [id, seat] of Object.entries(seats)) { scores[id].sum += seat.gain; scores[id].n += 1; }
+  save();
   $("hint-panel").hidden = true; $("hint").setAttribute("aria-expanded", "false");
   render();
   const verdict = gain > 0 ? "victoire (+1)" : gain < 0 ? "défaite (−1)" : "égalité (0)";
@@ -247,8 +289,9 @@ $("open-rules").addEventListener("click", () => $("rules").showModal());
 document.querySelectorAll("[data-mode]").forEach((b) => b.addEventListener("click", () => switchMode(b.dataset.mode)));
 if (!finite) document.querySelector(".segmented").hidden = true;
 $("reset").addEventListener("click", () => {
-  Object.values(mode.scores).forEach((s) => { s.sum = 0; s.n = 0; });
-  renderScores(); renderCount();
+  Object.values(mode.scores).forEach((sc) => { sc.sum = 0; sc.n = 0; });
+  mode.decisions = { good: 0, total: 0 };
+  save(); renderScores(); renderCount();
 });
 document.addEventListener("keydown", (event) => {
   if ($("rules").open || event.metaKey || event.ctrlKey || event.altKey) return;
