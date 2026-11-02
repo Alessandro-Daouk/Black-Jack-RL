@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Soutenance · Q-learning hybride au Blackjack</title>
+  <style>
+    :root {
+      --text: #f5f5f7; --muted: #a1a1a6; --faint: #6e6e73; --blue: #0a84ff; --green: #30d158; --red: #ff453a;
+      --line: rgba(255, 255, 255, 0.1);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      color: var(--text); background: #000; -webkit-font-smoothing: antialiased;
+    }
+    html, body { margin: 0; height: 100%; overflow: hidden; }
+    body { background: radial-gradient(1100px 600px at 50% -10%, rgba(10, 132, 255, 0.13), transparent 60%), #000; }
+    .slide {
+      position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center;
+      padding: 6vh 8vw; gap: 3vh; box-sizing: border-box;
+    }
+    .slide.active { display: flex; animation: in 0.35s ease both; }
+    @keyframes in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    .kicker { color: var(--blue); font-size: 2vh; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin: 0; }
+    h1 { font-size: 7vh; line-height: 1.05; letter-spacing: -0.03em; margin: 0; font-weight: 700; }
+    h2 { font-size: 5.2vh; line-height: 1.1; letter-spacing: -0.025em; margin: 0; font-weight: 700; }
+    p, li { font-size: 2.9vh; line-height: 1.45; color: var(--muted); margin: 0; }
+    strong { color: var(--text); font-weight: 600; }
+    ul { margin: 0; padding-left: 1.2em; display: grid; gap: 1.4vh; }
+    .big { font-size: 9vh; font-weight: 700; letter-spacing: -0.03em; color: var(--text); font-variant-numeric: tabular-nums; }
+    .big small { font-size: 3vh; color: var(--muted); font-weight: 500; letter-spacing: 0; }
+    .stack { display: grid; gap: 3vh; }
+    .lead { display: grid; gap: 1.6vh; }
+    .stack img { width: 100%; max-height: 46vh; object-fit: contain; }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2vw; }
+    .card { border: 1px solid var(--line); border-radius: 18px; padding: 3vh 2vw; background: rgba(44, 44, 46, 0.45); display: grid; gap: 1vh; }
+    .card .value { font-size: 5vh; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+    img { max-width: 100%; max-height: 52vh; border-radius: 14px; background: #fff; display: block; margin: 0 auto; }
+    table { border-collapse: collapse; font-size: 2.5vh; font-variant-numeric: tabular-nums; width: 100%; }
+    th { text-align: left; color: var(--faint); font-weight: 600; font-size: 1.9vh; text-transform: uppercase; letter-spacing: 0.06em; padding: 1vh 0; border-bottom: 1px solid var(--line); }
+    td { padding: 1.2vh 0; border-bottom: 1px solid var(--line); color: var(--muted); }
+    td:first-child { color: var(--text); }
+    th:not(:first-child), td:not(:first-child) { text-align: right; }
+    .good { color: var(--green); } .bad { color: var(--red); }
+    .flow { display: flex; align-items: center; gap: 1.5vw; flex-wrap: wrap; font-size: 2.6vh; }
+    .box { border: 1px solid var(--line); border-radius: 14px; padding: 2vh 1.6vw; background: rgba(44, 44, 46, 0.45); color: var(--text); }
+    .box.blue { border-color: rgba(10, 132, 255, 0.6); }
+    .arrow { color: var(--faint); font-size: 3.5vh; }
+    .notes {
+      position: fixed; left: 0; right: 0; bottom: 0; padding: 2vh 8vw 3vh; background: rgba(28, 28, 30, 0.95);
+      border-top: 1px solid var(--line); font-size: 2.2vh; color: var(--muted); line-height: 1.5; display: none;
+    }
+    body.show-notes .notes { display: block; }
+    .bar { position: fixed; left: 0; bottom: 0; height: 3px; background: var(--blue); transition: width 0.3s ease; }
+    .counter { position: fixed; right: 2vw; bottom: 1.5vh; color: var(--faint); font-size: 1.6vh; font-variant-numeric: tabular-nums; }
+    .help { position: fixed; left: 2vw; bottom: 1.5vh; color: var(--faint); font-size: 1.6vh; }
+    aside { display: none; }
+  </style>
+</head>
+<body>
+
+<section class="slide">
+  <p class="kicker">Projet de Machine Learning 2</p>
+  <h1>Estimer la valeur de l'action terminale pour accélérer le Q-learning</h1>
+  <p>Une étude contrôlée sur le Blackjack · Alessandro Daouk et Wassim Ghnaya</p>
+  <aside>Présentez-vous en une phrase, puis annoncez le message central dès maintenant : « fixer la valeur de rester accélère l'apprentissage ; l'information disponible fixe le niveau final ». Tout le reste de la présentation le démontre.</aside>
+</section>
+
+<section class="slide">
+  <p class="kicker">La question</p>
+  <h2>Faut-il tout apprendre en jouant ?</h2>
+  <ul>
+    <li>Un agent RL apprend en jouant, et <strong>chaque partie coûte</strong>.</li>
+    <li>Au Blackjack, <strong>rester</strong> termine la partie : sa valeur ne dépend que de la main finale du croupier.</li>
+    <li>Cette main se <strong>simule sans jouer</strong>. On peut donc l'estimer à part, par apprentissage supervisé.</li>
+    <li>Question : vaut-il mieux estimer cette valeur et la fixer, ou laisser le renforcement tout apprendre ?</li>
+  </ul>
+  <aside>Insistez sur la généralité : dès qu'une composante de la fonction de valeur est estimable sans agir, la question se pose. Le Blackjack est un cas où l'on peut tout mesurer exactement.</aside>
+</section>
+
+<section class="slide">
+  <p class="kicker">La méthode</p>
+  <h2>Deux modèles, une décision</h2>
+  <div class="flow">
+    <span class="box">Mains de croupier simulées</span><span class="arrow">→</span>
+    <span class="box blue">Modèle 1 · supervisé<br><small>P(issue du croupier | carte visible)</small></span><span class="arrow">→</span>
+    <span class="box">V<sub>STAND</sub> figée</span>
+  </div>
+  <div class="flow">
+    <span class="box">Parties jouées</span><span class="arrow">→</span>
+    <span class="box blue">Modèle 2 · Q-learning<br><small>n'apprend que Q<sub>HIT</sub></small></span><span class="arrow">→</span>
+    <span class="box">Tirer si Q<sub>HIT</sub> &gt; V<sub>STAND</sub></span>
+  </div>
+  <p><strong>Le prix est connu d'avance</strong> : l'erreur du modèle 1 devient permanente, l'agent ne peut pas la corriger en jouant.</p>
+  <aside>Le modèle 1 est une régression logistique multinomiale. L'hybride converge vers l'optimum de son modèle, pas vers l'optimum vrai : c'est démontré dans modele2.pdf et on le verra mesuré.</aside>
+</section>
+
+<section class="slide">
+  <p class="kicker">L'instrument</p>
+  <h2>Un oracle exact plutôt que la simulation</h2>
+  <div class="cards">
+    <div class="card"><span class="value">280</span><p>états de décision : le jeu se résout exactement</p></div>
+    <div class="card"><span class="value">0,95</span><p>écart-type du gain d'une partie</p></div>
+    <div class="card"><span class="value">3,5&nbsp;M</span><p>parties pour mesurer ±0,001 par simulation</p></div>
+  </div>
+  <p>Chaque politique est jugée par son <strong>gain espéré exact</strong>, calculé par un oracle indépendant, contrôlé par un second oracle et par Monte-Carlo. Seuil d'intérêt : <strong>0,001 par partie</strong>, le coût d'une seule décision fausse.</p>
+  <aside>C'est le choix méthodologique clé : les écarts entre bonnes politiques sont de l'ordre du millième, invisibles en simulation. Sans oracle, aucun des résultats suivants ne serait mesurable.</aside>
+</section>
+
+<section class="slide">
+  <p class="kicker">Résultat principal · 28 jeux de données indépendants</p>
+  <div class="stack">
+    <div class="lead">
+      <p class="big">+0,00214 <small>par partie</small></p>
+      <p>IC 95 % [+0,00188 ; +0,00240], hybride meilleur dans <strong>56 paires sur 56</strong>, à 20&nbsp;000 mains et 100&nbsp;000 parties.</p>
+      <p>L'hybride atteint en <strong>10&nbsp;000 parties</strong> le regret du standard à 40&nbsp;000. Répliqué sur 10 nouvelles graines (88 paires sur 90).</p>
+    </div>
+    <img src="../../results/2_campagne_principale/analyse/learning_and_cost.png" alt="Regret en fonction des parties, du temps et des cartes">
+  </div>
+  <aside>Plan figé avant la campagne, 28 jeux fixés par un pilote, bootstrap et retrait d'un jeu concordants. La dispersion vient à 95 % de l'apprentissage RL, pas des données supervisées.</aside>
+</section>
+
+<section class="slide">
+  <p class="kicker">Face aux autres algorithmes</p>
+  <h2>Un gain d'information, pas d'algorithme</h2>
+  <table>
+    <thead><tr><th>Regret exact</th><th>10&nbsp;000 parties</th><th>100&nbsp;000 parties</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Hybride</strong></td><td class="good">0,0065</td><td class="good">0,0008</td></tr>
+      <tr><td>Q-learning standard</td><td>0,0219</td><td>0,0030</td></tr>
+      <tr><td>RL à modèle appris</td><td>0,0224</td><td>0,0027</td></tr>
+      <tr><td>Dyna-Q</td><td>0,0251</td><td>0,0039</td></tr>
+      <tr><td>Expected SARSA</td><td>0,0451</td><td>0,0042</td></tr>
+      <tr><td>Contrôle Monte-Carlo</td><td>0,0637</td><td>0,0114</td></tr>
+    </tbody>
+  </table>
+  <p>Un RL qui modélise tout à partir des parties fait <strong>jeu égal</strong> avec le Q-learning : la difficulté est d'estimer STAND avec un bruit de ±1 par observation.</p>
+  <aside>Toutes les références sont réglées sur la même grille et les mêmes graines. Double Q-learning fait aussi moins bien que le standard : retirer le biais du maximum ne suffit pas à expliquer le gain.</aside>
+</section>
+
+<section class="slide">
+  <p class="kicker">La limite</p>
+  <div class="stack">
+    <div class="lead">
+      <h2>L'hybride a un plancher</h2>
+      <p>Il ne descend pas sous l'erreur de son modèle : regret limite <strong>0,0030</strong> avec 1&nbsp;000 mains, <strong>0,00013</strong> avec 20&nbsp;000.</p>
+      <p>Avec 1&nbsp;000 mains, le standard le dépasse à 200&nbsp;000 parties : <span class="bad">−0,0020</span> [−0,0033 ; −0,0006].</p>
+      <p>C'est ce que prévoit la théorie.</p>
+    </div>
+    <img src="../../results/2_campagne_principale/analyse/budget_surface.png" alt="Différence de gain selon les budgets">
+  </div>
+  <aside>Montrer qu'on a cherché les régions où la méthode perd, et qu'on les a trouvées. Les coûts : une main de croupier vaut un tiers de partie ; l'avantage tient au même temps total entre 2 et 20 secondes.</aside>
+</section>
+
+<section class="slide">
+  <p class="kicker">Résultats négatifs conservés</p>
+  <h2>Ce que la méthode n'apporte pas</h2>
+  <ul>
+    <li>En paquet infini, la <strong>régression logistique</strong> donne le même agent qu'une table de fréquences (équivalence à ±0,001), pour trois fois plus de temps : modèle saturé.</li>
+    <li>Une <strong>planification</strong> qui modélise aussi HIT fait mieux que l'hybride (+0,00069).</li>
+    <li>Avec des cartes équiprobables, l'avantage à 100&nbsp;000 parties <strong>n'est plus établi</strong> : ce n'est pas une constante de la méthode.</li>
+  </ul>
+  <aside>Ces trois points motivent l'extension en sabot fini : il fallait un cadre où le modèle supervisé a un vrai rôle et où l'on ne peut pas tout planifier simplement.</aside>
+</section>
+
+<section class="slide">
+  <p class="kicker">Extension · sabot de 52 cartes</p>
+  <h2>Le modèle 1 devient un vrai problème de ML</h2>
+  <p>La loi du croupier dépend des cartes déjà sorties. Excès de log-loss (KL vers la loi exacte), 100&nbsp;000 mains :</p>
+  <div class="cards">
+    <div class="card"><span class="value good">0,0046</span><p><strong>Logistique</strong> sur la composition du sabot</p></div>
+    <div class="card"><span class="value">0,0099</span><p>Gradient boosting</p></div>
+    <div class="card"><span class="value">0,0189</span><p>Table par classe de compte Hi-Lo</p></div>
+  </div>
+  <p>Compromis biais-variance : les tables plafonnent à l'information qu'elles utilisent, le boosting apprend tout depuis zéro.</p>
+  <aside>La loi exacte du croupier sachant la composition se calcule par récurrence : on mesure donc le KL exact, pas seulement une log-loss bruitée.</aside>
+</section>
+
+<section class="slide">
+  <p class="kicker">À information égale</p>
+  <div class="stack">
+    <div class="lead">
+      <h2>La séparation accélère, l'information fixe le niveau</h2>
+      <p>Hybride linéaire − Q-learning linéaire, mêmes informations :</p>
+      <p><strong class="good">+0,040</strong> à 10&nbsp;000 parties · <strong class="good">+0,0072</strong> à 200&nbsp;000 · <strong>+0,0002</strong> à 3 millions</p>
+      <p>Un hybride qui voit moins que le standard finit par perdre ; un hybride qui voit autant le rejoint.</p>
+    </div>
+    <img src="../../results/5_sabot_fini/shoe.png" alt="Qualité du modèle 1 et gain des agents en sabot fini">
+  </div>
+  <aside>C'est le résultat le plus important de l'extension : sans la référence linéaire, on aurait cru à un avantage durable de l'hybride. La borne du §6.4 explique l'ordre des agents : le regret est contrôlé par l'erreur des deux estimations.</aside>
+</section>
+
+<section class="slide">
+  <p class="kicker">Confirmation préenregistrée</p>
+  <h2>Quatre hypothèses, quatre confirmées</h2>
+  <table>
+    <thead><tr><th>Hypothèse (plan commité avant le lancement)</th><th>Mesure</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr><td>À information égale, fixer STAND accélère</td><td>+0,0073</td><td class="good">confirmée</td></tr>
+      <tr><td>À information égale, l'hybride est rejoint</td><td>+0,0004</td><td class="good">confirmée</td></tr>
+      <tr><td>Voir la composition partout dépasse Q<sub>HIT</sub> tabulaire</td><td>+0,0020</td><td class="good">confirmée</td></tr>
+      <tr><td>La logistique estime mieux que la table</td><td>+0,0144</td><td class="good">confirmée</td></tr>
+    </tbody>
+  </table>
+  <p>Données, graines et sabots neufs, IC à 98,75 % (Bonferroni), aucun nouveau réglage.</p>
+  <aside>Le plan est dans l'historique Git avant les résultats. Nuance honnête : pour H2, l'intervalle exclut zéro de justesse ; il reste un petit avantage sous le seuil pratique.</aside>
+</section>
+
+<section class="slide">
+  <p class="kicker">Conclusion</p>
+  <h1>Fixer STAND accélère.<br>L'information fixe le niveau.</h1>
+  <ul>
+    <li>Utile quand les parties coûtent cher par rapport aux données supervisées.</li>
+    <li>Ne remplace pas une représentation suffisante de l'état.</li>
+    <li>Limites : un seul jeu, mise fixe, agents tabulaires ou linéaires.</li>
+  </ul>
+  <aside>Terminer sur la phrase de la diapositive, puis enchaîner sur la démonstration.</aside>
+</section>
+
+<section class="slide">
+  <p class="kicker">Démonstration</p>
+  <h1>Jouez contre les modèles.</h1>
+  <p>Ouvrir <strong>web/index.html</strong> · Espace pour distribuer · C pour les conseils · mode Sabot fini.</p>
+  <aside>Jouer deux donnes en paquet infini avec les conseils affichés, puis une en sabot fini en montrant le compte vrai. Voir docs/soutenance/questions.md pour le scénario détaillé.</aside>
+</section>
+
+<div class="notes" id="notes"></div>
+<div class="bar" id="bar"></div>
+<div class="help">← → naviguer · N notes · F plein écran</div>
+<div class="counter" id="counter"></div>
+
+<script>
+  const slides = [...document.querySelectorAll(".slide")];
+  let current = Math.min(Math.max(parseInt(location.hash.slice(1), 10) - 1 || 0, 0), slides.length - 1);
+  function show(i) {
+    current = Math.min(Math.max(i, 0), slides.length - 1);
+    slides.forEach((s, k) => s.classList.toggle("active", k === current));
+    document.getElementById("notes").textContent = slides[current].querySelector("aside")?.textContent.trim() ?? "";
+    document.getElementById("counter").textContent = `${current + 1} / ${slides.length}`;
+    document.getElementById("bar").style.width = `${((current + 1) / slides.length) * 100}%`;
+    history.replaceState(null, "", `#${current + 1}`);
+  }
+  document.addEventListener("keydown", (e) => {
+    if (["ArrowRight", "ArrowDown", "PageDown", " "].includes(e.key)) { e.preventDefault(); show(current + 1); }
+    else if (["ArrowLeft", "ArrowUp", "PageUp"].includes(e.key)) show(current - 1);
+    else if (e.key === "Home") show(0);
+    else if (e.key === "End") show(slides.length - 1);
+    else if (e.key.toLowerCase() === "n") document.body.classList.toggle("show-notes");
+    else if (e.key.toLowerCase() === "f") document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+  });
+  document.addEventListener("click", (e) => { if (!e.target.closest("a")) show(current + (e.clientX > innerWidth / 3 ? 1 : -1)); });
+  show(current);
+</script>
+</body>
+</html>
