@@ -387,6 +387,25 @@ budgets qu'à l'annexe I ; les quatre agents tabulaires ont été reproduits à 
 
 *IC à 95 % incluant l'erreur d'évaluation, puis paires gagnantes sur 18.*
 
+### I.3 Prolongation jusqu'à 10 millions de parties
+
+*Exploratoire. Mêmes jeux, première graine RL de chaque jeu, mêmes réglages et sabots
+d'évaluation que l'annexe I.2 ; à 3 millions de parties, les 18 gains retrouvent exactement ceux
+de la campagne. Code : `src/shoe/extend.py`, sorties : [results/5_sabot_fini/prolongation/](../results/5_sabot_fini/prolongation/).*
+
+| Parties | 3 M | 6 M | 10 M |
+|---|---:|---:|---:|
+| Standard linéaire, gain − stratégie de base | +0,0051 | +0,0057 | +0,0058 |
+| Hybride logistique linéaire, gain − stratégie de base | +0,0053 | +0,0056 | +0,0056 |
+| Hybride logistique linéaire − standard linéaire | +0,0003 [−0,0000 ; +0,0006] | −0,0001 [−0,0004 ; +0,0002] | −0,0001 [−0,0004 ; +0,0002] |
+
+*Moyennes sur 9 jeux ; IC à 95 % incluant l'erreur d'évaluation.*
+
+**[observé, exploratoire]** Le standard linéaire n'avait pas convergé à 3 millions de parties ; il
+progresse encore de 0,0007 par manche jusqu'à 6 millions, puis plafonne. L'hybride linéaire, déjà
+proche de son niveau, ne gagne plus que 0,0003. À 6 et 10 millions de parties, les deux agents sont
+indiscernables : la séparation de STAND n'a changé que la vitesse, pas le niveau atteint.
+
 **[observé]**
 
 1. **L'avantage durable de l'hybride logistique était un effet d'information.** Le standard linéaire, qui voit

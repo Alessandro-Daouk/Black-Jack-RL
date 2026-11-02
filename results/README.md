@@ -48,7 +48,7 @@ rapport), les CSV bruts et `completion.json` (statut et durée).
 | `3_cartes_uniformes/` | `runs.csv`, `curves.csv`, `oracle_mc.json` (contrôle du nouvel oracle) |
 | `4_autres_methodes/planification_double_q/` | `planning.csv`, `double_q.csv`, `tuning.csv` |
 | `4_autres_methodes/autres_algorithmes/` | `curves.csv` (Expected SARSA, Monte-Carlo, Dyna-Q, RL à modèle appris), `variance_runs.csv` |
-| `5_sabot_fini/` | `supervised.csv` (4 modèles 1), `runs.csv` (6 agents, dont 2 linéaires à information égale), `shoe.png` (figure du §6) |
+| `5_sabot_fini/` | `supervised.csv` (4 modèles 1), `runs.csv` (6 agents, dont 2 linéaires à information égale), `shoe.png` (figure du §6), `prolongation/` (agents linéaires jusqu'à 10 millions de parties, annexe I.3) |
 
 Les `config.json` écrits avant cette organisation des dossiers peuvent contenir des noms
 de modules ou d'options de l'époque ; les chemins de dossiers ont été mis à jour.

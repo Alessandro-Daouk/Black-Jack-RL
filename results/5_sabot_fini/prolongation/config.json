@@ -1,0 +1,17 @@
+{
+  "checkpoints": [
+    3000000,
+    6000000,
+    10000000
+  ],
+  "agents": {
+    "standard_lineaire": 1.0,
+    "hybride_logistique_lineaire": 0.1
+  },
+  "groups": 9,
+  "rl_rep": 0,
+  "eval_shoes": [
+    1000000,
+    1300000
+  ]
+}

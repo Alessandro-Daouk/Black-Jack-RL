@@ -392,7 +392,11 @@ remplacée avant la campagne.
    logistique linéaire devance largement le standard linéaire (+0,040 à 10 000 parties,
    +0,0072 à 200 000, +0,0016 à 1 million) puis le rejoint (+0,0002 à 3 millions, intervalle
    inclus dans ±0,001). Il gagne alors +0,0053 par manche sur la stratégie de base, 12 % de
-   l'avantage de la maison, sans changer la mise.
+   l'avantage de la maison, sans changer la mise. Prolongés jusqu'à 10 millions de parties
+   (exploratoire, une graine RL par jeu), les deux agents linéaires plafonnent au même niveau :
+   le standard progresse encore jusqu'à 6 millions, puis l'écart reste dans ±0,0004
+   (−0,0001 [−0,0004 ; +0,0002] à 10 millions), pour environ +0,0057 sur la stratégie de base
+   (annexe I.3).
 4. **La qualité du modèle 1 se traduit en gain.** L'hybride logistique bat les hybrides carte
    et table de 0,0009 par manche à 3 millions de parties, dans les 18 paires.
 
@@ -497,7 +501,8 @@ fixé par l'information.
 - **Analyses exploratoires.** Les §5.3 et §5.7 ont été ajoutés après la campagne principale,
   sur 9 jeux, sans correction de multiplicité : ce sont des pistes. Les conclusions du sabot
   fini sont confirmées (§6.5), mais la forme des agents linéaires a été choisie après un essai
-  préliminaire, et le standard linéaire n'a pas convergé à 3 millions de parties.
+  préliminaire. Prolongé à 10 millions de parties sur une seule graine par jeu, le standard
+  linéaire plafonne au niveau de l'hybride linéaire.
 - **Hyperparamètres.** Réglages sur trois graines ; la décroissance de ε n'a pas été réglée.
 - **Temps.** Une machine et une implémentation par campagne ; les ratios temps main/partie
   dépendent du code. Les cartes sont une unité plus stable.

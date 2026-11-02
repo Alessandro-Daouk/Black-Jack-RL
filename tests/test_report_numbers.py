@@ -132,6 +132,17 @@ def test_finite_shoe_tables():
         check(ANNEX, label, contrast(key, [10000, 200000, 1000000, 3000000]))
 
 
+def test_extension_table():
+    extension = load("results/5_sabot_fini/prolongation/summary.json")["hybride_lineaire_minus_standard_lineaire"]
+    basic = load("results/5_sabot_fini/summary.json")["basic_strategy_j"]
+    budgets = ["3000000", "6000000", "10000000"]
+    for label, agent in {"Standard linéaire, gain − stratégie de base": "standard_lineaire",
+                         "Hybride logistique linéaire, gain − stratégie de base": "hybride_logistique_lineaire"}.items():
+        check(ANNEX, label, [extension[b]["j"][agent] - basic for b in budgets])
+    check(ANNEX, "Hybride logistique linéaire − standard linéaire",
+          [v for b in budgets for v in ci(extension[b]["difference"], "ci95_with_evaluation")])
+
+
 def test_confirmation_table():
     verdicts = load("results/6_confirmation_sabot/mesures/summary.json")["verdicts"]
     lines = [line for line in (ROOT / REPORT).read_text(encoding="utf-8").splitlines() if re.match(r"\| H\d\. ", line)]
