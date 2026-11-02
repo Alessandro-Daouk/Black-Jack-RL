@@ -199,6 +199,7 @@ modification, pour que la réplication porte sur le code d'origine.
 |---|---|
 | [docs/rapport_scientifique.md](docs/rapport_scientifique.md) | Rapport complet : cadre, résultats, coûts, discussion (**fait foi**) |
 | [docs/annexes.md](docs/annexes.md) | Détail des mesures : contrôles, coûts, ablations, statistiques, contrastes |
+| [docs/soutenance/](docs/soutenance/diapositives.html) | Diapositives de soutenance, scénario de démonstration et [questions probables](docs/soutenance/questions.md) |
 | [docs/modele1.pdf](docs/modele1.pdf), [docs/modele2.pdf](docs/modele2.pdf) | Démonstrations : modèle 1, convergence et bornes de regret |
 | [docs/etat_de_l_art.md](docs/etat_de_l_art.md) | Positionnement bibliographique |
 | [docs/reproductibilite.md](docs/reproductibilite.md) | Environnement, commandes et durées |
